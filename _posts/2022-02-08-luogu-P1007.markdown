@@ -76,11 +76,11 @@ tags:
   
   
 
-## 代码实现看这里
+## 代码实现
 
   
 
-```
+```c
 
 #include <iostream>
 using namespace std;

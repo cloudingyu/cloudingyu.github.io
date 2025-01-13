@@ -48,8 +48,8 @@ tags:
 ![图片3](/img/posts/2022-02-09-luogu-P3382/3.png)
 这样不断缩小搜索的区间，最终就能够获得一个足够小的区间以至接近一个实数值,以达到求值的目的。
 
-## 代码实现看这里
-```
+## 代码实现
+```c
 #include <iostream>
 #include <cstdio>
 using namespace std;
