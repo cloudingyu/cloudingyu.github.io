@@ -71,7 +71,7 @@ tags:
 
 同理，总共需要撤退时间的最小值，就等于所有士兵下桥时间较小值中的最大值，即：
 
-<p style="text-align: center;">$\displaystyle\max ( \min( x_1 , L-x_1+1 ) ,  ... , min( x_n , L-x_n+1 ) )$</p>
+<p style="text-align: center;">$\displaystyle\max ( \min( x_1 , L-x_1+1 ) ,  ... , \min( x_n , L-x_n+1 ) )$</p>
 
   
   
