@@ -201,7 +201,6 @@ int main()
 ```
 #include <stdio.h> //C++是什么，没学过
 #include <stdlib.h>
-#include <string.h>
 const int MAXN = 1000;
 struct big_digits
 {
