@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "洛谷P1007 独木桥"
+title:      "[洛谷]P1007 独木桥"
 subtitle:   "贪心模拟，看上去很复杂，实际上很简单"
 date:       2022-02-08
 author:     "CloudingYu"

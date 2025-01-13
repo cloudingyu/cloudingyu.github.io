@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "洛谷P1004 方格取数"
+title:      "[洛谷]P1004 方格取数"
 subtitle:   "四维动态规划，属于是模版题"
 date:       2022-02-09
 author:     "CloudingYu"
