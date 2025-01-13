@@ -9,6 +9,7 @@ mathjax: true
 tags:
     - 题解
     - 洛谷
+    - 算法
 ---
 ## [题目描述](https://www.luogu.com.cn/problem/P3382)
 
