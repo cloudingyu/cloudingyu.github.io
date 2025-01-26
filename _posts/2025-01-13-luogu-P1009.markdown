@@ -2,7 +2,7 @@
 layout:     post
 title:      "[洛谷]P1009 [NOIP1998 普及组] 阶乘之和"
 subtitle:   "高精度加+高精度乘（优化码风.ver)"
-date:       2024-01-13
+date:       2025-01-13
 author:     "CloudingYu"
 header-style: picture
 mathjax: true
