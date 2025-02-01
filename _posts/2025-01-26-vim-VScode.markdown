@@ -138,7 +138,7 @@ $VSCode$ 是一个现代化的代码编辑器，具有丰富的扩展和调试�
 
 ![smearcursor](/img/posts/2025-01-26-vim-VScode/smearcursor.png)
 
-安装完成后，`ctrl + shift + P`或者`command + shift +P`，运行命令`smearcursor.enable`.
+安装完成后，`ctrl + shift + P`或者`command + shift + P`，运行命令`smearcursor.enable`.
 
 ### $Relative line numbers$
 
