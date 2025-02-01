@@ -28,7 +28,7 @@ $VSCode$ 是一个现代化的代码编辑器，具有丰富的扩展和调试�
 
 ![vim](/img/posts/2025-01-26-vim-VScode/vim.png)
 
-### config配置
+### $config$ 配置
 安装完插件后，打开`setting.json`文件，在`{}`中添加以下内容：
 ```
 {
