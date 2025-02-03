@@ -140,7 +140,7 @@ $VSCode$ 是一个现代化的代码编辑器，具有丰富的扩展和调试�
 
 安装完成后，`ctrl + shift + P`或者`command + shift + P`，运行命令`smearcursor.enable`.
 
-### $Relative line numbers$
+### $Relative$ $line$ $numbers$
 
 该插件能够显示每行相对于当前光标所在行的差数，方便`j`、`k`快速跳转.
 
@@ -150,3 +150,4 @@ $VSCode$ 是一个现代化的代码编辑器，具有丰富的扩展和调试�
 
 
 安装完成即可直接使用.
+
