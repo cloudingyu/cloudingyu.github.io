@@ -149,5 +149,4 @@ $VSCode$ 是一个现代化的代码编辑器，具有丰富的扩展和调试�
 ![Rln](/img/posts/2025-01-26-vim-VScode/Relative_line_numbers.png)
 
 
-安装完成即可直接使用.
-
+安装完成后，`ctrl + shift + P`或者`command + shift + P`，运行命令`extension.relativeLineNumbersEnable`.
