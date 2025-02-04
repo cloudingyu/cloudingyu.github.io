@@ -1,7 +1,7 @@
 ---
 layout:     post
 title:      "数学分析（上）期末复习汇总"
-subtitle:   "定理证明+麦克劳林公式+基本积分表解析几何计算部分公式"
+subtitle:   "定理证明+麦克劳林公式+基本积分表+解析几何计算部分公式"
 date:       2024-12-27
 author:     "CloudingYu"
 header-style: picture
@@ -11,7 +11,7 @@ tags:
     - 数学分析
     - 复习
 ---
-## 定理
+## 定理证明
 
 ### 定理 $2.4.2$ （闭区间套定理）
 
@@ -75,7 +75,7 @@ tags:
 
 #### **证明：**
 
-##### 先证必要性.
+##### 必要性
 
 设 ${x_n}$ 收敛于 $a$ ，按照定义，$\forall \epsilon>0$ ，$\exists N$ ，$\forall n,m>N$：
 
@@ -85,13 +85,15 @@ tags:
 
 <p style="text-align: center;">$\displaystyle |x_n-x_m|\le|x_m-a|+|x_n-a|\le\epsilon.$</p>
 
-##### 再证充分性.
+##### 充分性
 
 先证明基本数列必定有界.取 $\epsilon_0=1$ ，因为 $\{x_n\}$ 是基本数列，所以 $\exists N_0$ ，$\forall n>N_0$ ：
 
 <p style="text-align: center;">$\displaystyle |x_n-x_{N_0+1}|<1.$</p>
 
-令 $ M=\max \{ |x_1|,|x_2|,\cdots,|x_{N_0}|,|x_{N_0}+1| \} $ ，则对一切 $n$ ，成立
+令
+$M=\max\{|x_1|,|x_2|,\cdots,|x_{N_0}|,|x_{N_0}+1|\}$
+，则对一切 $n$ ，成立
 
 <p style="text-align: center;">$\displaystyle |x_n|\le M.$</p>
 
@@ -110,8 +112,6 @@ tags:
 此即表明数列 $\{x_n\}$ 收敛.
 
 ### 定理 $3.1.5$ （$Heine$定理）
-
-命题
 
 <p style="text-align: center;">$\displaystyle \lim\limits_{x \to x_0} f(x) = A$</p> 
 
@@ -148,7 +148,7 @@ tags:
 
 即
 
-<p style="text-align: center;">$\displaystyle \lim\limits_{n \to \infty}f(x_n)=A$</p>.
+<p style="text-align: center;">$\displaystyle \lim\limits_{n \to \infty}f(x_n)=A$</p>
 
 ##### 充分性：
 
@@ -162,17 +162,28 @@ tags:
 
 <p style="text-align: center;">$\displaystyle \exists \epsilon_0 >0,\forall \delta >0、\exists x (0<|x-x_0|<\delta):|f(x)-A|\ge \epsilon.$</p>
 
-也就是说，存在某个固定正数 $\epsilon_0$ ，不管 $\delta$ 取得多么小，总能在 $O(x_0,\delta) / \{x_0\}$ 中找到一个 $x$ ，使 $f(x)$ 与 $A$ 的差的绝对值不小于 $\epsilon_0$，即 $|f(x)-A|\ge \epsilon$ .
+也就是说，存在某个固定正数 $\epsilon_0$ ，不管 $\delta$ 取得多么小，总能在 $O(x_0,\delta) / \{x_0\}$ 中找到一个 $x$ ，使 $f(x)$ 与 $A$ 的差的绝对值不小于 $\epsilon_0$，即 
+$|f(x)-A|\ge \epsilon$
 
 现在取一列 $\{\delta_n\}$ ，取 $\delta_n=\frac{1}{n}(n=1,2,3,\cdots)$ .
 
-对 $\delta_1=1$ ，存在 $x_1(0<|x_1-x0|<\delta_1)$ ，使 $|f(x)-A|\ge\epsilon_0$ .
+对 $\delta_1=1$ ，存在
+$x_1(0<|x_1-x0|<\delta_1)$
+ ，使 
+$|f(x)-A|\ge\epsilon_0$ .
 
-对 $\delta_2=\frac{1}{2}$ ，存在 $x_2(0<|x_2-x0|<\delta_2)$ ，使 $|f(x)-A|\ge\epsilon_0$ .
+对 $\delta_2=\frac{1}{2}$ ，存在 
+$x_2(0<|x_2-x0|<\delta_2)$
+ ，使 
+$|f(x)-A|\ge\epsilon_0$ .
 
 $\cdots\cdots$
 
-一般地，对 $\delta_k=\frac{1}{k}$ ，存在 $x_k(0<|x_k-x_0|<\delta_k)$ ，使 $|f(x)-A|\ge\epsilon_0$ .
+一般地，对 $\delta_k=\frac{1}{k}$ ，
+存在 
+$x_k(0<|x_k-x_0|<\delta_k)$
+ ，使 
+$|f(x)-A|\ge\epsilon_0$ .
 
 于是得到数列 $\{x_n\}$ ，满足 $x_n\not=x_0$， $\lim\limits_{n \to \infty}x_n=x_0$ ，但相应的函数值序列 ${f(x_n)}$ 不可能以 $A$为极限.
 
@@ -188,13 +199,17 @@ $\cdots\cdots$
 
 若 $f(x)$ 在 $[a,b]$上无界，将 $[a,b]$ 等分为两个小区间 $\displaystyle [a,\frac{a+b}{2}]$ 与 $\displaystyle [\frac{a+b}{2},b]$ ，则 $f(x)$ 至少在其中之一上无界，把它记为 $[a_1,b_1]$ ；再将闭区间 $[a_1,b_1]$ 等分为两个小区间 $\displaystyle [a_1,\frac{a_1+b_1}{2}]$ 与 $\displaystyle [\frac{a_1+b_1}{2},b_1]$ ，同样 $f(x)$ 至少在其中之一上无界，把它记为 $[a_2,b_2]$ $\cdots\cdots$ 这样的步骤一直做下去，便得到一个闭区间套 $\{[a_n,b_n]\}$ ， $f(x)$ 在其中任何一个闭区间 $[a_n,b_n]$ 上都是无界的.
 
-根据闭区间套定理，存在惟一的实数 $\xi$ 属于所有的闭区间 $[a_n,b_n]$ ，并且<p style="text-align: center;">$\displaystyle \xi = \lim\limits_{n_ \to \infty}a_n=\lim\limits_{n\to \infty}b_n.$</p>
+根据闭区间套定理，存在惟一的实数 $\xi$ 属于所有的闭区间 $[a_n,b_n]$ ，并且
 
-因为 $\xi\in[a,b]$ ，而 $f(x)$ 在点 $\xi$ 连续，由函数局部有界性得，存在 $\exists \delta>0$ ，$\exists M>0$， 对于一切 $x\in O(\xi,\delta)\cap[a,b]$ ，成立<p style="text-align: center;">$\displaystyle |f(x)|\le M.$</p>
+<p style="text-align: center;">$\displaystyle \xi = \lim\limits_{n_ \to \infty}a_n=\lim\limits_{n\to \infty}b_n.$</p>
+
+因为 $\xi\in[a,b]$ ，而 $f(x)$ 在点 $\xi$ 连续，由函数局部有界性得，存在 $\exists \delta>0$ ，$\exists M>0$， 对于一切 $x\in O(\xi,\delta)\cap[a,b]$ ，成立
+
+<p style="text-align: center;">$\displaystyle |f(x)|\le M.$</p>
 
 由于$\lim\limits_{n_ \to \infty}a_n=\lim\limits_{n\to \infty}b_n=\xi$ ，我们又知道对于充分大的 $n$ ，
 
-$$[a_n,b_n]\subset O(\xi,\delta)\cap[a,b]$$
+<p style="text-align: center;">$[a_n,b_n]\subset O(\xi,\delta)\cap[a,b]$</p>
 
 于是得到 $f(x)$ 在这些闭区间 $[a_n,b_n]$ ($n$充分大)上有界的结论，从而产生矛盾.
 
@@ -202,25 +217,43 @@ $$[a_n,b_n]\subset O(\xi,\delta)\cap[a,b]$$
 
 ### 定理 $3.4.5$ （一致连续的充分必要条件）
 
-设函数 $f(x)$ 再区间 $X$ 上定义，则 $f(x)$ 在 $X$ 上一致连续的充分必要条件是：对任何点列 $\{x'_n\}(x'_n\in X)$ 和 $\{x''_n\}(x''_n\in X)$ ，只要满足 $\lim\limits_{n \to \infty}(x'-x'')=0$ ，就成立 $\lim\limits_{n \to \infty}(f(x')-f(x''))=0$
+设函数 $f(x)$ 再区间 $X$ 上定义，则 $f(x)$ 在 $X$ 上一致连续的充分必要条件是：对任何点列 
+$\{x'_n\}(x'_n\in X)$ 
+和 
+$\{x''_n\}(x''_n\in X)$ ，只要满足 
+$\lim\limits_{n \to \infty}(x'-x'')=0$
+ ，就成立 
+$\lim\limits_{n \to \infty}(f(x')-f(x''))=0$
 
 #### **证明：**
 
 ##### 必要性：
 
-函数 $f(x)$ 在 $X$ 上的一致连续性可表述为<p style="text-align: center;">$\displaystyle \forall \epsilon >0,\exists \delta>0,\forall x',x''\in X(|x'-x''|<\delta):|f(x')-f(x'')|<\epsilon.$</p>
+函数 $f(x)$ 在 $X$ 上的一致连续性可表述为
 
-对上述的 $\delta>0$ ，由 $\lim\limits_{n \to \infty}(x'_n-x''_n)=0$ ,可知 $\exists N$ ，$\forall n>N$ ：$|x'_n-x''_n|<\delta$ ，从而得到<p style="text-align: center;">$\displaystyle |f(x'_n)-f(x''_n)|<\epsilon.$</p>
+<p style="text-align: center;">$\displaystyle \forall \epsilon >0,\exists \delta>0,\forall x',x''\in X(|x'-x''|<\delta):|f(x')-f(x'')|<\epsilon.$</p>
 
-这就证明了 <p style="text-align: center;">$\displaystyle \lim\limits_{n \to \infty}(f(x'_n)-f(x''_n))=0$</p>
+对上述的 $\delta>0$ ，由 
+$\lim\limits_{n \to \infty}(x'_n - x''_n )=0$
+ ,可知 $\exists N$ ，$\forall n>N$ ：$|x'_n- x''_n |<\delta$ ，从而得到
+
+<p style="text-align: center;">$\displaystyle |f(x'_n)-f(x''_n)|<\epsilon.$</p>
+
+这就证明了 
+
+<p style="text-align: center;">$\displaystyle \lim\limits_{n \to \infty}(f(x'_n)-f(x''_n))=0$</p>
 
 ##### 充分性：
 
 采用反证法.
 
-函数 $f(x)$ 在 $X$ 上的非一致连续性可表述为<p style="text-align: center;">$\displaystyle \exists \epsilon_0>0,\forall \delta >0,\exists x',x''\in X(|x'-x''|<\delta);|f(x')-f(x'')|\ge \epsilon_0.$</p>
+函数 $f(x)$ 在 $X$ 上的非一致连续性可表述为
 
-取 $\delta_n=\frac{1}{n}(n=1,2,3,\cdots)$ ，于是存在 $x'_n,x''_n\in X$ ，满足<p style="text-align: center;">$\displaystyle |x'_n-x''_n|<\frac{1}{n},|f(x'_n)-f(x''_n)|\ge \epsilon_0.$</p>
+<p style="text-align: center;">$\displaystyle \exists \epsilon_0>0,\forall \delta >0,\exists x',x''\in X(|x'-x''|<\delta);|f(x')-f(x'')|\ge \epsilon_0.$</p>
+
+取 $\delta_n=\frac{1}{n}(n=1,2,3,\cdots)$ ，于是存在 $x'_n,x''_n\in X$ ，满足
+
+<p style="text-align: center;">$\displaystyle |x'_n-x''_n|<\frac{1}{n},|f(x'_n)-f(x''_n)|\ge \epsilon_0.$</p>
 
 显然，$\lim\limits_{n \to \infty}(x'_n-x''_n)=0$ ，但 ${f(x'_n)-f(x''_n)}$ 不可能收敛于 $0$， 这就产生矛盾.
 
@@ -232,35 +265,65 @@ $$[a_n,b_n]\subset O(\xi,\delta)\cap[a,b]$$
 
 采用反证法.
 
-假设 $f(x)$ 在 $[a,b]$ 上非一致连续，则存在 $\epsilon_0>0$，及两列点列 $\{x'_n\}$ 和 $\{x''_n\}$ ， $x'_n,x''_n\in [a,b]$ ，满足<p style="text-align: center;">$\displaystyle |x'_n-x''_n|<\frac{1}{n},且|f(x'_n)-f(x''_n)|\ge \epsilon_0 (n=1,2,3,\cdots).$</p>
+假设 $f(x)$ 在 $[a,b]$ 上非一致连续，则存在 $\epsilon_0>0$，及两列点列 $\{x'_n\}$ 和 $\{x''_n\}$ ， $x'_n,x''_n\in [a,b]$ ，满足
 
-因为 $\{x'_n\}$ 有界，由 $Bolzano-Weierstrass$ 定理，存在收敛子列 $\{x'_{n_k}\}$ ：<p style="text-align: center;">$\displaystyle \lim\limits_{n \to \infty}x'_{n_k}=\xi,\xi\in[a,b].$</p>
+<p style="text-align: center;">$\displaystyle |x'_n-x''_n|<\frac{1}{n},且|f(x'_n)-f(x''_n)|\ge \epsilon_0 (n=1,2,3,\cdots).$</p>
 
-在点列 $\{x''_n\}$ 中取子列 $\{x''_{n_k}\}$ ，其下标与 $\{x'_{n_k}\}$ 相同，则由 $|x'_{n_k}-x''_{n_k}|<\frac{1}{n_k},k=1,2,3,\cdots.$
+因为 $ \{ x'_n \} $ 有界，由 
+$Bolzano-Weierstrass$
+ 定理，存在收敛子列 
+ $\{x'_{n_k}\}$ ：
 
-又得到<p style="text-align: center;">$\displaystyle \lim\limits_{k \to \infty}x''_{n_k}=\lim\limits_{k \to \infty} [x'_{n_k}+(x''_{n_k}-x'_{n_k})]=\lim\limits_{k \to \infty}x'_{n_k}=\xi.$</p>
+<p style="text-align: center;">$\displaystyle \lim\limits_{n \to \infty}x'_{n_k}=\xi,\xi\in[a,b].$</p>
 
-由于函数 $f(x)$ 在点 $\xi$ 连续，因而有<p style="text-align: center;">$\displaystyle \lim\limits_{k \to \infty}f(x'_{n_k})=\lim\limits_{k \to \infty}f(x''_{n_k})=f(\xi).$</p>
+在点列 $\{x''_n\}$ 中取子列 
+$\{x''_{n_k}\}$
+ ，其下标与 
+ $\{x'_{n_k}\}$ 
+ 相同，则由 
+ $|x'_{n_k}-x''_{n_k}|<\frac{1}{n_k},k=1,2,3,\cdots.$
 
-于是得到：<p style="text-align: center;">$\displaystyle \lim\limits_{k \to \infty}(f(x'_{n_k})-f(x''_{n_k}))=0.$</p>
+又得到
 
-但这与 <p style="text-align: center;">$\displaystyle |f(x'_n)-f(x''_n)|\ge \epsilon_0$</p> 产生矛盾，从而推翻假设.
+<p style="text-align: center;">$\displaystyle \lim\limits_{k \to \infty}x''_{n_k}=\lim\limits_{k \to \infty} [x'_{n_k}+(x''_{n_k}-x'_{n_k})]=\lim\limits_{k \to \infty}x'_{n_k}=\xi.$</p>
+
+由于函数 $f(x)$ 在点 $\xi$ 连续，因而有
+
+<p style="text-align: center;">$\displaystyle \lim\limits_{k \to \infty}f(x'_{n_k})=\lim\limits_{k \to \infty}f(x''_{n_k})=f(\xi).$</p>
+
+于是得到：
+
+<p style="text-align: center;">$\displaystyle \lim\limits_{k \to \infty}(f(x'_{n_k})-f(x''_{n_k}))=0.$</p>
+
+但这与 
+
+<p style="text-align: center;">$\displaystyle |f(x'_n)-f(x''_n)|\ge \epsilon_0$</p> 产生矛盾，从而推翻假设.
 
 ### 定理 $4.4.1$ （复合函数求导法则）
 
-设函数 $u=g(x)$ 在 $x=x_0$ 可导，而函数 $y=f(u)$ 在 $u=u_0=g(x_0)$  处可导，则复合函数 $y=f(g(x))$ 在 $x=x_0$ 可导，且有<p style="text-align: center;">$\displaystyle [f(g(x))]'_{x=x_0}=f'(u_0)g'(x_0)=f'(g(x_0))g'(x_0)$</p>
+设函数 $u=g(x)$ 在 $x=x_0$ 可导，而函数 $y=f(u)$ 在 $u=u_0=g(x_0)$  处可导，则复合函数 $y=f(g(x))$ 在 $x=x_0$ 可导，且有
+
+<p style="text-align: center;">$\displaystyle [f(g(x))]'_{x=x_0}=f'(u_0)g'(x_0)=f'(g(x_0))g'(x_0)$</p>
 
 #### **证明：**
 
-因为 $y=f(u)$ 在 $u_0$ 处可导，所以可微. 由可微的定义，对任意一个充分小的 $\Delta u \not= 0$ ，都有<p style="text-align: center;">$\displaystyle f(u_0+\Delta u)-f(u_0)=f'(u_0)\Delta u+\alpha \Delta u$</p>
+因为 $y=f(u)$ 在 $u_0$ 处可导，所以可微. 由可微的定义，对任意一个充分小的 $\Delta u \not= 0$ ，都有
+
+<p style="text-align: center;">$\displaystyle f(u_0+\Delta u)-f(u_0)=f'(u_0)\Delta u+\alpha \Delta u$</p>
 
 其中 $\lim\limits_{\Delta u \to 0}\alpha=0$ .因为当 $\Delta u=0$ 时 $\Delta y=0$， 不妨规定当 $\Delta u=0$ 时 $\alpha=0$ ，因此上式对 $\Delta u=0$ 也成立.
 
-设 $\Delta u=g(x_0+\Delta x)-g(x_0)(\Delta x\not=0)$ ，在上式两边同时除以 $\Delta x$ ，则有<p style="text-align: center;">$\displaystyle \frac{f(g(x_0+\Delta x))-f(g(x_0))}{\Delta x}=f'(u_0)\frac{\Delta u}{\Delta x}+\alpha\frac{\Delta u}{\Delta x}$</p>
+设 $\Delta u=g(x_0+\Delta x)-g(x_0)(\Delta x\not=0)$ ，在上式两边同时除以 $\Delta x$ ，则有
 
-由函数 $u=g(x)$ 在 $x=x_0$ 可导，即有 $\lim\limits_{\Delta x \to 0}\frac{\Delta u}{\Delta x}=g'(x_0)$，且此式也蕴含了 $\lim\limits_{\Delta x \to 0}\Delta u=0$ .注意到在 $\Delta x \to 0$ 的过程中，或者有 $\Delta u=0$ ，这时有 $\alpha =0$ ；或者有 $\Delta u \not=0$ ，但 $\Delta u$ 趋于 $0$， 因此由 $\lim\limits_{\Delta u \to 0}\alpha=0$， 可知 $\lim\limits_{\Delta x \to 0}\alpha=0$ . 于是令 $\Delta x \to 0$ ，得到<p style="text-align: center;">$\displaystyle \frac{dy}{dx}=\lim\limits_{\Delta x \to 0}\frac{f(g(x_0+\Delta x))-f(g(x_0))}{\Delta x}=f'(u_0)\lim\limits_{\Delta x \to 0}\frac{\Delta u}{\Delta x}+\lim\limits_{\Delta x \to 0}\alpha\lim\limits_{\Delta u}{\Delta x}=f'(u_0)g'(x_0)$</p>
+<p style="text-align: center;">$\displaystyle \frac{f(g(x_0+\Delta x))-f(g(x_0))}{\Delta x}=f'(u_0)\frac{\Delta u}{\Delta x}+\alpha\frac{\Delta u}{\Delta x}$</p>
 
-复合函数的求导规则可以写成<p style="text-align: center;">$\displaystyle \frac{dy}{dx}=\frac{dy}{du}\cdot\frac{du}{dx}.$</p>
+由函数 $u=g(x)$ 在 $x=x_0$ 可导，即有 $\lim\limits_{\Delta x \to 0}\frac{\Delta u}{\Delta x}=g'(x_0)$，且此式也蕴含了 $\lim\limits_{\Delta x \to 0}\Delta u=0$ .注意到在 $\Delta x \to 0$ 的过程中，或者有 $\Delta u=0$ ，这时有 $\alpha =0$ ；或者有 $\Delta u \not=0$ ，但 $\Delta u$ 趋于 $0$， 因此由 $\lim\limits_{\Delta u \to 0}\alpha=0$， 可知 $\lim\limits_{\Delta x \to 0}\alpha=0$ . 于是令 $\Delta x \to 0$ ，得到
+
+<p style="text-align: center;">$\displaystyle \frac{dy}{dx}=\lim\limits_{\Delta x \to 0}\frac{f(g(x_0+\Delta x))-f(g(x_0))}{\Delta x}=f'(u_0)\lim\limits_{\Delta x \to 0}\frac{\Delta u}{\Delta x}+\lim\limits_{\Delta x \to 0}\alpha\lim\limits_{\Delta u}{\Delta x}=f'(u_0)g'(x_0)$</p>
+
+复合函数的求导规则可以写成
+
+<p style="text-align: center;">$\displaystyle \frac{dy}{dx}=\frac{dy}{du}\cdot\frac{du}{dx}.$</p>
 
 ### 定理 $5.1.3$ （$Lagrange$中值定理）
 
@@ -358,53 +421,70 @@ $$[a_n,b_n]\subset O(\xi,\delta)\cap[a,b]$$
 
 于是
 
-$$
 
-\begin{aligned}\int_a^bf(x)g(x)dx&=g(b)\int_a^b f(x)dx-[g(b)-g(a)]\int_{a}^\xi f(x)dx\\
 
-&=g(a)\int_a^\xi f(x)dx+g(b)\int_\xi^b f(x)dx.
+<p style="text-align: center;">$\displaystyle \int_a^bf(x)g(x)dx=g(b)\int_a^b f(x)dx-[g(b)-g(a)]\int_{a}^\xi f(x)dx$</p>
+<p style="text-align: center;">$\displaystyle =g(a)\int_a^\xi f(x)dx+g(b)\int_\xi^b f(x)dx.$</p>
 
-\end{aligned}
 
-$$
 
 ### 定理 $8.2.5$ （$Abel$判别法和$Dirichlet$判别法）
 
-若下列两个条件之一满足, 则 <p style="text-align: center;">$\displaystyle\int_{a}^{+\infty} \int_{a}^{+\infty}f(x)g(x)dx$</p> 收敛:
+若下列两个条件之一满足, 则 
 
-（$1$）($Abel$  判别法) <p style="text-align: center;">$\displaystyle\int_{a}^{+\infty} f(x)dx$</p> 收敛, $g(x)$ 在 $[a, +\infty)$ 上单调有界;
+<p style="text-align: center;">$\displaystyle \int_{a}^{+\infty}f(x)g(x)dx$</p>
 
-（$2$） ($Dirichlet$ 判别法) <p style="text-align: center;">$\displaystyle F(A) = \int_{a}^{A} f(x)dx$</p> 在 $[a, +\infty)$ 上有界, $g(x)$ 在 $[a, +\infty)$ 上单调且 <p style="text-align: center;">$\displaystyle \lim\limits_{x \to +\infty} g(x) = 0$</p>.
+ 收敛:
+
+（$1$）($Abel$  判别法) 
+
+<p style="text-align: center;">$\displaystyle \int_{a}^{+\infty} f(x)dx$</p>
+
+ 收敛, $g(x)$ 在 $[a, +\infty)$ 上单调有界;
+
+（$2$） ($Dirichlet$ 判别法) 
+
+<p style="text-align: center;">$\displaystyle F(A) = \int_{a}^{A} f(x)dx$</p>
+
+ 在 $[a, +\infty)$ 上有界, $g(x)$ 在 $[a, +\infty)$ 上单调且
+ 
+<p style="text-align: center;">$\displaystyle \lim\limits_{x \to +\infty} g(x) = 0$</p>.
 
 #### **证明：**
 
-（$1$）若 $Abel$ 判别法条件满足，记 $G$ 是 $|g(x)|$ 在 $[a,+\infty)$ 的一个上界，因为 <p style="text-align: center;">$\displaystyle\int_a^{+\infty}f(x)dx$</p> 收敛，由 $Cauchy$ 收敛原理，存在 $A_0\ge a$ ，使得对任意 $A,A'\ge A_0$ ，有
+（$1$）若 $Abel$ 判别法条件满足，记 
+$G$ 
+是 $|g(x)|$ 在 $[a,+\infty)$ 的一个上界，因为
+
+ <p style="text-align: center;">$\displaystyle\int_a^{+\infty}f(x)dx$</p> 
+ 
+ 收敛，由 $Cauchy$ 收敛原理，存在 $A_0\ge a$ ，使得对任意 $A,A'\ge A_0$ ，有
 
 <p style="text-align: center;">$\displaystyle |\int_A^{A'}f(x)dx|<\frac{\epsilon}{2G}$</p>
 
 由积分第二中值定理，
 
-<p style="text-align: center;">$\displaystyle |\int_A^{A'}f(x)g(x)dx|&\le|g(A)|\cdot|\int_A^\xi f(x)dx|+|g(A')|\cdot|\int_\xi^{A'}f(x)dx|$</p>
+<p style="text-align: center;">$\displaystyle |\int_A^{A'}f(x)g(x)dx|\le|g(A)|\cdot|\int_A^\xi f(x)dx|+|g(A')|\cdot|\int_\xi^{A'}f(x)dx|$</p>
 
 （$2$）若 $Dirichlet$ 判别法条件满足，记 $M$ 是 $F(A)$ 在 $[a,+\infty)$ 的一个上界.此时对任意  $A,A'\ge a$ 显然有
 
 <p style="text-align: center;">$\displaystyle |\int_A^{A'}f(x)dx|<2M$</p>
 
-因为 <p style="text-align: center;">$\displaystyle \lim\limits_{x \to +\infty}g(x)=0$</p> ，所以存在 $A_0\ge a$ ，当 $x>A_0$ 时 ，有
+因为 
+
+<p style="text-align: center;">$\displaystyle \lim\limits_{x \to +\infty}g(x)=0$</p>
+
+ ，所以存在 $A_0\ge a$ ，当 $x>A_0$ 时 ，有
 
 <p style="text-align: center;">$\displaystyle |g(x)|<\frac{\epsilon}{4M}.$</p>
 
 于是，对任意 $A,A'\ge A_0$ ，
 
-<p style="text-align: center;">$\displaystyle |\int_A^{A'}f(x)g(x)dx|&\le |g(A)|\cdot |\int_A^\xi f(x)dx|+|g(A')|\cdot |\int_\xi^{A'}f(x)dx|$</p>
+<p style="text-align: center;">$\displaystyle |\int_A^{A'}f(x)g(x)dx| \le |g(A)|\cdot |\int_A^\xi f(x)dx|+|g(A')|\cdot |\int_\xi^{A'}f(x)dx|$</p>
 
 所以无论哪个判别法条件满足，由 $Cauchy$ 收敛原理，都有 $\int_a ^{+\infty}f(x)g(x)dx$ 收敛的结论.
 
 ## 麦克劳林公式
-
-$$
-
-\begin{aligned>
 
 <p style="text-align: center;">$\displaystyle e^x=1+x+\frac{x^2}{2!}+\frac{x^3}{3!}+\cdots+\frac{x^n}{n!}+\cdots$</p>
 
@@ -424,15 +504,7 @@ $$
 
 <p style="text-align: center;">$\displaystyle \arctan x=x-\frac{x^3}{3}+\frac{x^5}{5}-\cdots+(-1)^n\frac{x^{2n+1}}{2n+1}+\cdots$</p>
 
-</begin{aligned>
-
-$$
-
 ## 基本积分表
-
-$$
-
-\begin{aligned>
 
 <p style="text-align: center;">$\displaystyle \int\frac{dx}{\sqrt{a^2-x^2}}=\arcsin\frac{x}{a}+C$</p>
 
@@ -445,10 +517,6 @@ $$
 <p style="text-align: center;">$\displaystyle \int\sqrt{a^2-x^2}dx=\frac{1}{2}x\sqrt{a^2-x^2}+\frac{a^2}{2}\arcsin \frac{x}{a}+C$</p>
 
 <p style="text-align: center;">$\displaystyle \int\sqrt{x^2\pm a^2}=\frac{1}{2}\left(x\sqrt{x^2\pm a^2}\pm a^2ln\left|x+\sqrt{x^2\pm a^2}\right|\right)+C$</p>
-
-</begin{aligned>
-
-$$
 
 ## 几何计算
 
@@ -498,23 +566,15 @@ $r=r(\theta),\theta\in[\alpha,\beta]$
 
 $y=f(x),x\in[a,b]$
 
-$$\begin{aligned}
+<p style="text-align: center;">$\displaystyle V_x=\pi\int_a^b[f(x)]^2dx$</p>
 
-<p style="text-align: center;">$\displaystyle V_x&=\pi\int_a^b[f(x)]^2dx$</p>
+<p style="text-align: center;">$\displaystyle V_y=2\pi\int_a^bxf(x)dx$</p>
 
-<p style="text-align: center;">$\displaystyle V_y&=2\pi\int_a^bxf(x)dx$</p>
+<p>$\begin{cases}x=x(t)\\y=y(t)\\\end{cases}t\in[T_1,T_2]$</p>
 
-</begin{aligned}$$
+<p style="text-align: center;">$\displaystyle V_x=\pi\int_{T_1}^{T_2}y^2(t)d[x(t)]$</p>
 
-<p style="text-align: center;">$\begin{cases}x=x(t)\\y=y(t)\\\end{cases}t\in[T_1,T_2]$</p>
-
-$$\begin{aligned
-
-<p style="text-align: center;">$\displaystyle V_x&=\pi\int_{T_1}^{T_2}y^2(t)d[x(t)]$</p>
-
-<p style="text-align: center;">$\displaystyle V_y&=2\pi\int_{T_1}^{T_2}x(t)y(t)d[x(t)]$</p>
-
-</begin{aligned}$$
+<p style="text-align: center;">$\displaystyle V_y=2\pi\int_{T_1}^{T_2}x(t)y(t)d[x(t)]$</p>
 
 $r=r(\theta),\theta\in[\alpha,\beta]$
 
