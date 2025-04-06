@@ -198,4 +198,4 @@ $\mathrm{VSCode}$ 是一个现代化的代码编辑器，具有丰富的扩展�
 
 安装完成后，`ctrl + shift + P`或者`command + shift + P`，运行命令`extension.relativeLineNumbersEnable`.
 
-修正: 现在可以直接在设置中勾选 `Vim: Smart Relative Line` 选项, 实现相同的目的
+**修正(2025.4.6)**: 现在可以直接在设置中勾选 `Vim: Smart Relative Line` 选项, 实现相同的目的
