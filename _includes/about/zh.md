@@ -10,7 +10,7 @@
 
 ![Coding GIF](https://media.giphy.com/media/qgQUggAC3Pfv687qPC/giphy.gif)
 
-*"Curiosity is the spark that lights the flame of our journey, but it is not enough to illuminate the entire path"*
+<div align="center"><em>"Curiosity is the spark that lights the flame of our journey, but it is not enough to illuminate the entire path"</em></div>
 
 ## 💻 技术栈
 
