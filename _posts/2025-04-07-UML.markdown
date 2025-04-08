@@ -11,13 +11,13 @@ tags:
     - 软件设计
 ---
 
-# UML 静态类图详解
+## UML 静态类图详解
 
 UML（Unified Modeling Language，统一建模语言）是一种标准化的可视化建模语言，广泛应用于软件工程中。其中，静态类图是 UML 中最常用的图表之一，用于描述系统中的类及其之间的静态关系。
 
-# 生成 UML 静态类图（以 VSCode 为例）
+## 生成 UML 静态类图（以 VSCode 为例）
 
-## 安装 PlantUML 插件
+### 安装 PlantUML 插件
 
 1. 打开 VSCode
 2. 点击左侧活动栏中的扩展图标（或使用快捷键 Cmd+Shift+X）
@@ -25,7 +25,7 @@ UML（Unified Modeling Language，统一建模语言）是一种标准化的可�
 4. 找到由 Jebbs 开发的 "PlantUML" 插件并点击安装
 5. 安装完成后可能需要重启 VSCode
 
-## 编写 PlantUML 文件
+### 编写 PlantUML 文件
 
 1. 在 VSCode 中创建一个新文件，扩展名为 `.puml` 或 `.plantuml`（例如 `class-diagram.puml`）
 2. 编写 PlantUML 代码来描述您的类图
@@ -74,20 +74,20 @@ Student ..> Course
 ```
 
 
-## 导出和分享类图
+### 导出和分享类图
 
 要导出图形，可以：
 
 1. 在预览窗口中右键点击，选择"导出图表为..."
 2. 或使用命令面板（`Ctrl+Shift+P` 或 `Cmd+Shift+P`），搜索并选择 `"PlantUML: Export Current Diagram"` 
 
-# UML 静态类图结构组成和关系描述
+## UML 静态类图结构组成和关系描述
 
 UML 静态类图文件通常以 `@startuml` 开始, 以 `@enduml` 结束. 
 
-## 一、类的表示
+### 一、类的表示
 
-### 1. 基本结构
+#### 1. 基本结构
 
 ![](/img/posts/2025-04-07-UML/class.svg)
 
@@ -97,17 +97,15 @@ UML 静态类图文件通常以 `@startuml` 开始, 以 `@enduml` 结束.
 - **底部**：方法列表（可选）
 
 ```
-@startuml
 class ClassName{
     attribute
     method()
 }
-@enduml
 ```
 
 
 
-### 2. 访问修饰符
+#### 2. 访问修饰符
 
 ![](/img/posts/2025-04-07-UML/accessModifier.svg)
 
@@ -118,17 +116,15 @@ class ClassName{
 - `~` 表示 package/default（包/默认）
 
 ```
-@startuml
 class ClassName{
     + attribute1
     - attribute2
     # method3()
     ~ method4()
 }
-@enduml
 ```
 
-### 3. 属性表示
+#### 3. 属性表示
 
 ![](/img/posts/2025-04-07-UML/attribute.svg)
 
@@ -139,15 +135,15 @@ class ClassName{
 
 
 ```
-@startuml
 class Student {
   + name: String = "default" {readOnly}
   - age: int
   # scores: int[]
 }
-@enduml
 ```
-### 4. 方法表示
+#### 4. 方法表示
+
+![](/img/posts/2025-04-07-UML/function.svg)
 
 方法的完整表示形式：
 ```
@@ -160,28 +156,34 @@ class Student {
 ```
 其中方向可以是：`in`、`out`、`inout`
 
-例如：
 ```
-+ calculateGrade(): double
-- setName(in newName: String): void
-# processData(inout data: DataType): boolean
-```
-
-### 5. 抽象类与接口
-
-- **抽象类**：类名使用斜体字，或者在类名上方加上 `<<abstract>>` 构造型
-- **接口**：使用 `<<interface>>` 构造型，或者使用特殊符号（圆圈加实线）
-
-```
-┌─────────────────┐    ┌──────────────────┐
-│  <<abstract>>   │    │   <<interface>>  │
-│   AbstractClass │    │    Interface     │
-└─────────────────┘    └──────────────────┘
+class School{
+    + calculateGrade(): double
+    - setName(in newName: String): void
+    # processData(inout data: DataType): boolean
+}
 ```
 
-## 二、类之间的关系
+#### 5. 抽象类与接口
 
-### 1. 关联（Association）
+![](/img/posts/2025-04-07-UML/abstract.svg)
+
+```
+abstract class AbstractAnimal {
+  # name: String
+  + {abstract} makeSound(): void
+  + eat(): void
+}
+
+interface Movable {
+  + move(): void
+  + getSpeed(): int
+}
+```
+
+### 二、类之间的关系
+
+#### 1. 关联（Association）
 
 表示类之间的一般性连接关系。
 
@@ -202,7 +204,7 @@ ClassA ─────────> ClassB
         0..*   1
 ```
 
-### 2. 聚合（Aggregation）
+#### 2. 聚合（Aggregation）
 
 表示"整体-部分"关系，部分可以独立于整体存在。使用空心菱形箭头从整体指向部分。
 
@@ -212,7 +214,7 @@ ClassA ─────────> ClassB
 └───────┘      └───────┘
 ```
 
-### 3. 组合（Composition）
+#### 3. 组合（Composition）
 
 表示更强的"整体-部分"关系，部分不能独立于整体存在。使用实心菱形箭头从整体指向部分。
 
@@ -222,7 +224,7 @@ ClassA ─────────> ClassB
 └───────┘      └───────┘
 ```
 
-### 4. 泛化/继承（Generalization）
+#### 4. 泛化/继承（Generalization）
 
 表示类之间的继承关系。使用空心三角形箭头从子类指向父类。
 
@@ -237,7 +239,7 @@ ClassA ─────────> ClassB
 └────────┘
 ```
 
-### 5. 实现（Realization）
+#### 5. 实现（Realization）
 
 表示类实现接口的关系。使用空心三角形和虚线从实现类指向接口。
 
@@ -254,7 +256,7 @@ ClassA ─────────> ClassB
 └────────────┘
 ```
 
-### 6. 依赖（Dependency）
+#### 6. 依赖（Dependency）
 
 表示一个类使用另一个类的关系，通常是暂时性的。使用虚线箭头表示。
 
@@ -264,9 +266,9 @@ ClassA ─────────> ClassB
 └───────┘      └───────┘
 ```
 
-## 三、高级特性
+### 三、高级特性
 
-### 1. 模板/泛型类
+#### 1. 模板/泛型类
 
 使用虚线框表示模板参数。
 
@@ -278,7 +280,7 @@ ClassA ─────────> ClassB
 └───────────────┘
 ```
 
-### 2. 枚举类型
+#### 2. 枚举类型
 
 使用 `<<enumeration>>` 构造型。
 
@@ -295,7 +297,7 @@ ClassA ─────────> ClassB
 └──────────────────┘
 ```
 
-### 3. 静态成员
+#### 3. 静态成员
 
 静态属性和方法使用下划线表示。
 
@@ -311,7 +313,7 @@ ClassA ─────────> ClassB
 └───────────────┘
 ```
 
-### 4. 抽象方法
+#### 4. 抽象方法
 
 抽象方法使用斜体字表示。
 
@@ -326,7 +328,7 @@ ClassA ─────────> ClassB
 └───────────────────┘
 ```
 
-## 四、类图实例分析
+### 四、类图实例分析
 
 下面是一个综合示例，涵盖了多种关系：
 
@@ -361,7 +363,7 @@ ClassA ─────────> ClassB
 - `Person` 和 `GenderType` 之间有聚合关系
 - `Student` 对 `Course` 的 `register` 方法有依赖关系
 
-## 五、类图最佳实践
+### 五、类图最佳实践
 
 1. **保持简洁**：仅显示对理解系统必要的类和关系
 2. **合理分组**：将相关类放在一起，提高可读性
@@ -370,7 +372,7 @@ ClassA ─────────> ClassB
 5. **区分关系类型**：正确使用泛化、实现、组合、聚合、关联和依赖
 6. **一致性**：整个图中使用一致的表示法
 
-## 六、常见误区
+### 六、常见误区
 
 1. **混淆聚合与组合**：聚合(◇)是"弱"的整体-部分关系，组合(◆)是"强"的关系
 2. **过度复杂化**：类图应当清晰表达设计意图，不要包含过多细节
@@ -378,7 +380,7 @@ ClassA ─────────> ClassB
 4. **混淆依赖与关联**：关联是结构性关系，依赖则是使用关系
 5. **滥用继承**：继承应该遵循"是一个"原则，而不仅仅是共享代码
 
-## 总结
+### 总结
 
 UML 静态类图是面向对象设计中描述系统结构的强大工具。通过正确使用类表示、关系符号和高级特性，可以清晰地表达系统中各个类的职责和它们之间的交互方式。掌握这些表示方法不仅有助于设计阶段的沟通，也能帮助开发人员更好地理解和实现系统架构。
 

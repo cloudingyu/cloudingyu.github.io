@@ -7,7 +7,7 @@ author:     "CloudingYu"
 header-img: "img/posts/2025-01-26-vim-VScode/bg.png"
 mathjax: true
 tags:
-    - VScode
+    - VSCode
     - Vim
     - IDE
     - 插件
