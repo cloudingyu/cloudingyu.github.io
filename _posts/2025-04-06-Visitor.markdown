@@ -5,8 +5,10 @@ subtitle:   "如果你的模型具有相对稳定的复杂的结构, 经常需�
 date:       2025-04-06
 author:     "CloudingYu"
 header-style: picture
-mathjax: 
+mathjax: true
+tags:
     - 面向对象
     - 设计模式
 ---
 
+114514
