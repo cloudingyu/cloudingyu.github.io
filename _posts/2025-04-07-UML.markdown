@@ -102,7 +102,6 @@ class School{
 ![](/img/posts/2025-04-07-UML/abstract.svg)
 
 ```
-@startuml
 abstract class AbstractAnimal {
   # name: String
   + {abstract} makeSound(): void
@@ -113,7 +112,17 @@ interface Movable {
   + move(): void
   + getSpeed(): int
 }
-@enduml
+```
+
+#### 6. 简单构造型
+
+构造型可以应用于类、接口、关系等UML元素，用于表达特定领域的概念或设计模式。
+
+```
+<<stereotype>> className
+```
+```
+class className <<stereotype>>
 ```
 
 ### 二、类之间的关系
@@ -137,46 +146,10 @@ interface Movable {
 ![](/img/posts/2025-04-07-UML/association.svg)
 
 ```
-class Teacher {
-  - name: String
-  + teach(): void
-}
-
-class Textbook {
-  - title: String
-  - author: String
-  + getContent(): String
-}
-
 Teacher  -->  Textbook : uses >
-
-
-class Student {
-  - studentId: String
-  - name: String
-  + enroll(Course): void
-}
-
-class Course {
-  - courseId: String
-  - title: String
-  + addStudent(Student): void
-}
 
 Student -- Course : enrolls in <
 Course -- Student : has enrolled <
-
-
-class Department {
-  - deptName: String
-  + addEmployee(Employee): void
-}
-
-class Employee {
-  - empId: String
-  - name: String
-  + assignTo(Department): void
-}
 
 Department "1" -- "1..*" Employee : contains >
 ```
@@ -192,24 +165,6 @@ Department "1" -- "1..*" Employee : contains >
 ![](/img/posts/2025-04-07-UML/aggregation.svg)
 
 ```
-class University {
-  - name: String
-  + addDepartment(Department): void
-  + removeDepartment(Department): void 
-}
-
-class Department {
-  - deptName: String
-  - faculty: int
-  + getName(): String 
-}
-
-class Professor {
-  - profId: String
-  - specialization: String
-  + teach(): void 
-}
-
 University o-- Department : consists of > 
 Department o-- Professor : has faculty >
 ```
@@ -221,22 +176,6 @@ Department o-- Professor : has faculty >
 ![](/img/posts/2025-04-07-UML/composition.svg)
 
 ```
-class Car {
-  - model: String
-  - manufacturer: String
-  + drive(): void 
-}
-
-class Engine {
-  - power: int
-  - type: String
-  + start(): void 
-}
-
-class Wheel {
-  - size: int
-  + material: String 
-}
 Car *-- Engine : has > 
 Car *-- Wheel : has 4 > 
 ```
@@ -248,27 +187,11 @@ Car *-- Wheel : has 4 >
 ![](/img/posts/2025-04-07-UML/generalization.svg)
 
 ```
-class Animal {
-  - name: String
-  # age: int
-  + eat(): void
-  + sleep(): void
-}
-
-class Dog {
-  - breed: String
-  + bark(): void
-  + fetch(): void
-}
-
-class Cat {
-  - color: String
-  + meow(): void
-  + scratch(): void
-}
-
 Animal <|-- Dog : extends
-Animal <|-- Cat : extends
+
+class Cat extends Animal{
+  ...
+}
 ```
 
 #### 5. 实现（Realization）
@@ -278,29 +201,11 @@ Animal <|-- Cat : extends
 ![](/img/posts/2025-04-07-UML/realization.svg)
 
 ```
-interface Flyable {
-  + fly(): void
-  + getMaxAltitude(): int
-}
-
-class Bird {
-  - species: String
-  - wingSpan: double
-  + fly(): void
-  + getMaxAltitude(): int
-  + sing(): void
-}
-
-class Airplane {
-  - model: String
-  - engineCount: int
-  + fly(): void
-  + getMaxAltitude(): int
-  + transport(): void
-}
-
 Flyable <|.. Bird : implements
-Flyable <|.. Airplane : implements
+
+class Airplane implements Flyable{
+  ...
+}
 ```
 
 #### 6. 依赖（Dependency）
@@ -309,26 +214,7 @@ Flyable <|.. Airplane : implements
 
 ![](/img/posts/2025-04-07-UML/dependency.svg)
 
-
 ```
-class Order {
-  - orderId: String
-  - items: List<Item>
-  + calculateTotal(): double
-  + process(): void
-}
-
-class PaymentProcessor {
-  + processPayment(double amount): boolean
-  + refund(String transactionId): boolean
-}
-
-class Invoice {
-  - invoiceId: String
-  - order: Order
-  + generate(): void
-}
-
 Order ..> PaymentProcessor : uses >
 Invoice ..> Order : creates from >
 ```
@@ -339,96 +225,184 @@ Invoice ..> Order : creates from >
 
 使用虚线框表示模板参数。
 
+![](/img/posts/2025-04-07-UML/generic.svg)
+
 ```
-┌───────────────┐
-│   Class<T>    │
-│ - - - - - - - │
-│      <T>      │
-└───────────────┘
+class "ArrayList<T>" as ArrayList {
+  - elementData: Object[]
+  - size: int
+  + add(T element): boolean
+  + get(index: int): T
+  + remove(index: int): T
+}
 ```
+其中，T是类型参数，表示这个类可以处理任何类型的元素。
 
 #### 2. 枚举类型
 
-使用 `<<enumeration>>` 构造型。
+![](/img/posts/2025-04-07-UML/enumeration.svg)
 
 ```
-┌──────────────────┐
-│  <<enumeration>> │
-│       Days       │
-├──────────────────┤
-│ MONDAY           │
-│ TUESDAY          │
-│ WEDNESDAY        │
-│ THURSDAY         │
-│ FRIDAY           │
-└──────────────────┘
+enum Days {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+class Calendar {
+  + getCurrentDay(): Days
+  + isWeekend(day: Days): boolean
+}
+
+Calendar --> Days
 ```
 
 #### 3. 静态成员
 
 静态属性和方法使用下划线表示。
 
+![](/img/posts/2025-04-07-UML/static.svg)
+
 ```
-┌───────────────┐
-│    ClassName  │
-├───────────────┤
-│ + attribute   │
-│ + _staticAttr │  <- 静态属性
-├───────────────┤
-│ + method()    │
-│ + _staticM()  │  <- 静态方法
-└───────────────┘
+class MathUtils {
+  + _PI: double = 3.14159
+  + {static} E: double = 2.71828
+  + _abs(value: double): double
+  + {static} sqrt(value: double): double
+  - normalMethod(): void
+}
 ```
 
 #### 4. 抽象方法
 
 抽象方法使用斜体字表示。
 
-```
-┌───────────────────┐
-│  AbstractClass    │
-├───────────────────┤
-│ + attribute       │
-├───────────────────┤
-│ + *abstractMethod()*  │  <- 抽象方法
-│ + concreteMethod()│
-└───────────────────┘
-```
-
-### 四、类图实例分析
-
-下面是一个综合示例，涵盖了多种关系：
+![](/img/posts/2025-04-07-UML/abstractFunction.svg)
 
 ```
-┌───────────────┐      ┌────────────────┐
-│    Person     │      │<<enumeration>> │
-├───────────────┤      │   GenderType   │
-│ - name: String│      ├────────────────┤
-│ - age: int    │      │ MALE           │
-│ # gender: GenderType │◇--│ FEMALE         │
-├───────────────┤      │ OTHER          │
-│ + getName()   │      └────────────────┘
-│ + setName()   │
-│ + getAge()    │
-└───────────────┘
-        ▲
-        │
-┌───────────────────┐       ┌───────────────┐
-│      Student      │       │    Course     │
-├───────────────────┤       ├───────────────┤
-│ - studentId: String│◆─────○─│ - courseId   │
-│ - grades: Map      │0..*  1│ - courseName │
-├───────────────────┤       ├───────────────┤
-│ + enrollCourse()  │- - - >│ + register()  │
-│ + calculateGPA()  │       │ + complete()  │
-└───────────────────┘       └───────────────┘
+abstract class Shape {
+  # x: int
+  # y: int
+  + move(dx: int, dy: int): void
+  + {abstract} draw(): void
+  + {abstract} resize(factor: double): void
+}
+
+class Circle extends Shape {
+  - radius: double
+  + draw(): void
+  + resize(factor: double): void
+}
+
+class Rectangle extends Shape {
+  - width: double
+  - height: double
+  + draw(): void
+  + resize(factor: double): void
+}
 ```
 
-在这个例子中：
-- `Person` 是 `Student` 的父类（泛化关系）
-- `Student` 和 `Course` 之间有组合关系，一个学生可以选多门课程，一门课程属于一个学生
-- `Person` 和 `GenderType` 之间有聚合关系
-- `Student` 对 `Course` 的 `register` 方法有依赖关系
+### 四、添加注释
+
+可以使用注释来提供额外的信息或解释。
+
+![](/img/posts/2025-04-07-UML/notes.svg)
+
+```
+class User {
+  +username: String
+  +password: String
+}
+
+note left of User
+  用户账号信息
+  包含基本的认证数据
+end note
+
+note right of User::username
+  用户名必须唯一
+end note
+
+note "这是一个浮动注释" as N1
+User .. N1
+
+```
+
+### 五、包和命名空间
+
+使用包可以对类进行分组和分层管理。
+
+![](/img/posts/2025-04-07-UML/packages.svg)
+
+```
+package "外部API" {
+  class ExternalService
+}
+
+package "应用层" {
+  class Controller
+  class Service
+}
+
+package "数据层" {
+  class Repository
+  class Model
+}
+
+Controller --> Service
+Service --> Repository
+Service --> ExternalService
+Repository --> Model
+```
+
+### 六、布局调整
+
+#### 1. 方向设置
+
+可以使用命令改变图表的方向
+
+![](/img/posts/2025-04-07-UML/direction.svg)
+
+```
+' 默认方向是从上到下
+' top to bottom direction
+
+' 使用从左到右
+left to right direction
+
+class A
+class B
+class C
+class D
+
+A --> B
+C --> D
+```
+
+#### 2. 组织和排列元素
+
+![](/img/posts/2025-04-07-UML/layout.svg)
+
+```
+' 使用隐藏连接线调整布局
+class A
+class B
+class C
+class D
+
+' 使用不可见连接线调整布局
+A -[hidden]-> B
+B -[hidden]-> C
+A -[hidden]-> D
+
+' 可见的实际关系
+A --> C
+B --> D
+```
 
 ## 生成 UML 静态类图（以 VSCode 为例）
 
@@ -488,7 +462,6 @@ Student ..> Course
 @enduml
 ```
 
-
 ### 导出和分享类图
 
 要导出图形，可以：
@@ -500,5 +473,10 @@ Student ..> Course
 ## 总结
 
 UML 静态类图是面向对象设计中描述系统结构的强大工具。通过正确使用类表示、关系符号和高级特性，可以清晰地表达系统中各个类的职责和它们之间的交互方式。掌握这些表示方法不仅有助于设计阶段的沟通，也能帮助开发人员更好地理解和实现系统架构。
+
+## 注释和排版设置
+
+UML类图中的注释和排版设置对于提高图表的可读性和组织性非常重要，可以让复杂的类图更加清晰。
+
 
 
