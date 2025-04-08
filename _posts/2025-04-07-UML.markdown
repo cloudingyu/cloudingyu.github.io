@@ -15,72 +15,6 @@ tags:
 
 UML（Unified Modeling Language，统一建模语言）是一种标准化的可视化建模语言，广泛应用于软件工程中。其中，静态类图是 UML 中最常用的图表之一，用于描述系统中的类及其之间的静态关系。
 
-## 生成 UML 静态类图（以 VSCode 为例）
-
-### 安装 PlantUML 插件
-
-1. 打开 VSCode
-2. 点击左侧活动栏中的扩展图标（或使用快捷键 Cmd+Shift+X）
-3. 在搜索框中输入 "PlantUML"
-4. 找到由 Jebbs 开发的 "PlantUML" 插件并点击安装
-5. 安装完成后可能需要重启 VSCode
-
-### 编写 PlantUML 文件
-
-1. 在 VSCode 中创建一个新文件，扩展名为 `.puml` 或 `.plantuml`（例如 `class-diagram.puml`）
-2. 编写 PlantUML 代码来描述您的类图
-3. 使用 PlantUML 的预览功能查看图形，通常使用快捷键为 `Alt+D` 或使用命令面板（`Ctrl+Shift+P` 或 `Cmd+Shift+P`），搜索并选择 `"Preview Current Diagram"`
-
-以下是一个简单的类图示例代码：
-
-```
-@startuml
-
-class Person {
-  -name: String
-  -age: int
-  +getName(): String
-  +setName(String): void
-  +getAge(): int
-  +setAge(int): void
-}
-
-class Student {
-  -studentId: String
-  -grades: Map
-  +enrollCourse(Course): void
-  +calculateGPA(): double
-}
-
-class Course {
-  -courseId: String
-  -courseName: String
-  +register(Student): void
-  +complete(): void
-}
-
-enum GenderType {
-  MALE
-  FEMALE
-  OTHER
-}
-
-Person <|-- Student
-Person o-- GenderType
-Course "1..*" *-- "0..*" Student
-Student ..> Course
-
-@enduml
-```
-
-
-### 导出和分享类图
-
-要导出图形，可以：
-
-1. 在预览窗口中右键点击，选择"导出图表为..."
-2. 或使用命令面板（`Ctrl+Shift+P` 或 `Cmd+Shift+P`），搜索并选择 `"PlantUML: Export Current Diagram"` 
-
 ## UML 静态类图结构组成和关系描述
 
 UML 静态类图文件通常以 `@startuml` 开始, 以 `@enduml` 结束. 
@@ -89,12 +23,12 @@ UML 静态类图文件通常以 `@startuml` 开始, 以 `@enduml` 结束.
 
 #### 1. 基本结构
 
-![](/img/posts/2025-04-07-UML/class.svg)
-
 一个类在 UML 中通常被表示为一个矩形，分为三个部分：
 - **顶部**：类名（必须）
 - **中部**：属性列表（可选）
 - **底部**：方法列表（可选）
+
+![](/img/posts/2025-04-07-UML/class.svg)
 
 ```
 class ClassName{
@@ -107,13 +41,13 @@ class ClassName{
 
 #### 2. 访问修饰符
 
-![](/img/posts/2025-04-07-UML/accessModifier.svg)
-
 属性和方法前的符号表示访问修饰符：
 - `+` 表示 public（公有）
 - `-` 表示 private（私有）
 - `#` 表示 protected（受保护）
 - `~` 表示 package/default（包/默认）
+
+![](/img/posts/2025-04-07-UML/accessModifier.svg)
 
 ```
 class ClassName{
@@ -126,13 +60,12 @@ class ClassName{
 
 #### 3. 属性表示
 
-![](/img/posts/2025-04-07-UML/attribute.svg)
-
 属性的完整表示形式：
 ```
 [可见性] 名称 [: 类型] [= 默认值] [{属性字符串}]
 ```
 
+![](/img/posts/2025-04-07-UML/attribute.svg)
 
 ```
 class Student {
@@ -142,8 +75,6 @@ class Student {
 }
 ```
 #### 4. 方法表示
-
-![](/img/posts/2025-04-07-UML/function.svg)
 
 方法的完整表示形式：
 ```
@@ -155,6 +86,8 @@ class Student {
 [方向] 参数名称: 类型 [= 默认值]
 ```
 其中方向可以是：`in`、`out`、`inout`
+
+![](/img/posts/2025-04-07-UML/function.svg)
 
 ```
 class School{
@@ -169,6 +102,7 @@ class School{
 ![](/img/posts/2025-04-07-UML/abstract.svg)
 
 ```
+@startuml
 abstract class AbstractAnimal {
   # name: String
   + {abstract} makeSound(): void
@@ -179,6 +113,7 @@ interface Movable {
   + move(): void
   + getSpeed(): int
 }
+@enduml
 ```
 
 ### 二、类之间的关系
@@ -199,71 +134,203 @@ interface Movable {
 - `1..*` 表示一个或多个
 - `m..n` 表示 m 到 n 个
 
+![](/img/posts/2025-04-07-UML/association.svg)
+
 ```
-ClassA ─────────> ClassB
-        0..*   1
+class Teacher {
+  - name: String
+  + teach(): void
+}
+
+class Textbook {
+  - title: String
+  - author: String
+  + getContent(): String
+}
+
+Teacher  -->  Textbook : uses >
+
+
+class Student {
+  - studentId: String
+  - name: String
+  + enroll(Course): void
+}
+
+class Course {
+  - courseId: String
+  - title: String
+  + addStudent(Student): void
+}
+
+Student -- Course : enrolls in <
+Course -- Student : has enrolled <
+
+
+class Department {
+  - deptName: String
+  + addEmployee(Employee): void
+}
+
+class Employee {
+  - empId: String
+  - name: String
+  + assignTo(Department): void
+}
+
+Department "1" -- "1..*" Employee : contains >
 ```
+
+1. **单向关联**：教师使用教材，但教材不需要知道被哪些教师使用
+2. **双向关联**：学生和课程互相引用，形成双向关联
+3. **带多重性的关联**：部门包含多个员工，每个员工属于一个部门
 
 #### 2. 聚合（Aggregation）
 
 表示"整体-部分"关系，部分可以独立于整体存在。使用空心菱形箭头从整体指向部分。
 
+![](/img/posts/2025-04-07-UML/aggregation.svg)
+
 ```
-┌───────┐      ┌───────┐
-│ Whole │◇─────│ Part  │
-└───────┘      └───────┘
+class University {
+  - name: String
+  + addDepartment(Department): void
+  + removeDepartment(Department): void 
+}
+
+class Department {
+  - deptName: String
+  - faculty: int
+  + getName(): String 
+}
+
+class Professor {
+  - profId: String
+  - specialization: String
+  + teach(): void 
+}
+
+University o-- Department : consists of > 
+Department o-- Professor : has faculty >
 ```
 
 #### 3. 组合（Composition）
 
 表示更强的"整体-部分"关系，部分不能独立于整体存在。使用实心菱形箭头从整体指向部分。
 
+![](/img/posts/2025-04-07-UML/composition.svg)
+
 ```
-┌───────┐      ┌───────┐
-│ Whole │◆─────│ Part  │
-└───────┘      └───────┘
+class Car {
+  - model: String
+  - manufacturer: String
+  + drive(): void 
+}
+
+class Engine {
+  - power: int
+  - type: String
+  + start(): void 
+}
+
+class Wheel {
+  - size: int
+  + material: String 
+}
+Car *-- Engine : has > 
+Car *-- Wheel : has 4 > 
 ```
 
 #### 4. 泛化/继承（Generalization）
 
 表示类之间的继承关系。使用空心三角形箭头从子类指向父类。
 
+![](/img/posts/2025-04-07-UML/generalization.svg)
+
 ```
-┌────────┐
-│ Parent │
-└────────┘
-    ▲
-    │
-┌────────┐
-│ Child  │
-└────────┘
+class Animal {
+  - name: String
+  # age: int
+  + eat(): void
+  + sleep(): void
+}
+
+class Dog {
+  - breed: String
+  + bark(): void
+  + fetch(): void
+}
+
+class Cat {
+  - color: String
+  + meow(): void
+  + scratch(): void
+}
+
+Animal <|-- Dog : extends
+Animal <|-- Cat : extends
 ```
 
 #### 5. 实现（Realization）
 
 表示类实现接口的关系。使用空心三角形和虚线从实现类指向接口。
 
+![](/img/posts/2025-04-07-UML/realization.svg)
+
 ```
-┌────────────┐
-│<<interface>>│
-│ Interface  │
-└────────────┘
-      ▲
-      ┊
-      ┊
-┌────────────┐
-│    Class   │
-└────────────┘
+interface Flyable {
+  + fly(): void
+  + getMaxAltitude(): int
+}
+
+class Bird {
+  - species: String
+  - wingSpan: double
+  + fly(): void
+  + getMaxAltitude(): int
+  + sing(): void
+}
+
+class Airplane {
+  - model: String
+  - engineCount: int
+  + fly(): void
+  + getMaxAltitude(): int
+  + transport(): void
+}
+
+Flyable <|.. Bird : implements
+Flyable <|.. Airplane : implements
 ```
 
 #### 6. 依赖（Dependency）
 
 表示一个类使用另一个类的关系，通常是暂时性的。使用虚线箭头表示。
 
+![](/img/posts/2025-04-07-UML/dependency.svg)
+
+
 ```
-┌───────┐      ┌───────┐
-│ ClassA│- - ->│ ClassB│
-└───────┘      └───────┘
+class Order {
+  - orderId: String
+  - items: List<Item>
+  + calculateTotal(): double
+  + process(): void
+}
+
+class PaymentProcessor {
+  + processPayment(double amount): boolean
+  + refund(String transactionId): boolean
+}
+
+class Invoice {
+  - invoiceId: String
+  - order: Order
+  + generate(): void
+}
+
+Order ..> PaymentProcessor : uses >
+Invoice ..> Order : creates from >
 ```
 
 ### 三、高级特性
@@ -363,24 +430,74 @@ ClassA ─────────> ClassB
 - `Person` 和 `GenderType` 之间有聚合关系
 - `Student` 对 `Course` 的 `register` 方法有依赖关系
 
-### 五、类图最佳实践
+## 生成 UML 静态类图（以 VSCode 为例）
 
-1. **保持简洁**：仅显示对理解系统必要的类和关系
-2. **合理分组**：将相关类放在一起，提高可读性
-3. **明确标记多重性**：在关联端点标明多重性，清晰表达关系
-4. **使用注释**：对复杂关系添加文字说明
-5. **区分关系类型**：正确使用泛化、实现、组合、聚合、关联和依赖
-6. **一致性**：整个图中使用一致的表示法
+### 安装 PlantUML 插件
 
-### 六、常见误区
+1. 打开 VSCode
+2. 点击左侧活动栏中的扩展图标（或使用快捷键 Cmd+Shift+X）
+3. 在搜索框中输入 "PlantUML"
+4. 找到由 Jebbs 开发的 "PlantUML" 插件并点击安装
+5. 安装完成后可能需要重启 VSCode
 
-1. **混淆聚合与组合**：聚合(◇)是"弱"的整体-部分关系，组合(◆)是"强"的关系
-2. **过度复杂化**：类图应当清晰表达设计意图，不要包含过多细节
-3. **忽略多重性**：多重性标记对理解关系至关重要
-4. **混淆依赖与关联**：关联是结构性关系，依赖则是使用关系
-5. **滥用继承**：继承应该遵循"是一个"原则，而不仅仅是共享代码
+### 编写 PlantUML 文件
 
-### 总结
+1. 在 VSCode 中创建一个新文件，扩展名为 `.puml` 或 `.plantuml`（例如 `class-diagram.puml`）
+2. 编写 PlantUML 代码来描述您的类图
+3. 使用 PlantUML 的预览功能查看图形，通常使用快捷键为 `Alt+D` 或使用命令面板（`Ctrl+Shift+P` 或 `Cmd+Shift+P`），搜索并选择 `"Preview Current Diagram"`
+
+以下是一个简单的类图示例代码：
+
+```
+@startuml
+
+class Person {
+  -name: String
+  -age: int
+  +getName(): String
+  +setName(String): void
+  +getAge(): int
+  +setAge(int): void
+}
+
+class Student {
+  -studentId: String
+  -grades: Map
+  +enrollCourse(Course): void
+  +calculateGPA(): double
+}
+
+class Course {
+  -courseId: String
+  -courseName: String
+  +register(Student): void
+  +complete(): void
+}
+
+enum GenderType {
+  MALE
+  FEMALE
+  OTHER
+}
+
+Person <|-- Student
+Person o-- GenderType
+Course "1..*" *-- "0..*" Student
+Student ..> Course
+
+@enduml
+```
+
+
+### 导出和分享类图
+
+要导出图形，可以：
+
+1. 在预览窗口中右键点击，选择"导出图表为..."
+2. 或使用命令面板（`Ctrl+Shift+P` 或 `Cmd+Shift+P`），搜索并选择 `"PlantUML: Export Current Diagram"` 
+
+
+## 总结
 
 UML 静态类图是面向对象设计中描述系统结构的强大工具。通过正确使用类表示、关系符号和高级特性，可以清晰地表达系统中各个类的职责和它们之间的交互方式。掌握这些表示方法不仅有助于设计阶段的沟通，也能帮助开发人员更好地理解和实现系统架构。
 
