@@ -13,11 +13,83 @@ tags:
 
 # UML 静态类图详解
 
-UML（Unified Modeling Language，统一建模语言）是一种标准化的可视化建模语言，广泛应用于软件工程中。其中，静态类图是 UML 中最常用的图表之一，用于描述系统中的类及其之间的静态关系。本文将详细介绍 UML 静态类图的各个组成部分及其表示方法。
+UML（Unified Modeling Language，统一建模语言）是一种标准化的可视化建模语言，广泛应用于软件工程中。其中，静态类图是 UML 中最常用的图表之一，用于描述系统中的类及其之间的静态关系。
+
+# 生成 UML 静态类图（以 VSCode 为例）
+
+## 安装 PlantUML 插件
+
+1. 打开 VSCode
+2. 点击左侧活动栏中的扩展图标（或使用快捷键 Cmd+Shift+X）
+3. 在搜索框中输入 "PlantUML"
+4. 找到由 Jebbs 开发的 "PlantUML" 插件并点击安装
+5. 安装完成后可能需要重启 VSCode
+
+## 编写 PlantUML 文件
+
+1. 在 VSCode 中创建一个新文件，扩展名为 `.puml` 或 `.plantuml`（例如 `class-diagram.puml`）
+2. 编写 PlantUML 代码来描述您的类图
+3. 使用 PlantUML 的预览功能查看图形，通常使用快捷键为 `Alt+D` 或使用命令面板（`Ctrl+Shift+P` 或 `Cmd+Shift+P`），搜索并选择 `"Preview Current Diagram"`
+
+以下是一个简单的类图示例代码：
+
+```
+@startuml
+
+class Person {
+  -name: String
+  -age: int
+  +getName(): String
+  +setName(String): void
+  +getAge(): int
+  +setAge(int): void
+}
+
+class Student {
+  -studentId: String
+  -grades: Map
+  +enrollCourse(Course): void
+  +calculateGPA(): double
+}
+
+class Course {
+  -courseId: String
+  -courseName: String
+  +register(Student): void
+  +complete(): void
+}
+
+enum GenderType {
+  MALE
+  FEMALE
+  OTHER
+}
+
+Person <|-- Student
+Person o-- GenderType
+Course "1..*" *-- "0..*" Student
+Student ..> Course
+
+@enduml
+```
+
+
+## 导出和分享类图
+
+要导出图形，可以：
+
+1. 在预览窗口中右键点击，选择"导出图表为..."
+2. 或使用命令面板（`Ctrl+Shift+P` 或 `Cmd+Shift+P`），搜索并选择 `"PlantUML: Export Current Diagram"` 
+
+# UML 静态类图结构组成和关系描述
+
+UML 静态类图文件通常以 `@startuml` 开始, 以 `@enduml` 结束. 
 
 ## 一、类的表示
 
 ### 1. 基本结构
+
+![](/img/posts/2025-04-07-UML/class.svg)
 
 一个类在 UML 中通常被表示为一个矩形，分为三个部分：
 - **顶部**：类名（必须）
@@ -25,20 +97,19 @@ UML（Unified Modeling Language，统一建模语言）是一种标准化的可�
 - **底部**：方法列表（可选）
 
 ```
-┌───────────────┐
-│   ClassName   │  <- 类名
-├───────────────┤
-│ - attribute1  │
-│ # attribute2  │  <- 属性
-│ + attribute3  │
-├───────────────┤
-│ - method1()   │
-│ # method2()   │  <- 方法
-│ + method3()   │
-└───────────────┘
+@startuml
+class ClassName{
+    attribute
+    method()
+}
+@enduml
 ```
 
+
+
 ### 2. 访问修饰符
+
+![](/img/posts/2025-04-07-UML/accessModifier.svg)
 
 属性和方法前的符号表示访问修饰符：
 - `+` 表示 public（公有）
@@ -46,20 +117,36 @@ UML（Unified Modeling Language，统一建模语言）是一种标准化的可�
 - `#` 表示 protected（受保护）
 - `~` 表示 package/default（包/默认）
 
+```
+@startuml
+class ClassName{
+    + attribute1
+    - attribute2
+    # method3()
+    ~ method4()
+}
+@enduml
+```
+
 ### 3. 属性表示
+
+![](/img/posts/2025-04-07-UML/attribute.svg)
 
 属性的完整表示形式：
 ```
 [可见性] 名称 [: 类型] [= 默认值] [{属性字符串}]
 ```
 
-例如：
-```
-+ name: String = "default" {readOnly}
-- age: int
-# scores: int[]
-```
 
+```
+@startuml
+class Student {
+  + name: String = "default" {readOnly}
+  - age: int
+  # scores: int[]
+}
+@enduml
+```
 ### 4. 方法表示
 
 方法的完整表示形式：
