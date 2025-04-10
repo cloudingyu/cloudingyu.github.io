@@ -1707,3 +1707,43 @@ img::-moz-selection {
 .no-scroll {
   overflow-y: hidden;
 }
+/* 强化代码高亮样式优先级 */
+.highlight,
+pre.highlight,
+.highlighter-rouge .highlight {
+  background: #fff8e1 !important; /* 浅奶黄色背景 */
+  color: #37474f !important;
+  border: 1px solid #ffe0b2 !important; /* 稍深的奶黄色边框 */
+}
+
+.highlight pre,
+.highlighter-rouge .highlight pre {
+  background: #fff8e1 !important;
+  color: #37474f !important;
+}
+
+/* 确保代码元素具有正确的颜色 */
+.highlight .k,
+.language-coq .highlight .err {
+  color: #8e44ad !important; /* 关键字 - 紫色 */
+}
+.highlight .s,
+.highlight .s1,
+.highlight .s2 {
+  color: #16a085 !important; /* 字符串 - 青绿色 */
+}
+.highlight .m,
+.highlight .mi,
+.highlight .mf {
+  color: #e67e22 !important; /* 数字 - 橙色 */
+}
+.highlight .c,
+.highlight .c1 {
+  color: #6c7a89 !important; /* 注释 - 灰色 */
+}
+.highlight .nf {
+  color: #2980b9 !important; /* 函数名 - 蓝色 */
+}
+.highlight .nc {
+  color: #f39c12 !important; /* 类名 - 金色 */
+}
