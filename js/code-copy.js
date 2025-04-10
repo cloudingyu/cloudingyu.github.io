@@ -8,6 +8,13 @@
         // 添加复制按钮样式到head
         var style = document.createElement('style');
         style.innerHTML = `
+            /* 代码容器和复制按钮的基本样式 */
+            .code-wrapper {
+                position: relative;
+                margin-bottom: 10px;
+                width: 100%;
+            }
+            
             .code-header {
                 display: flex;
                 justify-content: flex-end;
@@ -16,11 +23,9 @@
                 border-top-left-radius: 10px;
                 border-top-right-radius: 10px;
                 border-bottom: 1px solid rgba(220, 220, 220, 0.7);
-                margin: 0;
-                width: 100%;
                 box-sizing: border-box;
             }
-
+            
             .copy-btn {
                 display: inline-block;
                 cursor: pointer;
@@ -32,61 +37,48 @@
                 border-radius: 4px;
                 transition: all 0.2s ease;
             }
-
+            
             .copy-btn:hover {
                 color: #0085a1;
                 background-color: rgba(0, 133, 161, 0.1);
             }
-
+            
             .copy-btn:active {
                 background-color: rgba(0, 133, 161, 0.2);
             }
-
+            
             .copy-btn::before {
                 content: "📋 复制";
             }
-
+            
             .copy-btn.copied::before {
                 content: "✓ 已复制";
             }
-
-            /* 代码块容器样式 */
-            .highlighter-rouge {
-                margin-bottom: 10px;
-                position: relative;
-                width: 100%;
-            }
-
-            .highlighter-rouge .highlight {
-                margin-top: 0;
+            
+            /* 确保代码块的顶部边框圆角被移除 */
+            .code-wrapper .highlighter-rouge .highlight {
                 border-top-left-radius: 0;
                 border-top-right-radius: 0;
+                margin-top: 0;
             }
-
+            
             /* 移动端适配 */
             @media screen and (max-width: 480px) {
+                .code-wrapper {
+                    width: 100vw;
+                    position: relative;
+                    left: 50%;
+                    right: 50%;
+                    margin-left: -50vw;
+                    margin-right: -50vw;
+                }
+                
                 .code-header {
-                    margin-left: -15px;
-                    margin-right: -15px;
-                    border-radius: 0;
-                    padding: 5px 15px;
-                }
-
-                .highlighter-rouge {
-                    width: calc(100% + 30px);
-                    margin-left: -15px;
-                    margin-right: -15px;
-                }
-
-                .highlighter-rouge .highlight {
-                    margin-left: 0;
-                    margin-right: 0;
                     border-radius: 0;
                 }
-
-                .highlighter-rouge .highlight pre {
-                    margin: 0;
-                    padding: 14px 15px;
+                
+                .code-wrapper .highlighter-rouge .highlight {
+                    border-radius: 0;
                 }
             }
         `;
@@ -111,6 +103,10 @@
                     return; // 可能是行内代码，跳过
                 }
 
+                // 创建一个包装容器
+                var wrapper = document.createElement('div');
+                wrapper.className = 'code-wrapper';
+                
                 // 创建复制按钮容器
                 var header = document.createElement('div');
                 header.className = 'code-header';
@@ -157,8 +153,11 @@
                 // 将按钮添加到容器中
                 header.appendChild(button);
                 
-                // 将容器插入到代码块之前
-                block.parentNode.insertBefore(header, block);
+                // 替换原来的元素
+                var parent = block.parentNode;
+                parent.insertBefore(wrapper, block);
+                wrapper.appendChild(header);
+                wrapper.appendChild(block);
             }
         });
         
