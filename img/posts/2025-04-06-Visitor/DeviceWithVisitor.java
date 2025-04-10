@@ -86,11 +86,11 @@ class Computer implements DevicePart {
 class Chassis implements DevicePart {
 
     private Harddisk harddisk;
-    private Switch switch1;
+    private Switch switchh;
 
     public Chassis(Harddisk harddisk, Switch switch1) {
         this.harddisk = harddisk;
-        this.switch1 = switch1;
+        this.switchh = switch1;
     }
 
     public Harddisk getHarddisk() {
@@ -98,13 +98,13 @@ class Chassis implements DevicePart {
     }
 
     public Switch getSwitch1() {
-        return switch1;
+        return switchh;
     }
 
     @Override
     public void accept(DeviceVisitor visitor) {
         harddisk.accept(visitor);
-        switch1.accept(visitor);
+        switchh.accept(visitor);
         visitor.visit(this);
     }
 
@@ -121,19 +121,19 @@ class Harddisk implements DevicePart {
 
 class Monitor implements DevicePart {
 
-    private Switch switch1;
+    private Switch switchh;
 
     public Monitor(Switch sw) {
-        this.switch1 = sw;
+        this.switchh = sw;
     }
 
     public Switch getSwitch1() {
-        return switch1;
+        return switchh;
     }
 
     @Override
     public void accept(DeviceVisitor visitor) {
-        switch1.accept(visitor);
+        switchh.accept(visitor);
         visitor.visit(this);
     }
 

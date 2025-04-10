@@ -9,160 +9,15 @@ mathjax: true
 tags:
     - 面向对象
     - 设计模式
+    - 行为型模式
     - 软件设计
 ---
 
 ## Visitor(访问者模式)
 
-Visitor 模式, 又称访问者模式。当需要遍历复杂的对象结构，并对该结构中不同类型的对象作不同操作时，可以将 **遍历** 的过程和 **操作对象** 的过程分离，设计为不同的类，这就是 Visitor 模式。
+Visitor 模式, 又称访问者模式。当需要遍历复杂的对象结构，并对该结构中不同类型的对象作不同操作时，可以将 **遍历** 的过程和 **操作对象** 的过程分离，设计为不同的类。
 
-下面通过一个简单的例子演示访问者模式的使用场景。
-### 实例演示
-#### 问题
-假设电脑（Computer）有包括主机箱（Chassis）和显示器（Monitor），主机箱和显示器上都有开关（Switch），主机箱中有硬盘（Harddisk）。需要写一段代码关闭指定电脑`computer`设备上的所有开关。
-
-```plantuml
-
-@startuml
-
-class Computer
-
-class Chassis
-
-class Monitor
-
-class Harddisk
-
-class Switch{
-
-    close()
-
-}
-
-  
-
-Computer *--> Chassis
-
-Computer *--> Monitor
-
-Chassis *--> Switch
-
-Chassis *--> Harddisk
-
-Monitor *--> Switch
-
-  
-  
-
-@enduml
-
-```
-
-#### 解决方案 1 （不使用设计者模式）
-
-```
-computer.monitor.switch.close()
-
-computer.chassis.switch.close()
-```
-
-#### 解决方案 2 （使用设计者模式）
-
-```plantuml
-
-@startuml
-
-  
-
-interface Part <<Element>>{
-
-    accept(visitor)
-
-}
-
-interface PartVisitor<<Visitor>>{
-
-    visitComputer(element)
-
-    visitMonitor(element)
-
-    visitChassis(element)
-
-    visitChassis(element)
-
-    visitSwitch(element)
-
-}
-
-  
-
-Part ..PartVisitor
-
-  
-
-class Computer <<ConcreteElement>>{
-
-}
-
-class Chassis <<ConcreteElement>>{
-
-}
-
-class Monitor <<ConcreteElement>>{
-
-}
-
-class Harddisk <<ConcreteElement>>{
-
-}
-
-class Switch <<ConcreteElement>>{
-
-    close()
-
-}
-
-  
-
-class SwitchClose<<ConcreteVisitor>> #LightYellow {
-
-   visitSwitch(element)
-
-}
-
-PartVisitor <|-- SwitchClose
-
-Computer .|> Part
-
-Chassis ..|> Part
-
-Monitor ..|> Part
-
-Harddisk ..|> Part
-
-Part <|. Switch
-
-@enduml
-
-```
-
-
-### 优势分析
-如果代码需要增加需求，Visitor 模式方便更好的维护方法。
-
-#### 问题
-
-假设电脑（Computer）有包括主机箱（Chassis）和显示器（Monitor），主机箱和显示器上都有开关（Switch），主机箱中有硬盘（Harddisk），硬盘上也有开关。需要写一段代码关闭指定电脑`computer`设备上的所有开关。
-
-#### 修改方案
-
-
-
-
-
-
-### 使用场景
-Visitor 模式是个中等复杂的模式，如果你的模型具有相对稳定的复杂的结构，经常需要在这个结构中遍历处理，这时候可以考虑使用 Visitor 模式。
+### 简单模型
 
 在 Visitor 模式中，我们可以抽象出两个参与者
 - **Element**
@@ -170,4 +25,347 @@ Visitor 模式是个中等复杂的模式，如果你的模型具有相对稳定
 - **Visitor**
 	表示对结构中元素的访问者，负责对不同类型的对象作不同处理
 
-### 实验代码
+#### Visitor 模式的完整结构
+![](/img/posts/2025-04-06-Visitor/normal.svg)
+
+<!--
+@startuml normal
+left to right direction
+interface Visitor{
+  visit(Element)
+}
+
+interface Element{
+  accept(visitor)
+}
+
+class ConcreteVisitor1{
+  visit()
+}
+
+class ConcreteVisitor2{
+  visit()
+}
+
+class ConcreteElement1{
+  accept()
+}
+
+class ConcreteElement2{
+  accept()
+}
+
+Visitor .. Element
+
+ConcreteVisitor1 --|> Visitor
+ConcreteVisitor2 --|> Visitor
+
+Element <|-- ConcreteElement1
+Element <|-- ConcreteElement2
+
+@enduml
+-->
+
+- `Visitor`: 访问者，访问一个复杂结构中的元素。定义为抽象类或接口。
+- `Element`: 元素，作为访问的对象，需要定义一个 `accept` 操作。
+- `ConcreteVisitor`: 具体访问者。
+- `ConcreteElement`: 对 `Element` 的实现。
+
+
+下面通过一个简单的例子演示访问者模式的使用场景。
+### 实例演示
+#### 问题
+假设电脑（Computer）有包括主机箱（Chassis）和显示器（Monitor），主机箱和显示器上都有开关（Switch），主机箱中有硬盘（Harddisk）。需要写一段代码关闭指定电脑`computer`设备上的所有开关。
+
+![](/img/posts/2025-04-06-Visitor/problem.svg)
+
+<!--
+@startuml problem
+class Computer
+class Chassis
+class Monitor
+class Harddisk
+class Switch{
+    close()
+}
+
+Computer *-- Chassis
+Computer *-- Monitor
+Chassis *-- Switch
+Chassis *-- Harddisk
+Monitor *-- Switch
+
+@enduml
+-->
+
+#### 解决方案 1 （不使用访问者模式）
+这是一种直接访问的方式，通过对象的层级关系直接调用开关的close方法。这种方法的缺点是：
+- 需要了解对象的具体结构才能访问
+- 如果结构发生变化（比如硬盘上新增开关），需要修改所有相关代码
+- 代码结构不够灵活，难以扩展新的操作
+
+```java
+// 直接访问方式实现
+public class ComputerManager {
+    public void closeAllSwitches(Computer computer) {
+        // 直接访问显示器开关
+        computer.getMonitor().getSwitch().close();
+        // 直接访问机箱开关
+        computer.getChassis().getSwitch().close();
+    }
+}
+```
+
+#### 解决方案 2 （使用访问者模式）
+访问者模式提供了一种更优雅的解决方案：
+- 将对象结构和数据操作分离
+- 通过visitor模式，可以在不改变各元素类的前提下定义新的操作
+- 使用双分派技术，具有更好的扩展性
+
+访问者模式通过以下步骤优雅地解决这个问题：
+
+将 **遍历** 的过程和 **操作对象** 的过程分离，得到如下类图
+![](/img/posts/2025-04-06-Visitor/DeviceWithVisitor.svg)
+<!-- 
+@startuml DeviceWithVisitor
+
+skinparam packageStyle rectangle
+skinparam nodesep 80
+skinparam ranksep 60
+
+' 将元素分为两个包
+package "Element 部分" {
+  ' 接口定义
+  interface DevicePart {
+    +accept(visitor: DeviceVisitor): void
+  }
+
+  ' 具体元素
+  class Computer <<DevicePart>>{
+    -chassis: Chassis
+    -monitor: Monitor
+    +accept(visitor: DeviceVisitor): void
+  }
+
+  class Chassis <<DevicePart>>{
+    -harddisk: Harddisk
+    -switch: Switch
+    +accept(visitor: DeviceVisitor): void
+  }
+
+  class Harddisk <<DevicePart>>{
+    +accept(visitor: DeviceVisitor): void
+  }
+
+  class Monitor <<DevicePart>>{
+    -switch: Switch
+    +accept(visitor: DeviceVisitor): void
+  }
+
+  class Switch <<DevicePart>>{
+    +close(): void
+    +accept(visitor: DeviceVisitor): void
+  }
+}
+
+package "Visitor 部分" {
+  interface DeviceVisitor {
+    +visit(computer: Computer): void
+    +visit(chassis: Chassis): void
+    +visit(harddisk: Harddisk): void
+    +visit(monitor: Monitor): void
+    +visit(aSwitch: Switch): void
+  }
+
+  ' 具体访问者
+  class DeviceVisitorAdapter {
+    +visit(computer: Computer): void
+    +visit(chassis: Chassis): void
+    +visit(harddisk: Harddisk): void
+    +visit(monitor: Monitor): void
+    +visit(aSwitch: Switch): void
+  }
+}
+
+' 实现关系
+DeviceVisitorAdapter ..|> DeviceVisitor
+
+' 将DevicePart放在中心位置，设置其他元素围绕它
+DevicePart <|.. Computer
+DevicePart <|.. Chassis
+DevicePart <|.. Harddisk
+DevicePart <|.. Monitor
+DevicePart <|.. Switch
+
+' 组合关系
+Computer *-- Monitor
+Computer *-- Chassis
+Chassis *-- Harddisk
+Chassis *-- Switch
+Monitor *-- Switch
+
+' 交互关系
+DevicePart ..> DeviceVisitor : 接受访问
+
+@enduml
+-->
+
+1. 定义设备部件接口：
+```java
+public interface DevicePart {
+    void accept(DeviceVisitor visitor);
+}
+```
+
+2. 定义访问者接口和适配器：
+```java
+public interface DeviceVisitor {
+    void visit(Computer computer);
+    void visit(Chassis chassis);
+    void visit(Monitor monitor);
+    void visit(Harddisk harddisk);
+    void visit(Switch aSwitch);
+}
+
+// 访问者适配器，提供默认空实现
+public class DeviceVisitorAdapter implements DeviceVisitor {
+    @Override public void visit(Computer computer) {}
+    @Override public void visit(Chassis chassis) {}
+    @Override public void visit(Monitor monitor) {}
+    @Override public void visit(Harddisk harddisk) {}
+    @Override public void visit(Switch aSwitch) {}
+}
+```
+
+3. 实现具体设备类：
+```java
+public class Computer implements DevicePart {
+    private Chassis chassis;
+    private Monitor monitor;
+    
+    public void accept(DeviceVisitor visitor) {
+        visitor.visit(this);
+        chassis.accept(visitor);
+        monitor.accept(visitor);
+    }
+}
+
+public class Chassis implements DevicePart {
+    private Switch switchDevice;
+    private Harddisk harddisk;
+    
+    public void accept(DeviceVisitor visitor) {
+        visitor.visit(this);
+        switchDevice.accept(visitor);
+        harddisk.accept(visitor);
+    }
+}
+
+public class Monitor implements DevicePart {
+    private Switch switchDevice;
+    
+    public void accept(DeviceVisitor visitor) {
+        visitor.visit(this);
+        switchDevice.accept(visitor);
+    }
+}
+
+public class Switch implements DevicePart {
+    public void close() {
+        System.out.println("关闭开关");
+    }
+    
+    public void accept(DeviceVisitor visitor) {
+        visitor.visit(this);
+    }
+}
+```
+
+4. 关闭开关的访问者实现：
+```java
+public class SwitchOffVisitor extends DeviceVisitorAdapter {
+    @Override
+    public void visit(Switch sw) {
+        sw.close();
+    }
+}
+
+// 使用示例
+Computer computer = new Computer();
+computer.accept(new SwitchOffVisitor());
+```
+
+
+
+### 优势分析
+访问者模式的主要优势体现在它能够在不改变数据结构的情况下，轻松地增加新的操作。同时，当数据结构发生变化时，已有的访问者代码也能很好地适应。让我们通过两个具体场景来说明：
+
+#### 场景一：增加新的操作
+假设我们现在需要给电脑设备增加一个新功能：统计所有开关的数量。使用访问者模式，我们只需要新增一个访问者类，而不需要修改任何现有的设备类：
+
+```java
+public class SwitchCountVisitor extends DeviceVisitorAdapter {
+    private int count = 0;
+    
+    @Override
+    public void visit(Switch sw) {
+        count++;
+    }
+    
+    public int getCount() {
+        return count;
+    }
+}
+
+Computer computer = new Computer();
+SwitchCountVisitor visitor = new SwitchCountVisitor();
+computer.accept(visitor);
+System.out.println("设备中的开关数量：" + visitor.getCount());
+```
+
+#### 场景二：数据结构变化
+当设备结构发生变化时（如硬盘上新增开关），访问者模式也能很好地适应：
+
+1. 结构变化只需要修改相应的设备类：
+```java
+public class Harddisk implements DevicePart {
+    private Switch powerSwitch;
+    private Switch securitySwitch; 
+    
+    public void accept(DeviceVisitor visitor) {
+        visitor.visit(this);
+        powerSwitch.accept(visitor);
+        securitySwitch.accept(visitor);
+    }
+}
+```
+
+2. 现有的访问者代码无需改动就能正确处理新增的开关：
+- `SwitchOffVisitor` 会自动关闭新增的开关
+- `SwitchCountVisitor` 会自动将新增的开关计入总数
+
+这种设计体现了访问者模式的两个关键优势：
+- **操作的封装**：将对数据结构的操作封装在访问者中，使得添加新操作变得简单
+- **结构与操作分离**：数据结构的变化不会影响现有的访问者实现
+
+### 总结
+
+访问者模式是一种优雅的设计模式，特别适合处理复杂对象结构的场景。让我们回顾这种模式的关键特点：
+
+1. **适用场景**
+   - 对象结构相对稳定，但经常需要在此结构上定义新的操作
+   - 需要将数据结构与数据操作分离
+   - 对象结构中存在多种类型的对象，需要对它们进行不同的处理
+
+2. **主要优势**
+   - 符合开闭原则，易于扩展新的访问者
+   - 集中相关的操作，易于维护
+   - 数据结构和操作解耦，提高代码的灵活性
+
+3. **注意事项**
+   - 如果对象结构经常变动，访问者模式可能不是最佳选择
+   - 在访问者类中需要为每种元素类型提供访问方法
+   - 可能会暴露原本不需要公开的细节
+
+总的来说，访问者模式通过巧妙的设计实现了对象结构与操作的分离，是处理复杂对象结构的有力工具。在实际应用中，应当根据具体场景权衡是否使用这种模式.
+
