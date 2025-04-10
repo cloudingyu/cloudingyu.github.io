@@ -42,10 +42,25 @@
                 content: "✓ 已复制";
             }
             /* 调整代码块显示 */
+            .highlighter-rouge {
+                margin-bottom: 10px;
+            }
             .highlighter-rouge .highlight {
                 margin-top: 0;
                 border-top-left-radius: 0;
                 border-top-right-radius: 0;
+            }
+            @media (max-width: 480px) {
+                .code-header {
+                    margin-left: -15px;
+                    margin-right: -15px;
+                    border-radius: 0;
+                }
+                .highlighter-rouge .highlight {
+                    margin-left: -15px;
+                    margin-right: -15px;
+                    border-radius: 0;
+                }
             }
         `;
         document.head.appendChild(style);
