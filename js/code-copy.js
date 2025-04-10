@@ -51,76 +51,73 @@
         document.head.appendChild(style);
         
         // 只为特定的代码块添加复制按钮（被```包裹的代码块）
-        // 在Jekyll中，被```包裹的代码块会被转换为.highlighter-rouge元素
-        // 但并非所有.highlighter-rouge元素都是```包裹的代码块，因此需要额外检查
-        
-        // 查找所有的highlighter-rouge元素
         var codeBlocks = document.querySelectorAll('.highlighter-rouge');
         
         codeBlocks.forEach(function(block) {
             // 检查是否是真正的代码框（被```包裹）
-            // 方法1: 通常这类代码块内会有一个<pre>元素
             var preElement = block.querySelector('pre');
-            
-            // 方法2: 检查父元素路径是否符合Markdown渲染后的代码块结构
-            var isRealCodeBlock = false;
             
             // 检查这个代码块是否在正文内容中，而非行内代码
             if (block.parentNode && 
                 (block.parentNode.classList.contains('post-container') || 
                  block.parentNode.tagName === 'P' || 
                  block.parentNode.tagName === 'DIV')) {
-                isRealCodeBlock = true;
-            }
-            
-            // 单行的行内代码通常没有pre元素或只包含很短的内容
-            if (!preElement || !isRealCodeBlock) {
-                return; // 跳过这个元素
-            }
-            
-            // 筛选掉行内代码 `xxx`，它们通常没有换行或内容很短
-            var codeText = preElement.textContent;
-            if (!codeText.includes('\n') && codeText.length < 30) {
-                return; // 可能是行内代码，跳过
-            }
-            
-            // 创建复制按钮容器
-            var header = document.createElement('div');
-            header.className = 'code-header';
-            
-            // 创建复制按钮
-            var button = document.createElement('button');
-            button.className = 'copy-btn';
-            button.title = '复制代码';
-            
-            // 添加复制功能
-            button.addEventListener('click', function() {
-                // 获取代码内容，排除行号
-                var code = Array.from(preElement.querySelectorAll('code'))
-                    .map(codeElement => codeElement.textContent)
-                    .join('\n');
+                
+                // 筛选掉行内代码 `xxx`
+                var codeText = preElement ? preElement.textContent : '';
+                if (!codeText.includes('\n') && codeText.length < 30) {
+                    return; // 可能是行内代码，跳过
+                }
 
-                // 使用Clipboard API复制
-                navigator.clipboard.writeText(code).then(function() {
-                    // 复制成功，显示反馈
-                    button.classList.add('copied');
+                // 创建复制按钮容器
+                var header = document.createElement('div');
+                header.className = 'code-header';
+                
+                // 创建复制按钮
+                var button = document.createElement('button');
+                button.className = 'copy-btn';
+                button.title = '复制代码';
+                
+                // 添加复制功能
+                button.addEventListener('click', function() {
+                    // 获取代码内容（仅代码列，不包含行号）
+                    var codeContent = '';
+                    // 检查是否是表格式的代码块（带行号）
+                    var rougeTable = block.querySelector('.rouge-table');
+                    if (rougeTable) {
+                        // 如果是表格式，只获取代码列的内容
+                        var codeCell = rougeTable.querySelector('.rouge-code');
+                        codeContent = codeCell.textContent;
+                    } else {
+                        // 如果不是表格式，直接获取pre中的内容
+                        codeContent = preElement.textContent;
+                    }
                     
-                    // 2秒后恢复按钮状态
-                    setTimeout(function() {
-                        button.classList.remove('copied');
-                    }, 2000);
-                }).catch(function(err) {
-                    console.error('无法复制文本: ', err);
-                    // 回退方法：创建临时textarea
-                    fallbackCopy(code, button);
+                    // 清理代码文本（去除多余的空行和首尾空白）
+                    codeContent = codeContent.replace(/^\s+|\s+$/g, '');
+                    
+                    // 使用Clipboard API复制
+                    navigator.clipboard.writeText(codeContent).then(function() {
+                        // 复制成功，显示反馈
+                        button.classList.add('copied');
+                        
+                        // 2秒后恢复按钮状态
+                        setTimeout(function() {
+                            button.classList.remove('copied');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('无法复制文本: ', err);
+                        // 回退方法：创建临时textarea
+                        fallbackCopy(codeContent, button);
+                    });
                 });
-            });
-            
-            // 将按钮添加到容器中
-            header.appendChild(button);
-            
-            // 将容器插入到代码块之前
-            block.parentNode.insertBefore(header, block);
+                
+                // 将按钮添加到容器中
+                header.appendChild(button);
+                
+                // 将容器插入到代码块之前
+                block.parentNode.insertBefore(header, block);
+            }
         });
         
         // 回退复制方法（用于不支持Clipboard API的浏览器）
