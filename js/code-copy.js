@@ -3,141 +3,143 @@
  * 
  * 创建于: 2025-04-10
  * 作者: CloudingYu
- * 修改于: 2025-04-10 - 彻底解决重复按钮和行号问题
+ * 修改于: 2025-04-10 - 修复代码块类型识别和风格问题
  */
 
-// 全局变量，确保只在页面加载一次
-var hasInitialized = false;
-
 function addCopyButtons() {
-  // 如果已经初始化过，则先移除所有已存在的按钮
-  if (hasInitialized) {
-    var existingButtons = document.querySelectorAll('.copy-button');
-    existingButtons.forEach(function(button) {
-      button.remove();
-    });
-  }
+  // 删除所有已存在的复制按钮
+  document.querySelectorAll('.copy-button').forEach(button => button.remove());
   
   // 获取所有代码块
-  var codeBlocks = document.querySelectorAll('pre');
-  
-  codeBlocks.forEach(function(pre) {
+  document.querySelectorAll('pre').forEach(function(pre) {
+    // 跳过已经有复制按钮的代码块
+    if (pre.querySelector('.copy-button')) return;
+    
+    // 检查代码块类型
+    const codeElement = pre.querySelector('code');
+    const language = codeElement ? codeElement.className.match(/language-(\w+)/) : null;
+    const isPlantUML = language && language[1] === 'plantuml';
+    
     // 创建复制按钮
-    var copyButton = document.createElement('button');
+    const copyButton = document.createElement('button');
     copyButton.className = 'copy-button';
     copyButton.innerHTML = '复制';
+    if (isPlantUML) {
+      copyButton.classList.add('copy-button-plantuml');
+    }
     
     // 添加点击事件
     copyButton.addEventListener('click', function() {
-      var code = '';
-      
-      // 判断代码块结构
-      var codeElement = pre.querySelector('code');
+      let code = '';
       
       if (codeElement) {
-        // 如果存在code标签，先克隆它以便于处理
-        var tempElement = codeElement.cloneNode(true);
+        // 克隆元素以避免修改原始内容
+        const tempElement = codeElement.cloneNode(true);
         
-        // 移除所有可能存在的行号元素
-        ['span.line-numbers', '.gutter', '.line-number', '.hljs-ln-numbers'].forEach(function(selector) {
-          var elements = tempElement.querySelectorAll(selector);
-          elements.forEach(function(el) {
-            el.remove();
-          });
+        // 移除所有可能的行号元素
+        const lineNumberSelectors = [
+          '.line-numbers',
+          '.line-number',
+          '.hljs-ln-numbers',
+          '.gutter'
+        ];
+        
+        lineNumberSelectors.forEach(selector => {
+          tempElement.querySelectorAll(selector).forEach(el => el.remove());
         });
         
-        // 从处理过的元素中获取文本
+        // 获取代码文本
         code = tempElement.textContent || tempElement.innerText;
       } else {
-        // 直接从pre标签获取文本
         code = pre.textContent || pre.innerText;
       }
       
-      // 进一步处理代码文本，移除行号
+      // 处理代码文本
       code = code
-        // 移除行首的数字+冒号/点+空格 (如 "1: " 或 "1. ")
-        .replace(/^[ \t]*\d+[\:\.][ \t]+/gm, '')
-        // 移除可能存在的其他行号格式
-        .replace(/^[ \t]*\d+[ \t]*/gm, '');
+        // 移除可能的前缀空格和制表符
+        .replace(/^[\r\n]+/, '')
+        .replace(/[\r\n]+$/, '')
+        // 保持缩进但移除行号
+        .split('\n')
+        .map(line => line.replace(/^\s*\d+[:|.]\s*/, ''))
+        .join('\n');
       
       // 复制到剪贴板
-      try {
-        // 现代浏览器API
-        navigator.clipboard.writeText(code)
-          .then(function() {
-            showCopySuccess(copyButton);
-          })
-          .catch(function() {
-            // 回退方法
-            fallbackCopy(code, copyButton);
-          });
-      } catch (err) {
-        // 老浏览器回退方法
-        fallbackCopy(code, copyButton);
-      }
+      copyToClipboard(code, copyButton);
     });
     
     // 将按钮添加到代码块
     pre.appendChild(copyButton);
   });
-  
-  hasInitialized = true;
 }
 
-// 回退复制方法
-function fallbackCopy(text, button) {
-  var textArea = document.createElement('textarea');
+// 复制到剪贴板的函数
+function copyToClipboard(text, button) {
+  // 使用现代API
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => {
+      showSuccess(button);
+    }).catch(() => {
+      // 如果失败，使用回退方法
+      fallbackCopyToClipboard(text, button);
+    });
+  } else {
+    // 在不安全上下文中使用回退方法
+    fallbackCopyToClipboard(text, button);
+  }
+}
+
+// 回退的复制方法
+function fallbackCopyToClipboard(text, button) {
+  const textArea = document.createElement('textarea');
   textArea.value = text;
   textArea.style.position = 'fixed';
-  textArea.style.left = '-999999px';
-  textArea.style.top = '-999999px';
+  textArea.style.left = '-9999px';
+  textArea.style.top = '-9999px';
   document.body.appendChild(textArea);
-  textArea.focus();
-  textArea.select();
   
   try {
-    var successful = document.execCommand('copy');
+    textArea.select();
+    const successful = document.execCommand('copy');
     if (successful) {
-      showCopySuccess(button);
+      showSuccess(button);
     } else {
-      button.innerHTML = '复制失败';
-      setTimeout(function() {
-        button.innerHTML = '复制';
-      }, 2000);
+      showError(button);
     }
   } catch (err) {
-    button.innerHTML = '复制失败';
-    setTimeout(function() {
-      button.innerHTML = '复制';
-    }, 2000);
+    console.error('复制失败:', err);
+    showError(button);
+  } finally {
+    document.body.removeChild(textArea);
   }
+}
+
+// 显示成功提示
+function showSuccess(button) {
+  const originalText = button.innerHTML;
+  button.innerHTML = '已复制!';
+  button.classList.add('copy-success');
   
-  document.body.removeChild(textArea);
+  setTimeout(() => {
+    button.innerHTML = originalText;
+    button.classList.remove('copy-success');
+  }, 2000);
 }
 
-// 显示复制成功
-function showCopySuccess(button) {
-  // 如果有snackbar功能，使用它
-  if (typeof showSnackbar === 'function') {
-    showSnackbar('代码已复制到剪贴板');
-  } else {
-    // 否则修改按钮文字
-    button.innerHTML = '已复制!';
-    setTimeout(function() {
-      button.innerHTML = '复制';
-    }, 2000);
-  }
+// 显示错误提示
+function showError(button) {
+  const originalText = button.innerHTML;
+  button.innerHTML = '复制失败';
+  button.classList.add('copy-error');
+  
+  setTimeout(() => {
+    button.innerHTML = originalText;
+    button.classList.remove('copy-error');
+  }, 2000);
 }
 
-// 当DOM加载完成时初始化
+// 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
-  // 延迟执行，确保其他操作完成
-  setTimeout(function() {
-    addCopyButtons();
-  }, 500);
+  // 延迟执行以确保其他脚本完成
+  setTimeout(addCopyButtons, 500);
 });
-
-// 对于可能的动态加载内容，添加重新初始化按钮的方法
-window.reinitCodeCopyButtons = function() {
-  addCopyButtons();
-};
