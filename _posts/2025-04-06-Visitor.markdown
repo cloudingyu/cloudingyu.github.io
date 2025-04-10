@@ -28,44 +28,6 @@ Visitor 模式, 又称访问者模式。当需要遍历复杂的对象结构，�
 #### Visitor 模式的完整结构
 ![](/img/posts/2025-04-06-Visitor/normal.svg)
 
-<!--
-@startuml normal
-left to right direction
-interface Visitor{
-  visit(Element)
-}
-
-interface Element{
-  accept(visitor)
-}
-
-class ConcreteVisitor1{
-  visit()
-}
-
-class ConcreteVisitor2{
-  visit()
-}
-
-class ConcreteElement1{
-  accept()
-}
-
-class ConcreteElement2{
-  accept()
-}
-
-Visitor .. Element
-
-ConcreteVisitor1 --|> Visitor
-ConcreteVisitor2 --|> Visitor
-
-Element <|-- ConcreteElement1
-Element <|-- ConcreteElement2
-
-@enduml
--->
-
 - `Visitor`: 访问者，访问一个复杂结构中的元素。定义为抽象类或接口。
 - `Element`: 元素，作为访问的对象，需要定义一个 `accept` 操作。
 - `ConcreteVisitor`: 具体访问者。
@@ -126,89 +88,6 @@ public class ComputerManager {
 
 将 **遍历** 的过程和 **操作对象** 的过程分离，得到如下类图
 ![](/img/posts/2025-04-06-Visitor/DeviceWithVisitor.svg)
-<!-- 
-@startuml DeviceWithVisitor
-
-skinparam packageStyle rectangle
-skinparam nodesep 80
-skinparam ranksep 60
-
-' 将元素分为两个包
-package "Element 部分" {
-  ' 接口定义
-  interface DevicePart {
-    +accept(visitor: DeviceVisitor): void
-  }
-
-  ' 具体元素
-  class Computer <<DevicePart>>{
-    -chassis: Chassis
-    -monitor: Monitor
-    +accept(visitor: DeviceVisitor): void
-  }
-
-  class Chassis <<DevicePart>>{
-    -harddisk: Harddisk
-    -switch: Switch
-    +accept(visitor: DeviceVisitor): void
-  }
-
-  class Harddisk <<DevicePart>>{
-    +accept(visitor: DeviceVisitor): void
-  }
-
-  class Monitor <<DevicePart>>{
-    -switch: Switch
-    +accept(visitor: DeviceVisitor): void
-  }
-
-  class Switch <<DevicePart>>{
-    +close(): void
-    +accept(visitor: DeviceVisitor): void
-  }
-}
-
-package "Visitor 部分" {
-  interface DeviceVisitor {
-    +visit(computer: Computer): void
-    +visit(chassis: Chassis): void
-    +visit(harddisk: Harddisk): void
-    +visit(monitor: Monitor): void
-    +visit(aSwitch: Switch): void
-  }
-
-  ' 具体访问者
-  class DeviceVisitorAdapter {
-    +visit(computer: Computer): void
-    +visit(chassis: Chassis): void
-    +visit(harddisk: Harddisk): void
-    +visit(monitor: Monitor): void
-    +visit(aSwitch: Switch): void
-  }
-}
-
-' 实现关系
-DeviceVisitorAdapter ..|> DeviceVisitor
-
-' 将DevicePart放在中心位置，设置其他元素围绕它
-DevicePart <|.. Computer
-DevicePart <|.. Chassis
-DevicePart <|.. Harddisk
-DevicePart <|.. Monitor
-DevicePart <|.. Switch
-
-' 组合关系
-Computer *-- Monitor
-Computer *-- Chassis
-Chassis *-- Harddisk
-Chassis *-- Switch
-Monitor *-- Switch
-
-' 交互关系
-DevicePart ..> DeviceVisitor : 接受访问
-
-@enduml
--->
 
 1. 定义设备部件接口：
 ```java
@@ -217,7 +96,7 @@ public interface DevicePart {
 }
 ```
 
-2. 定义访问者接口和适配器：
+1. 定义访问者接口和适配器：
 ```java
 public interface DeviceVisitor {
     void visit(Computer computer);
