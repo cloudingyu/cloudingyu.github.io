@@ -87,16 +87,14 @@ public class ComputerManager {
 将 **遍历** 的过程和 **操作对象** 的过程分离，得到如下类图
 ![](/img/posts/2025-04-06-Visitor/DeviceWithVisitor.svg)
 
-1. 定义设备部件接口：
-
+##### 定义设备部件接口：
 ```java
 public interface DevicePart {
     void accept(DeviceVisitor visitor);
 }
 ```
 
-2. 定义访问者接口和适配器：
-
+##### 定义访问者接口和适配器：
 ```java
 public interface DeviceVisitor {
     void visit(Computer computer);
@@ -116,8 +114,7 @@ public class DeviceVisitorAdapter implements DeviceVisitor {
 }
 ```
 
-3. 实现具体设备类：
-
+##### 实现具体设备类：
 ```java
 public class Computer implements DevicePart {
     private Chassis chassis;
@@ -161,7 +158,7 @@ public class Switch implements DevicePart {
 }
 ```
 
-4. 关闭开关的访问者实现：
+##### 关闭开关的访问者实现：
 ```java
 public class SwitchOffVisitor extends DeviceVisitorAdapter {
     @Override
@@ -178,7 +175,7 @@ computer.accept(new SwitchOffVisitor());
 
 
 ### 优势分析
-访问者模式的主要优势体现在它能够在不改变数据结构的情况下，轻松地增加新的操作。同时，当数据结构发生变化时，已有的访问者代码也能很好地适应。让我们通过两个具体场景来说明：
+访问者模式的主要优势体现在它能够在不改变数据结构的情况下，轻松地增加新的操作。同时，当数据结构发生变化时，已有的访问者代码也能很好地适应。
 
 #### 场景一：增加新的操作
 假设我们现在需要给电脑设备增加一个新功能：统计所有开关的数量。使用访问者模式，我们只需要新增一个访问者类，而不需要修改任何现有的设备类：
@@ -229,8 +226,6 @@ public class Harddisk implements DevicePart {
 
 ### 总结
 
-访问者模式是一种优雅的设计模式，特别适合处理复杂对象结构的场景。让我们回顾这种模式的关键特点：
-
 1. **适用场景**
    - 对象结构相对稳定，但经常需要在此结构上定义新的操作
    - 需要将数据结构与数据操作分离
@@ -246,5 +241,5 @@ public class Harddisk implements DevicePart {
    - 在访问者类中需要为每种元素类型提供访问方法
    - 可能会暴露原本不需要公开的细节
 
-总的来说，访问者模式通过巧妙的设计实现了对象结构与操作的分离，是处理复杂对象结构的有力工具。在实际应用中，应当根据具体场景权衡是否使用这种模式.
+访问者模式通过巧妙的设计实现了对象结构与操作的分离，是处理复杂对象结构的有力工具。在实际应用中，应当根据具体场景权衡是否使用这种模式.
 
