@@ -3,11 +3,13 @@
  * 
  * 创建于: 2025-04-10
  * 作者: CloudingYu
+ * 修改于: 2025-04-10 - 使按钮常驻显示
  */
 
 /* 确保代码块有相对定位，这样复制按钮才能正确放置 */
 pre {
   position: relative;
+  padding-top: 30px; /* 为复制按钮增加空间 */
 }
 
 /* 复制按钮样式 */
@@ -22,14 +24,9 @@ pre {
   border: 1px solid #ccc;
   border-radius: 3px;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.3s;
+  opacity: 0.9; /* 设置常驻显示的不透明度 */
   z-index: 100;
-}
-
-/* 鼠标悬停在代码块上时显示按钮 */
-pre:hover .copy-button {
-  opacity: 0.9;
+  transition: background-color 0.3s;
 }
 
 /* 按钮悬停和激活状态 */
