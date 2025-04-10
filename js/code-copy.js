@@ -95,9 +95,11 @@
             
             // 添加复制功能
             button.addEventListener('click', function() {
-                // 获取代码内容
-                var code = preElement.textContent;
-                
+                // 获取代码内容，排除行号
+                var code = Array.from(preElement.querySelectorAll('code'))
+                    .map(codeElement => codeElement.textContent)
+                    .join('\n');
+
                 // 使用Clipboard API复制
                 navigator.clipboard.writeText(code).then(function() {
                     // 复制成功，显示反馈
