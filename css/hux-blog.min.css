@@ -311,6 +311,7 @@ pre.highlight {
   background: #fff8e1;
   /* 浅奶黄色背景 */
   color: #37474f;
+  font-family: "Maple Mono", "Fira Code", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 .highlight pre {
   background: #fff8e1;
