@@ -31,8 +31,8 @@ Visitor 模式, 又称访问者模式。当需要遍历复杂的对象结构，�
 - `ConcreteVisitor`: 具体访问者。
 - `ConcreteElement`: 对 `Element` 的实现。
 
-
 下面通过一个简单的例子演示访问者模式的使用场景。
+
 ### 实例演示
 #### 问题
 假设电脑（Computer）有包括主机箱（Chassis）和显示器（Monitor），主机箱和显示器上都有开关（Switch），主机箱中有硬盘（Harddisk）。需要写一段代码关闭指定电脑`computer`设备上的所有开关。
