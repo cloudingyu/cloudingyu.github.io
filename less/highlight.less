@@ -3,21 +3,21 @@
 
 .highlight,
 pre.highlight {
-  background: #f8f9fa;
-  color: #383a42;
+  background: #fff8e1; /* 浅奶黄色背景 */
+  color: #37474f;
 }
 .highlight pre {
-  background: #f8f9fa;
+  background: #fff8e1;
 }
 .highlight .hll {
-  background: #f8f9fa;
+  background: #fff8e1;
 }
 .highlight .c {
-  color: #6a737d;
+  color: #6c7a89; /* 注释 - 灰色 */
   font-style: italic;
 }
 .highlight .err {
-  color: #d73a49;
+  color: #e74c3c; /* 错误 - 红色 */
 }
 .language-coq .highlight .err {
   // Hux: a temp workaround to fix for Coq math symbol
@@ -27,19 +27,19 @@ pre.highlight {
 }
 .highlight .k,
 .language-coq .highlight .err {
-  color: #d73a49;
+  color: #8e44ad; /* 关键字 - 紫色 */
 }
 .highlight .l {
-  color: #032f62;
+  color: #2980b9; /* 字面量 - 蓝色 */
 }
 .highlight .n {
-  color: #24292e;
+  color: #34495e; /* 名称 - 深灰蓝色 */
 }
 .highlight .o {
-  color: #24292e;
+  color: #d35400; /* 操作符 - 橙色 */
 }
 .highlight .p {
-  color: #24292e;
+  color: #7f8c8d; /* 标点符号 - 灰色 */
 }
 .highlight .cm,
 .highlight .cp,
@@ -60,17 +60,17 @@ pre.highlight {
 .highlight .kp,
 .highlight .kr,
 .highlight .kt {
-  color: #a626a4;
+  color: #9b59b6; /* 关键字类型 - 亮紫色 */
 }
 .highlight .ld {
-  color: #98c379;
+  color: #27ae60; /* 字面量定义 - 绿色 */
 }
 .highlight .m,
 .highlight .mf,
 .highlight .mh,
 .highlight .mi,
 .highlight .mo {
-  color: #986801;
+  color: #e67e22; /* 数字 - 橙色 */
 }
 .highlight .s,
 .highlight .sb,
@@ -82,16 +82,16 @@ pre.highlight {
 .highlight .si,
 .highlight .sx,
 .highlight .s1 {
-  color: #50a14f;
+  color: #16a085; /* 字符串 - 青绿色 */
 }
 .highlight .na {
-  color: #986801;
+  color: #d35400; /* 属性名称 - 橙色 */
 }
 .highlight .nb {
-  color: #383a42;
+  color: #3498db; /* 内置名称 - 蓝色 */
 }
 .highlight .nc {
-  color: #c18401;
+  color: #f39c12; /* 类名称 - 金色 */
 }
 .highlight .no {
   color: #e5c07b;
@@ -106,7 +106,7 @@ pre.highlight {
   color: #e5c07b;
 }
 .highlight .nf {
-  color: #4078f2;
+  color: #2980b9; /* 函数名称 - 蓝色 */
 }
 .highlight .nl {
   color: #383a42;
@@ -206,11 +206,11 @@ pre.highlight {
 .highlighter-rouge .highlight {
   margin-bottom: 10px;
   border-radius: 6px;
-  border: 1px solid #e9ecef;
+  border: 1px solid #ffe0b2; /* 稍深的奶黄色边框 */
   pre {
     font-size: 14px;
     line-height: 1.5;
-    color: #383a42;
+    color: #37474f;
     background: transparent;
     border: 0;
     margin: 0;
@@ -225,7 +225,7 @@ pre.highlight {
   }
   .rouge-code {
     pre {
-      color: #24292e; // default color for nil-lang code
+      color: #34495e; /* 默认代码颜色 */
     }
   }
   .table-responsive {
