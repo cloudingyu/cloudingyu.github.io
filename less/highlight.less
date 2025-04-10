@@ -3,22 +3,21 @@
 
 .highlight,
 pre.highlight {
-  background: #282c34;
-  color: #abb2bf;
+  background: #f8f9fa;
+  color: #383a42;
 }
 .highlight pre {
-  background: #282c34;
+  background: #f8f9fa;
 }
 .highlight .hll {
-  background: #282c34;
+  background: #f8f9fa;
 }
 .highlight .c {
-  color: #5c6370;
+  color: #a0a1a7;
   font-style: italic;
 }
 .highlight .err {
-  color: #960050;
-  background-color: #1e0010;
+  color: #e45649;
 }
 .language-coq .highlight .err {
   // Hux: a temp workaround to fix for Coq math symbol
@@ -26,8 +25,9 @@ pre.highlight {
   &:extend(.highlight .k);
   background-color: transparent;
 }
-.highlight .k {
-  color: #c678dd;
+.highlight .k,
+.language-coq .highlight .err {
+  color: #a626a4;
 }
 .highlight .l {
   color: #98c379;
@@ -212,10 +212,11 @@ pre.highlight {
 .highlighter-rouge .highlight {
   margin-bottom: 10px;
   border-radius: 6px;
+  border: 1px solid #e9ecef;
   pre {
     font-size: 14px;
     line-height: 1.5;
-    color: #555;
+    color: #383a42;
     background: transparent;
     border: 0;
     margin: 0;
