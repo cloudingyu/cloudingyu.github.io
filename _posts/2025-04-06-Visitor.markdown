@@ -202,7 +202,7 @@ System.out.println("设备中的开关数量：" + visitor.getCount());
 
 #### 场景二：数据结构变化
 当设备结构发生变化时（如硬盘上新增开关），访问者模式也能很好地适应：
-1. 结构变化只需要修改相应的设备类：
+I. 结构变化只需要修改相应的设备类：
 ```java
 public class Harddisk implements DevicePart {
     private Switch powerSwitch;
@@ -216,7 +216,7 @@ public class Harddisk implements DevicePart {
 }
 ```
 
-2. 现有的访问者代码无需改动就能正确处理新增的开关：
+II. 现有的访问者代码无需改动就能正确处理新增的开关：
 - `SwitchOffVisitor` 会自动关闭新增的开关
 - `SwitchCountVisitor` 会自动将新增的开关计入总数
 
