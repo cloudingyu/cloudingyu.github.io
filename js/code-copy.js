@@ -65,20 +65,24 @@
             /* 移动端适配 */
             @media screen and (max-width: 480px) {
                 .code-wrapper {
-                    width: 100vw;
+                    width: calc(100% - 20px);  /* 减小宽度，保留10px左右边距 */
+                    margin-left: 10px;
+                    margin-right: 10px;
                     position: relative;
-                    left: 50%;
-                    right: 50%;
-                    margin-left: -50vw;
-                    margin-right: -50vw;
                 }
                 
                 .code-header {
-                    border-radius: 0;
+                    border-radius: 5px 5px 0 0;  /* 恢复圆角 */
                 }
                 
                 .code-wrapper .highlighter-rouge .highlight {
-                    border-radius: 0;
+                    border-radius: 0 0 5px 5px;  /* 为底部添加圆角 */
+                    margin-left: 0;
+                    margin-right: 0;
+                }
+                
+                .code-wrapper .highlighter-rouge .highlight pre {
+                    padding: 14px;  /* 统一内边距 */
                 }
             }
         `;
