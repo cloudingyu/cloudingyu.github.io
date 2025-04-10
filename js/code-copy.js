@@ -1,6 +1,6 @@
 /**
  * 代码块复制功能
- * 为所有代码块添加复制按钮
+ * 为代码块添加复制按钮（仅支持被```包裹的代码块）
  */
 (function() {
     // 等待DOM完全加载
@@ -50,9 +50,40 @@
         `;
         document.head.appendChild(style);
         
-        // 为每个代码块添加复制按钮
+        // 只为特定的代码块添加复制按钮（被```包裹的代码块）
+        // 在Jekyll中，被```包裹的代码块会被转换为.highlighter-rouge元素
+        // 但并非所有.highlighter-rouge元素都是```包裹的代码块，因此需要额外检查
+        
+        // 查找所有的highlighter-rouge元素
         var codeBlocks = document.querySelectorAll('.highlighter-rouge');
+        
         codeBlocks.forEach(function(block) {
+            // 检查是否是真正的代码框（被```包裹）
+            // 方法1: 通常这类代码块内会有一个<pre>元素
+            var preElement = block.querySelector('pre');
+            
+            // 方法2: 检查父元素路径是否符合Markdown渲染后的代码块结构
+            var isRealCodeBlock = false;
+            
+            // 检查这个代码块是否在正文内容中，而非行内代码
+            if (block.parentNode && 
+                (block.parentNode.classList.contains('post-container') || 
+                 block.parentNode.tagName === 'P' || 
+                 block.parentNode.tagName === 'DIV')) {
+                isRealCodeBlock = true;
+            }
+            
+            // 单行的行内代码通常没有pre元素或只包含很短的内容
+            if (!preElement || !isRealCodeBlock) {
+                return; // 跳过这个元素
+            }
+            
+            // 筛选掉行内代码 `xxx`，它们通常没有换行或内容很短
+            var codeText = preElement.textContent;
+            if (!codeText.includes('\n') && codeText.length < 30) {
+                return; // 可能是行内代码，跳过
+            }
+            
             // 创建复制按钮容器
             var header = document.createElement('div');
             header.className = 'code-header';
@@ -65,7 +96,7 @@
             // 添加复制功能
             button.addEventListener('click', function() {
                 // 获取代码内容
-                var code = block.querySelector('pre').textContent;
+                var code = preElement.textContent;
                 
                 // 使用Clipboard API复制
                 navigator.clipboard.writeText(code).then(function() {
