@@ -308,16 +308,21 @@ button.paper-button {
 }
 .highlight,
 pre.highlight {
-  background: #fff8e1;
-  /* 浅奶黄色背景 */
+  background: rgba(255, 255, 255, 0.7);
+  /* 更浅的白色半透明背景 */
+  backdrop-filter: blur(10px);
+  /* 毛玻璃效果 */
+  -webkit-backdrop-filter: blur(10px);
+  /* Safari 兼容 */
   color: #37474f;
   font-family: "Maple Mono", "Fira Code", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 .highlight pre {
-  background: #fff8e1;
+  background: transparent;
+  /* 确保内部pre元素是透明的 */
 }
 .highlight .hll {
-  background: #fff8e1;
+  background: transparent;
 }
 .highlight .c {
   color: #6c7a89;
@@ -523,9 +528,12 @@ pre.highlight {
 }
 .highlighter-rouge .highlight {
   margin-bottom: 10px;
-  border-radius: 6px;
-  border: 1px solid #ffe0b2;
-  /* 稍深的奶黄色边框 */
+  border-radius: 10px;
+  /* 增大圆角 */
+  border: 1px solid rgba(220, 220, 220, 0.5);
+  /* 更淡的边框 */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  /* 轻微阴影增强立体感 */
 }
 .highlighter-rouge .highlight pre {
   font-size: 14px;
