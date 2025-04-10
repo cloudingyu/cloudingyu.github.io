@@ -16,7 +16,11 @@
                 border-top-left-radius: 10px;
                 border-top-right-radius: 10px;
                 border-bottom: 1px solid rgba(220, 220, 220, 0.7);
+                margin: 0;
+                width: 100%;
+                box-sizing: border-box;
             }
+
             .copy-btn {
                 display: inline-block;
                 cursor: pointer;
@@ -28,38 +32,61 @@
                 border-radius: 4px;
                 transition: all 0.2s ease;
             }
+
             .copy-btn:hover {
                 color: #0085a1;
                 background-color: rgba(0, 133, 161, 0.1);
             }
+
             .copy-btn:active {
                 background-color: rgba(0, 133, 161, 0.2);
             }
+
             .copy-btn::before {
                 content: "📋 复制";
             }
+
             .copy-btn.copied::before {
                 content: "✓ 已复制";
             }
-            /* 调整代码块显示 */
+
+            /* 代码块容器样式 */
             .highlighter-rouge {
                 margin-bottom: 10px;
+                position: relative;
+                width: 100%;
             }
+
             .highlighter-rouge .highlight {
                 margin-top: 0;
                 border-top-left-radius: 0;
                 border-top-right-radius: 0;
             }
-            @media (max-width: 480px) {
+
+            /* 移动端适配 */
+            @media screen and (max-width: 480px) {
                 .code-header {
                     margin-left: -15px;
                     margin-right: -15px;
                     border-radius: 0;
+                    padding: 5px 15px;
                 }
-                .highlighter-rouge .highlight {
+
+                .highlighter-rouge {
+                    width: calc(100% + 30px);
                     margin-left: -15px;
                     margin-right: -15px;
+                }
+
+                .highlighter-rouge .highlight {
+                    margin-left: 0;
+                    margin-right: 0;
                     border-radius: 0;
+                }
+
+                .highlighter-rouge .highlight pre {
+                    margin: 0;
+                    padding: 14px 15px;
                 }
             }
         `;
