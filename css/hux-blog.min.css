@@ -683,6 +683,8 @@ body {
   font-size: 16px;
   color: #404040;
   overflow-x: hidden;
+  background-color: #fffcf0;
+  /* 添加浅黄色背景 */
   text-rendering: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
