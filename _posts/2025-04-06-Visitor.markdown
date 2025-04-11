@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "访问者模式"
+title:      "访问者模式（Visitor）"
 subtitle:   "如果模型具有相对稳定的复杂的结构, 经常需要在这个结构中遍历处理, 这时候可以考虑使用 Visitor 模式. "
 date:       2025-04-06
 author:     "CloudingYu"
