@@ -1,7 +1,7 @@
 ---
 layout:     post
 title:      "迭代器模式"
-subtitle:   "当您需要提供一种方法顺序访问聚合对象中的元素，而无需暴露其内部表示时，Iterator 模式是理想的解决方案。"
+subtitle:   "当需要提供一种方法顺序访问聚合对象中的元素，而无需暴露其内部表示时，Iterator 模式是理想的解决方案。"
 date:       2025-04-11
 author:     "CloudingYu"
 header-style: picture
