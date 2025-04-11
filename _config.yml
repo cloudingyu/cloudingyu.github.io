@@ -85,6 +85,7 @@ featured-condition-size: 1 # A tag will be featured if the size of it is more th
 # Progressive Web Apps
 chrome-tab-theme-color: "#000000"
 service-worker: true
+pwa-offline-page: "/404.html"
 
 # MathJax rendering for layout:page (e.g. post preview)
 page-mathjax: false
@@ -92,6 +93,6 @@ page-mathjax: false
 # Friends
 friends:
   [
-    { title: "顺其自然", href: "http://sqzr2319.github.io" },
+    { title: "顺其自然2319", href: "http://sqzr2319.github.io" },
     
   ]
