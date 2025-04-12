@@ -416,6 +416,7 @@ pre.highlight {
 .highlight .nc {
   color: #f39c12;
   /* 类名称 - 金色 */
+  font-style: italic; /* 添加斜体 */
 }
 .highlight .no {
   color: #e5c07b;
@@ -432,6 +433,7 @@ pre.highlight {
 .highlight .nf {
   color: #2980b9;
   /* 函数名称 - 蓝色 */
+  font-style: italic; /* 添加斜体 */
 }
 .highlight .nl {
   color: #383a42;
