@@ -1,0 +1,130 @@
+---
+layout:     post
+title:      "[力扣]4.寻找两个正序数组的中位数"
+subtitle:   "二分查找实现O(log(m+n))时间复杂度解法"
+date:       2025-04-13
+author:     "CloudingYu"
+header-style: picture
+mathjax: true
+tags:
+    - 题解
+    - 力扣
+---
+
+## [题目描述](https://leetcode.cn/problems/median-of-two-sorted-arrays/description/)
+
+给定两个大小分别为 `m` 和 `n` 的正序（从小到大）数组 `nums1` 和 `nums2`。请你找出并返回这两个正序数组的 **中位数** 。
+
+算法的时间复杂度应该为 `O(log (m+n))` 。
+
+### 示例
+
+**示例 1：**
+```
+输入：nums1 = [1,3], nums2 = [2]
+输出：2.00000
+解释：合并数组 = [1,2,3] ，中位数 2
+```
+
+**示例 2：**
+```
+输入：nums1 = [1,2], nums2 = [3,4]
+输出：2.50000
+解释：合并数组 = [1,2,3,4] ，中位数 (2 + 3) / 2 = 2.5
+```
+
+## 问题分析
+
+这道题的难点在于要求时间复杂度为 O(log(m+n))。最直观的解法是合并两个数组然后找中位数，但这样的时间复杂度是 O(m+n)，不满足题目要求。
+
+要达到 O(log(m+n)) 的时间复杂度，我们需要使用二分查找的思想。事实上，我们可以将问题转化为寻找两个数组中第k小的元素的问题。
+
+## 解决思路
+
+### I. 问题转化
+
+首先将「找中位数」的问题转化为「找第k小数」的问题：
+- 如果合并后数组长度为奇数，中位数是第 (m+n)/2+1 小的元素
+- 如果合并后数组长度为偶数，中位数是第 (m+n)/2 小和第 (m+n)/2+1 小的元素的平均值
+
+### II. 二分策略
+
+我们的核心思想是在两个有序数组中找到一个分割线，使得：
+
+![分割线示意图](/img/posts/2025-04-13-leetcode-4/1.png)
+
+1. 分割线左边的所有元素 ≤ 分割线右边的所有元素
+2. 分割线左边的元素个数 = 分割线右边的元素个数（或比右边多一个）
+
+为了实现上述目标，我们需要：
+- 确保短数组在前，长数组在后（便于处理边界情况）
+- 在较短的数组上进行二分查找，寻找合适的分割位置i
+- 根据i计算出较长数组的分割位置j，满足i+j = (m+n+1)/2
+
+### III. 终止条件
+
+当我们找到满足以下条件的分割位置时，问题解决：
+- maxLeft1 ≤ minRight2
+- maxLeft2 ≤ minRight1
+
+这表示分割线左边的所有元素都小于或等于右边的所有元素。
+
+## 代码实现
+
+```cpp
+class Solution {
+public:
+    double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
+
+        if (nums1.size() > nums2.size())
+            return findMedianSortedArrays(nums2, nums1);
+        
+        if (nums1.empty())
+        {
+            int n = nums2.size();
+            if (n % 2 == 0)
+                return (nums2[n/2-1] + nums2[n/2]) / 2.0;
+            else
+                return nums2[n/2];
+        }
+        
+        int len1 = nums1.size();
+        int len2 = nums2.size();
+        int left = 0, right = len1;
+        
+        while (left <= right) 
+        {
+            int i = (left + right) / 2;
+            int j = (len1 + len2 + 1) / 2 - i;
+            
+            int maxLeft1 = (i == 0) ? -1e6-1 : nums1[i-1];
+            int minRight1 = (i == len1) ? 1e6+1 : nums1[i];
+            int maxLeft2 = (j == 0) ? -1e6-1 : nums2[j-1];
+            int minRight2 = (j == len2) ? 1e6+1 : nums2[j];
+            
+            if (maxLeft1 <= minRight2 && maxLeft2 <= minRight1) 
+            {
+                if ((len1 + len2) % 2 != 0) 
+                    return max(maxLeft1, maxLeft2);
+                else
+                    return (max(maxLeft1, maxLeft2) + min(minRight1, minRight2)) / 2.0;
+            } 
+            else if (maxLeft1 > minRight2)
+                right = i - 1;
+
+            else
+                left = i + 1;
+        }
+        return 0;
+    }
+};
+```
+
+## 复杂度分析
+
+- **时间复杂度**: O(log(min(m,n)))
+  - 我们对较短的数组进行二分查找，所以是log(min(m,n))
+  - 这满足题目要求的O(log(m+n))复杂度
+
+- **空间复杂度**: O(1)
+  - 只使用了常数级别的额外空间
