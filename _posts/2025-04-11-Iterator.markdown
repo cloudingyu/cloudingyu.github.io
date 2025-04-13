@@ -12,3 +12,485 @@ tags:
     - 行为型模式
     - 软件设计
 ---
+
+Iterator 模式，又称迭代器模式，它提供了一种方法来访问一个聚合对象中的各个元素，而无需暴露该对象的内部表示。这种模式将迭代逻辑从集合中分离出来，放到迭代器对象中，使得我们可以为不同的集合结构实现不同的迭代方式，且不会暴露集合的内部结构。
+
+### 基本结构
+
+在 Iterator 模式中，我们可以抽象出两个参与者
+- **Iterator**
+    定义了访问和遍历元素的接口，提供了统一的方法来遍历聚合对象中的元素，而无需暴露聚合对象的内部表示。 
+- **Aggregate**
+    表示一个包含多个元素的容器，如列表、集合等。必须提供一个创建迭代器对象的方法，用于返回一个符合迭代器接口的对象。
+
+#### Iterator 模式的结构
+
+![](/img/posts/2025-04-11-Iterator/iterator.svg)
+
+```
+@startuml iterator
+interface Iterator {
+  + hasNext(): boolean
+  + next(): Element
+}
+
+interface isIterable {
+  + createIterator(): Iterator
+}
+
+class ConcreteIterator {
+  + hasNext(): boolean
+  + next(): Element
+}
+
+class ConcreteAggregate {
+  + createIterator(): Iterator
+}
+
+Iterator <|.. ConcreteIterator
+isIterable <|.. ConcreteAggregate
+ConcreteIterator <. ConcreteAggregate
+Iterator <. isIterable
+
+'设置ConcreteAggregate和ConcreteIterator在同一行
+ConcreteAggregate -[hidden]-> ConcreteIterator
+@enduml
+```
+
+- `Iterator`: 迭代器接口，定义访问和遍历元素的标准方法。主要包含判断是否有下一个元素的`hasNext()`方法和获取下一个元素的`next()`方法，提供了一种统一的方式来顺序访问集合中的元素。
+- `isIterable`: 可迭代对象接口，定义了创建迭代器的方法。实现此接口的类必须提供一个`createIterator()`方法，返回一个可以用来遍历该对象元素的迭代器实例。
+- `ConcreteIterator`: 具体迭代器类，实现`Iterator`接口。负责跟踪当前遍历的位置，并提供访问集合中元素的具体实现。它维护遍历的状态，知道哪些元素已经被遍历，哪些元素还没有被遍历。
+- `ConcreteAggregate`: 具体聚合类，实现`isIterable`接口。它是一个包含多个元素的容器对象，如列表、数组等。它实现`createIterator()`方法来返回一个能够遍历其内部元素的具体迭代器实例，同时隐藏内部数据结构的具体实现细节。
+
+
+### Java标准库中的迭代器
+
+在Java中，迭代器模式已经被标准化为 `java.util.Iterator` 接口和 `java.lang.Iterable` 接口。实现了 `Iterable` 接口的对象可以使用 foreach 语法进行迭代，使用起来非常方便。
+
+以下是Java标准库中迭代器的基本接口：
+
+```java
+public interface Iterator<E> {
+    boolean hasNext();
+    E next();
+    default void remove() {
+        throw new UnsupportedOperationException("remove");
+    }
+}
+
+public interface Iterable<T> {
+    Iterator<T> iterator();
+}
+```
+
+### 实例演示
+
+#### 问题
+假设一个棋类游戏，黑白两色的棋子，在棋盘内部，棋子是用一个二维数组来存储。需要对棋盘中的棋子进行遍历：
+
+![](/img/posts/2025-04-11-Iterator/cell.svg)
+
+```
+@startuml cell
+left to right direction
+enum ChessType {
+  black
+  white
+  blank
+}
+
+class Cell {
+  - ChessType chessType
+  - int x
+  - int y
+}
+
+
+class CheckBoard {
+  - ChessType[][] chessBoard
+  - int max_x
+  - int max_y
+  + putChess(int x, int y, ChessType): void
+}
+
+CheckBoard --> Cell
+Cell --> ChessType : contains >
+@enduml
+```
+
+![](/img/posts/2025-04-11-Iterator/solution2.svg)
+
+```
+@startuml solution2
+!theme plain
+
+package "java.util" {
+  interface "Iterator<Cell>" as Iterator {
+    + boolean hasNext()
+    + Cell next()
+  }
+  
+  interface "Iterable<Cell>" as Iterable {
+    + Iterator<Cell> iterator()
+  }
+}
+
+enum ChessType {
+  black
+  white
+  blank
+}
+
+class Point {
+  - int x
+  - int y
+  + Point(int x, int y)
+  + int getX()
+  + int getY()
+}
+
+enum Direction {
+  up
+  down
+  left
+  right
+  upLeft
+  upRight
+  downLeft
+  downRight
+  - Point p
+  + Point getP()
+}
+
+class Cell {
+  - ChessType chessType
+  - int x
+  - int y
+  + Cell(int x, int y, ChessType)
+  + int getX()
+  + int getY()
+  + ChessType getChessType()
+  + String toString()
+}
+
+class CheckBoard {
+  - ChessType[][] chessBoard
+  - int max_x
+  - int max_y
+  + CheckBoard(int max_x, int max_y)
+  + void putChess(int x, int y, ChessType)
+  + ChessType getChess(int x, int y)
+  + int getMax_x()
+  + int getMax_y()
+  + Iterator<Cell> iterator()
+  + Iterator<Cell> iterator(Direction, Point)
+}
+
+class "DefaultIterator" as DefaultIter << anonymous >> {
+  - int x
+  - int y
+  + boolean hasNext()
+  + Cell next()
+}
+
+class "DirectionalIterator" as DirIter << anonymous >> {
+  - Point p
+  + boolean hasNext()
+  + Cell next()
+}
+
+Direction o--> Point : 包含
+Cell --> ChessType : 包含
+CheckBoard *--> "many" ChessType : 包含
+CheckBoard ..|> Iterable : 实现
+Iterator <|.. DefaultIter : 实现
+Iterator <|.. DirIter : 实现
+DefaultIter ..> Cell : 创建
+DirIter ..> Cell : 创建
+CheckBoard ..> DefaultIter : 创建
+CheckBoard ..> DirIter : 创建
+DirIter --> Direction : 使用
+DirIter --> Point : 使用
+@enduml
+```
+
+#### 解决方案 1（不使用迭代器模式）
+直接通过两层循环实现对每一个棋盘格的遍历。这种方法的缺点是：
+- 需要了解对象的具体结构才能访问
+- 如果结构发生变化，需要修改所有相关代码
+
+```java
+public class CheckBoardManager {
+    public void traverse(CheckBoard checkerBoard) {
+        // 通过两层循环依次遍历每一个棋盘格
+        for (int y = 0; y < checkerBoard.getMax_y(); y++)
+            for (int x = 0; x < checkerBoard.getMax_x(); x++)
+                System.out.print(checkerBoard.getChess(x, y) + " ");
+    }
+}
+```
+
+#### 解决方案 2（使用迭代器模式）
+
+
+
+##### 定义基础数据结构
+
+```java
+// 定义棋子的类型枚举
+enum ChessType {
+    black, white, blank
+}
+
+// 定义坐标点类
+class Point {
+    int x;
+    int y;
+
+    public Point(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+}
+
+// 定义棋盘上的单元格类
+class Cell {
+    private ChessType chessType;
+    private int x;
+    private int y;
+
+    public Cell(int x, int y, ChessType chessType) {
+        this.x = x;
+        this.y = y;
+        this.chessType = chessType;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public ChessType getChessType() {
+        return chessType;
+    }
+
+    @Override
+    public String toString() {
+        return "Cell{" +
+                "chessType=" + chessType +
+                ", x=" + x +
+                ", y=" + y +
+                '}';
+    }
+}
+
+// 定义方向枚举，用于定向遍历
+enum Direction {
+    up(new Point(0, -1)),
+    down(new Point(0, 1)),
+    left(new Point(-1, 0)),
+    right(new Point(1, 0)),
+    upLeft(new Point(-1, -1)),
+    upRight(new Point(1, -1)),
+    downRight(new Point(1, 1)),
+    downLeft(new Point(-1, 1));
+
+    private Point p;
+
+    Direction(Point p) {
+        this.p = p;
+    }
+
+    public Point getP() {
+        return p;
+    }
+}
+```
+
+##### 实现棋盘类及迭代器实现
+
+```java
+// 棋盘类，实现可迭代接口
+public class CheckBoard implements Iterable<Cell> {
+
+    private ChessType[][] chessBoard;
+    private int max_x;
+    private int max_y;
+
+    public CheckBoard(int max_x, int max_y) {
+        this.max_x = max_x;
+        this.max_y = max_y;
+        chessBoard = new ChessType[max_x][max_y];
+    }
+
+    public void putChess(int x, int y, ChessType chessType) {
+        chessBoard[x][y] = chessType;
+    }
+
+    public ChessType getChess(int x, int y) {
+        ChessType t = chessBoard[x][y];
+        if (t == null)
+            return ChessType.blank;
+        else
+            return t;
+    }
+
+    public int getMax_x() {
+        return max_x;
+    }
+
+    public int getMax_y() {
+        return max_y;
+    }
+
+    @Override
+    public Iterator<Cell> iterator() {
+        // 实现默认迭代器，按行优先顺序遍历棋盘
+        return new Iterator<Cell>() {
+            // 初始化棋盘坐标的x轴位置
+            private int x = 0;
+            // 初始化棋盘坐标的y轴位置
+            private int y = 0;
+
+            @Override
+            public boolean hasNext() {
+                // 判断棋盘上是否有下一个棋子
+                return x < getMax_x() && y < getMax_y();
+            }
+
+            @Override
+            public Cell next() {
+                // 获取当前坐标上的棋子，并移动到下一个位置
+                Cell cell = new Cell(x, y, getChess(x, y));
+                x++; // 在x轴上移动到下一个位置
+                if (x >= getMax_x()) {
+                    // 如果x轴达到最大值，则重置x轴并移动y轴到下一个位置
+                    x = 0;
+                    y++;
+                }
+                return cell;
+            }
+        };
+    }
+
+    /**
+     * 返回一个迭代器，用于遍历棋盘上的满足指定条件的Cell
+     * 迭代顺序由给定的方向和起始点决定
+     * 
+     * @return 返回一个迭代器，用于按指定方向和起始点遍历棋盘上的Cell
+     */
+    public Iterator<Cell> iterator(Direction dir, Point start) {
+        // 实现方向迭代器，沿指定方向从起始点遍历
+        return new Iterator<Cell>() {
+            // 当前迭代的细胞的位置，初始值为start
+            private Point p = start;
+
+            /**
+             * 检查迭代是否还有下一个元素
+             */
+            @Override
+            public boolean hasNext() {
+                // 检查当前位置p是否在棋盘的有效范围内
+                return p.getX() < getMax_x() && p.getY() < getMax_y() 
+                       && p.getX() >= 0 && p.getY() >= 0;
+            }
+
+            /**
+             * 返回迭代的下一个元素，并移动到下一个元素的位置
+             */
+            @Override
+            public Cell next() {
+                // 根据当前位置p创建一个细胞对象
+                Cell cell = new Cell(p.getX(), p.getY(), getChess(p.getX(), p.getY()));
+                // 根据给定的方向更新当前位置p
+                p = new Point(p.getX() + dir.getP().getX(), p.getY() + dir.getP().getY());
+                return cell;
+            }
+        };
+    }
+}
+```
+
+##### 使用迭代器进行遍历
+```java
+// 调用默认迭代器进行遍历
+public void traverse(CheckBoard checkerBoard) {
+        Iterator<Cell> cellIterator = checkerBoard.iterator();
+        while (cellIterator.hasNext())
+            System.out.println(cellIterator.next());
+}
+
+// 使用 for-each 进行遍历
+public void traverseWithForEach(CheckBoard checkerBoard) {
+        for (Cell cell : checkerBoard) {
+            System.out.println(cell);
+        }
+}
+
+// 自定义方向和起始点进行遍历
+public void traverseWithDir(CheckBoard checkerBoard) {
+        Iterator<Cell> i = checkerBoard.iterator(Direction.down, new Point(2, 2));
+        while (i.hasNext())
+            System.out.println(i.next());
+} 
+```
+
+### 优势分析
+
+本例中迭代器模式的实现具有以下特点：
+
+1. **多种迭代方式**：
+   - `CheckBoard` 类实现了标准的 `Iterable<Cell>` 接口，提供默认的行优先遍历
+   - 同时提供了自定义的 `iterator(Direction, Point)` 方法，支持按指定方向和起始点进行遍历
+   
+2. **匿名内部类实现**：
+   - 使用匿名内部类实现 `Iterator` 接口，简化了代码结构
+   - 迭代器维护自己的状态（位置信息），不暴露棋盘的内部表示
+
+3. **与枚举类型的结合**：
+   - 使用 `Direction` 枚举定义多种移动方向，提高了代码的可读性和可维护性
+   - 每个方向与一个 `Point` 对象关联，表示在该方向上的位移
+
+4. **迭代器与聚合的分离**：
+   - `CheckBoard` 类专注于棋盘状态的维护和管理
+   - 迭代逻辑被封装在单独的迭代器对象中
+
+5. **支持Java的for-each语法**：
+迭代器模式将集合的遍历行为从集合本身分离出来，集中在迭代器中。这种设计有两个好处：
+- **集合类专注于数据存储和管理**，减少了它的职责
+- **遍历算法可以独立变化**，不会影响集合的实现
+
+### 局限性分析
+1. **过度设计**：
+   - 对于简单集合或遍历需求简单的情况，引入迭代器模式可能显得繁琐，造成不必要的设计复杂度
+   - 对于经验不足的开发人员，理解和正确实现迭代器模式可能会有一定难度
+
+2. **效率更低**：
+   - 迭代器模式引入了额外的抽象层，相比直接访问集合元素，会带来少量的性能开销
+   - 在某些情况下，迭代器无法实现与直接索引访问相同的性能，特别是需要随机访问元素时
+
+3. **迭代器状态管理**：
+   - 迭代器需要维护自身的遍历状态，这可能导致额外的内存消耗
+   - 当集合在迭代过程中被修改时，迭代器可能无法正确反映这些变化，需要额外的同步机制
+
+4. **功能限制**：
+   - 标准的迭代器接口通常只支持单向遍历，实现双向或随机访问需要扩展接口
+   - 对于某些复杂的遍历需求（如条件跳跃、分支遍历等），基本的迭代器模式可能不够灵活
+   - 迭代器通常不保留遍历的历史路径，难以实现"回退"等功能
+
+
+
+### 总结
+
+迭代器模式是一种简单而强大的设计模式，它通过将集合的遍历行为分离出来，而不暴露其内部结构的方法，实现了单一职责原则，使得集合和遍历算法可以独立变化。迭代器模式能为我们提供一种统一、简洁的方式来访问集合元素，同时保持良好的封装性和灵活性。在实际应用中，应当根据具体场景权衡是否使用这种模式。
