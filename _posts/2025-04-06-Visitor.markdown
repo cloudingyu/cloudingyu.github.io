@@ -17,17 +17,20 @@ Visitor 模式, 又称访问者模式，是一种行为型设计模式。当需�
 
 ### 基本结构
 
+#### 参与者
 在 Visitor 模式中，我们可以抽象出两个参与者
 - **Element**
+
 	表示结构中的元素，这是相对稳定的部分，负责遍历结构部分
 - **Visitor**
+
 	表示对结构中元素的访问者，负责对不同类型的对象作不同处理
 
-#### Visitor 模式的结构
+#### 类图结构
 ![](/img/posts/2025-04-06-Visitor/normal.svg)
 
 - `Visitor`: 访问者，访问一个复杂结构中的元素。定义为抽象类或接口。
-- `Element`: 元素，作为访问的对象，需要定义一个 `accept` 操作。
+- `Element`: 元素，作为访问的对象，需要定类图结构义一个 `accept` 操作。
 - `ConcreteVisitor`: 具体访问者。
 - `ConcreteElement`: 对 `Element` 的实现。
 
