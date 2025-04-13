@@ -30,36 +30,6 @@ Iterator 模式，又称迭代器模式，它提供了一种方法来访问一�
 
 ![](/img/posts/2025-04-11-Iterator/iterator.svg)
 
-```
-@startuml iterator
-interface Iterator {
-  + hasNext(): boolean
-  + next(): Element
-}
-
-interface isIterable {
-  + createIterator(): Iterator
-}
-
-class ConcreteIterator {
-  + hasNext(): boolean
-  + next(): Element
-}
-
-class ConcreteAggregate {
-  + createIterator(): Iterator
-}
-
-Iterator <|.. ConcreteIterator
-isIterable <|.. ConcreteAggregate
-ConcreteIterator <. ConcreteAggregate
-Iterator <. isIterable
-
-'设置ConcreteAggregate和ConcreteIterator在同一行
-ConcreteAggregate -[hidden]-> ConcreteIterator
-@enduml
-```
-
 - `Iterator`: 迭代器接口，定义访问和遍历元素的标准方法。主要包含判断是否有下一个元素的`hasNext()`方法和获取下一个元素的`next()`方法，提供了一种统一的方式来顺序访问集合中的元素。
 - `isIterable`: 可迭代对象接口，定义了创建迭代器的方法。实现此接口的类必须提供一个`createIterator()`方法，返回一个可以用来遍历该对象元素的迭代器实例。
 - `ConcreteIterator`: 具体迭代器类，实现`Iterator`接口。负责跟踪当前遍历的位置，并提供访问集合中元素的具体实现。它维护遍历的状态，知道哪些元素已经被遍历，哪些元素还没有被遍历。
@@ -113,62 +83,6 @@ public class CheckBoardManager {
 #### 解决方案 2（使用迭代器模式）
 
 ![](/img/posts/2025-04-11-Iterator/iteratorCheckborad.svg)
-
-```
-@startuml iteratorCheckborad
-
-interface "Iterable<Cell>" as Iterable {
-+ Iterator<Cell> iterator()
-}
-
-enum Direction {
-  up
-  down
-  left
-  ...
-  - Point p
-}
-
-
-class CheckBoard {
-  - ChessType[][] chessBoard
-  - int max_x
-  - int max_y
-  + Iterator<Cell> iterator()
-  + Iterator<Cell> iterator(Direction, Point)
-}
-
-package "迭代器" {
-
-  interface "Iterator<Cell>" as Iterator {
-    + boolean hasNext()
-    + Cell next()
-  }
-
-  class "Default_Iterator" as DefaultIter << anonymous >> {
-    - int x
-    - int y
-    + boolean hasNext()
-    + Cell next()
-  }
-
-  class "Direction_Iterator" as DirIter << anonymous >> {
-    - Point p
-    + boolean hasNext()
-    + Cell next()
-  }
-}
-
-
-
-CheckBoard ..|> Iterable
-Iterator <|.. DefaultIter
-Iterator <|.. DirIter
-CheckBoard ..> DefaultIter
-CheckBoard ..> DirIter
-DirIter --> Direction
-@enduml
-```
 
 以下代码已省略构造器及取值器
 
@@ -320,3 +234,90 @@ public void traverseWithDir(CheckBoard checkerBoard) {
 ### 总结
 
 迭代器模式是一种简单而强大的设计模式，它通过将集合的遍历行为分离出来，而不暴露其内部结构的方法，实现了单一职责原则，使得集合和遍历算法可以独立变化。迭代器模式能为我们提供一种统一、简洁的方式来访问集合元素，同时保持良好的封装性和灵活性。在实际应用中，应当根据具体场景权衡是否使用这种模式。
+
+
+<!--
+@startuml iteratorCheckborad
+
+interface "Iterable<Cell>" as Iterable {
++ Iterator<Cell> iterator()
+}
+
+enum Direction {
+  up
+  down
+  left
+  ...
+  - Point p
+}
+
+
+class CheckBoard {
+  - ChessType[][] chessBoard
+  - int max_x
+  - int max_y
+  + Iterator<Cell> iterator()
+  + Iterator<Cell> iterator(Direction, Point)
+}
+
+package "迭代器" {
+
+  interface "Iterator<Cell>" as Iterator {
+    + boolean hasNext()
+    + Cell next()
+  }
+
+  class "Default_Iterator" as DefaultIter << anonymous >> {
+    - int x
+    - int y
+    + boolean hasNext()
+    + Cell next()
+  }
+
+  class "Direction_Iterator" as DirIter << anonymous >> {
+    - Point p
+    + boolean hasNext()
+    + Cell next()
+  }
+}
+
+
+
+CheckBoard ..|> Iterable
+Iterator <|.. DefaultIter
+Iterator <|.. DirIter
+CheckBoard ..> DefaultIter
+CheckBoard ..> DirIter
+DirIter ..> Direction
+@enduml
+-->
+
+<!--
+@startuml iterator
+interface Iterator {
+  + hasNext(): boolean
+  + next(): Element
+}
+
+interface isIterable {
+  + createIterator(): Iterator
+}
+
+class ConcreteIterator {
+  + hasNext(): boolean
+  + next(): Element
+}
+
+class ConcreteAggregate {
+  + createIterator(): Iterator
+}
+
+Iterator <|.. ConcreteIterator
+isIterable <|.. ConcreteAggregate
+ConcreteIterator <. ConcreteAggregate
+Iterator <. isIterable
+
+'设置ConcreteAggregate和ConcreteIterator在同一行
+ConcreteAggregate -[hidden]-> ConcreteIterator
+@enduml
+-->
