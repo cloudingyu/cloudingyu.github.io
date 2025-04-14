@@ -198,12 +198,12 @@ class DeleteCommand implements CanUndoCommand {
     }
 }
 
-class UndoCommand implements Command{
-    private StringBuffer buffer;
+class ShowCommand implements Command{
+    private StringBuffer str;
 
     @Override
     public void execute() {
-        System.out.println(buffer);
+        System.out.println(str);
     }
 }
 
@@ -268,7 +268,7 @@ class EditorInvoker {
 // Client
 public class Console {
 
-    public Command commandParser(String newCommand){
+    public Command commandParser(String read){
         // 通过 newCommand 分析得出命令类型
         // 返回已经传入参数的 ConcreteCommand 对象(实现 Command 接口)
     }
@@ -283,10 +283,10 @@ public class Console {
         boolean running = true;
 
         while (running) {
-            String newCommand = Scanner.nextLine();
+            String read = Scanner.nextLine();
             
             try{
-                Command command = commandParser(newCommand);
+                Command command = commandParser(read);
                 editor.executeCommand(command);
             } catch(Exception e){
                 System.out.println(e.getMessage())
@@ -337,7 +337,7 @@ public class Console {
 
 
 
-```
+<!--
 @startuml command
 
 
@@ -377,113 +377,113 @@ class Client
 
 
 
-Client --> Invoker
-Client --> Receiver
-Client --> Command
+Client -> Invoker
+Client -> Receiver
+Client -> Command
 Invoker o-- Command
 
 Command <|. ConcreteCommand1
 Command <|-- CanUndoCommand 
 CanUndoCommand <|.. ConcreteCommand2
 
-ConcreteCommand1 --> Receiver
-ConcreteCommand2 --> Receiver
+ConcreteCommand1 -> Receiver
+ConcreteCommand2 -> Receiver
 
 
 @enduml
-```
 
 
-<!--
 @startuml string
 
-' 定义接口和类
-interface Command {
-  + execute()
-  + undo()
+package command{
+    interface Command {
+    + execute()
+    }
+
+    interface CanUndoCommand{
+        + undo()
+    }
+
+    class AppendCommand {
+    - buffer: StringBuffer
+    - text: String
+    + execute()
+    + undo()
+    }
+
+    class InsertCommand {
+    - buffer: StringBuffer
+    - position: int
+    - text: String
+    + execute()
+    + undo()
+    }
+
+    class DeleteCommand {
+    - buffer: StringBuffer
+    - position: int
+    - length: int
+    - deletedText: String
+    + execute()
+    + undo()
+    }
+
+    class ShowCommand{
+    - buffer: StringBuffer
+    + execute()
+    }
+
+    class UndoCommand{
+    - editor: EditorInvoker
+    + execute()
+    }
+
+    class RedoCommand{
+    - editor: EditorInvoker
+    + execute()
+    }
+
+    class EditorInvoker {
+    - executedCommands: List<Command>
+    - undoneCommands: List<Command>
+    + executeCommand(Command)
+    + undo()
+    + redo()
+    }
 }
 
-class AppendCommand {
-  - buffer: StringBuffer
-  - text: String
-  + execute()
-  + undo()
+class StringBuf {
+  - str: StringBuffer
+  + append(str: String): void
+  + insert(pos: int, str: String): void
+  + delete(pos: int, len: int): string
 }
 
-class InsertCommand {
-  - buffer: StringBuffer
-  - position: int
-  - text: String
-  + execute()
-  + undo()
+class Console{
+    + read: String
+    + buffer: StringBuffer
+    + newCommand: Command
+    + commandParser(read: String): Command
+
 }
 
-class DeleteCommand {
-  - buffer: StringBuffer
-  - position: int
-  - length: int
-  - deletedText: String
-  + execute()
-  + undo()
-}
 
-class EditorInvoker {
-  - executedCommands: List<Command>
-  - undoneCommands: List<Command>
-  + executeCommand(Command)
-  + undo()
-  + redo()
-}
-
-class StringBuffer {
-  - content: StringBuilder
-  + append(String)
-  + insert(int, String)
-  + delete(int, int)
-  + getContent(): String
-}
-
-class Client
-
-' 设置水平布局
-together {
-  Client
-  EditorInvoker
-  Command
-}
-
-together {
-  AppendCommand
-  InsertCommand
-  DeleteCommand
-}
-
-together {
-  StringBuffer
-}
-
-' 定义关系
-Command <|.. AppendCommand
-Command <|.. InsertCommand
-Command <|.. DeleteCommand
-EditorInvoker o--> Command
-AppendCommand --> StringBuffer
-InsertCommand --> StringBuffer
-DeleteCommand --> StringBuffer
-Client --> Command
-Client --> StringBuffer
-Client --> EditorInvoker
-
-' 隐藏空成员
-hide empty members
-
-note "调用者" as N1
-note "命令" as N2
-note "接收者" as N3
-
-EditorInvoker .. N1
-Command .. N2
-StringBuffer .. N3
+CanUndoCommand <|.. AppendCommand
+CanUndoCommand <|.. InsertCommand
+CanUndoCommand <|.. DeleteCommand
+Command <|.. CanUndoCommand 
+Command <|.. ShowCommand
+Command <|.. UndoCommand
+Command <|.. RedoCommand
+EditorInvoker -> Command
+AppendCommand -> StringBuf
+InsertCommand -> StringBuf
+DeleteCommand -> StringBuf
+UndoCommand -> EditorInvoker
+RedoCommand -> EditorInvoker
+Console -> Command
+Console -> StringBuf
+Console -> EditorInvoker
 
 @enduml
 -->
