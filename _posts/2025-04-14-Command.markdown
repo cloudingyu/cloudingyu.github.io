@@ -41,15 +41,11 @@ Command 模式，又称命令模式，它将一个请求封装为一个对象，
 ![](/img/posts/2025-04-14-Command/command.svg)
 
 
-- `Client`: 客户端，创建具体的 `command` 对象，并指定它的 `Receiver` 。`Client` 负责组装命令 `command` 与 `Receiver` 。
-
+- `Client`: 客户端，创建具体的 `command` 对象，并指定它的 `Receiver` 。`Client` 负责组装 `command` 与 `Receiver` 。
 - `Command`: 命令接口，定义执行命令的方法。通常包含一个 `execute()` 方法，有时（子接口）也会包含 `undo()` 方法用于支持撤销操作。
-
 - `ConcreteCommand`: 具体命令类，实现 `Command` 接口。它将一个 `Receiver` 对象与一个动作绑定，调用 `Receiver` 相应的 `action()` 来实现 `execute()` 方法。
-
 - `Invoker`: 调用者，负责调用 `command` 对象执行请求。可以持有多个 `command` 对象，并按照一定的规则（如队列、栈等）来执行这些 `command`。
-
-- `Receiver`: 接收者，知道如何执行与请求相关的操作。`action()` 具体实现了 `command` 要执行的动作。
+- `Receiver`: 接收者，知道如何执行与请求相关的操作，即 `action()`。`action()` 具体实现了 `command` 要执行的动作。
 
 
 
@@ -57,84 +53,90 @@ Command 模式，又称命令模式，它将一个请求封装为一个对象，
 ### 实例演示
 
 #### 问题
-假设我们正在开发一个智能家居控制系统，需要通过遥控器（调用者）来控制不同的智能设备（接收者），如灯、音响、空调等。遥控器上有多个按钮，每个按钮可以对应不同的设备操作，我们希望能够灵活地配置这些按钮，甚至可以支持撤销上一次操作。
-
-![](/img/posts/2025-04-14-Command/remote.svg)
+编写一个基于命令行的字符串编辑器，支持字符串的追加、插入、删除等操作。编辑操作需要支持撤销和恢复。
+命令如下：
+* 追加： `a 'string'`
+* 插入： `i pos 'string'`
+* 删除： `d pos len`
+* 显示当前内容：`l`
+* 撤销: `undo`
+* 恢复: `redo`
 
 
 #### 解决方案 1（不使用命令模式）
-直接在遥控器类中处理所有设备的操作逻辑。这种方法的缺点是：
-- 遥控器类会变得非常庞大和复杂
-- 每增加一种设备或操作，都需要修改遥控器类
-- 很难实现撤销功能
+直接在编辑器类中处理所有字符串操作逻辑。这种方法的缺点是：
+- 编辑器类会变得非常庞大和复杂
+- 每增加一种操作，都需要修改编辑器类
+- 很难实现撤销/重做功能
 
 ```java
-public class RemoteControl {
-    public void turnOnLight() {
-        Light light = new Light();
-        light.on();
+public class StringEditor {
+    private StringBuilder content = new StringBuilder();
+    
+    public void append(String str) {
+        content.append(str);
     }
     
-    public void turnOffLight() {
-        Light light = new Light();
-        light.off();
+    public void insert(int position, String str) {
+        content.insert(position, str);
     }
     
-    public void turnOnStereo() {
-        Stereo stereo = new Stereo();
-        stereo.on();
-        stereo.setVolume(5);
+    public void delete(int position, int length) {
+        content.delete(position, position + length);
     }
     
-    // 更多的操作...
+    public String getContent() {
+        return content.toString();
+    }
+    
+    // 实现撤销和重做功能会变得非常复杂
+    // 需要手动记录每个操作和状态...
 }
 ```
 
 #### 解决方案 2（使用命令模式）
 
-![](/img/posts/2025-04-14-Command/commandRemote.svg)
+![](/img/posts/2025-04-14-Command/String.svg)
 
-以下代码已省略构造器及一些基本方法
+以下代码实现了基于命令模式的字符串编辑器：
 
-##### 定义命令接口与接收者类
+##### 定义命令接口
 ```java
-// 命令接口
 interface Command {
     void execute();
+}
+
+interface CanUndoCommand extends Command{
     void undo();
 }
+```
 
-// 灯光接收者
-class Light {
-    private String location;
-    
-    public void on() {
-        System.out.println(location + " light is on");
-    }
-    
-    public void off() {
-        System.out.println(location + " light is off");
-    }
-}
+##### 定义接收者类
+```java
+// Receiver
+public class StringBuf {
 
-// 音响接收者
-class Stereo {
-    private String location;
-    
-    public void on() {
-        System.out.println(location + " stereo is on");
+    private StringBuffer str;
+
+    public void append(String str) {
+        this.str.append(str);
     }
-    
-    public void off() {
-        System.out.println(location + " stereo is off");
+
+    // 返回删去的字符串部分，便于后续撤销和恢复
+    public String delete(int start, int end) {
+        int _end = end > this.str.length() ? this.str.length() : end;
+        String result = this.str.substring(start, _end);
+        this.str.delete(start, _end).toString();
+        return result;
     }
-    
-    public void setCD() {
-        System.out.println(location + " stereo is set for CD input");
-    }
-    
-    public void setVolume(int volume) {
-        System.out.println(location + " stereo volume set to " + volume);
+
+    public void insert(String str, int index) {
+        if (index < 0) {
+            index = 0;
+        } else if (index > this.str.length()) {
+            index = this.str.length();
+        }
+        this.str.insert(index, str);
     }
 }
 ```
@@ -142,130 +144,120 @@ class Stereo {
 ##### 实现具体命令类
 
 ```java
-// 开灯命令
-class LightOnCommand implements Command {
-    private Light light;
-    
-    public LightOnCommand(Light light) {
-        this.light = light;
-    }
-    
+// ConcreteCommand
+class AppendCommand implements CanUndoCommand {
+    private StringBuffer buffer;
+    private String text;
+
     @Override
     public void execute() {
-        light.on();
+        buffer.append(text);
     }
     
     @Override
     public void undo() {
-        light.off();
+        String content = buffer.getContent();
+        if (content.endsWith(text)) {
+            buffer.delete(content.length() - text.length(), text.length()); 
+        }
     }
 }
 
-// 关灯命令
-class LightOffCommand implements Command {
-    private Light light;
-    
-    public LightOffCommand(Light light) {
-        this.light = light;
-    }
+class InsertCommand implements CanUndoCommand {
+    private StringBuffer buffer;
+    private int position;
+    private String text;
     
     @Override
     public void execute() {
-        light.off();
+        buffer.insert(position, text);
     }
     
     @Override
     public void undo() {
-        light.on();
+        buffer.delete(position, text.length());
     }
 }
 
-// 打开音响命令
-class StereoOnWithCDCommand implements Command {
-    private Stereo stereo;
-    
-    public StereoOnWithCDCommand(Stereo stereo) {
-        this.stereo = stereo;
-    }
+class DeleteCommand implements CanUndoCommand {
+    private StringBuffer buffer;
+    private int position;
+    private int length;
+    private String deletedText;
     
     @Override
     public void execute() {
-        stereo.on();
-        stereo.setCD();
-        stereo.setVolume(5);
+        String content = buffer.getContent();
+        deletedText = content.substring(position, position + length);
+        buffer.delete(position, length);
     }
     
     @Override
     public void undo() {
-        stereo.off();
+        buffer.insert(position, deletedText);
     }
 }
 
-// 空命令，用于初始化遥控器按钮
-class NoCommand implements Command {
+class UndoCommand implements Command{
+    private StringBuffer buffer;
+
     @Override
-    public void execute() {}
+    public void execute() {
+        System.out.println(buffer);
+    }
+}
+
+class UndoCommand implements Command{
+    private EditorInvoker editor;
     
     @Override
-    public void undo() {}
+    public void execute() {
+        editor.undoLast()
+    }
 }
+
+class RedoCommand implements Command{
+    private EditorInvoker editor;
+    
+    @Override
+    public void execute() {
+        editor.redoLast()
+    }
+}
+
+class 
 ```
 
 ##### 实现调用者类
 
 ```java
-// 遥控器 - 调用者
-class RemoteControl {
-    private Command[] onCommands;
-    private Command[] offCommands;
-    private Command undoCommand;
+// Invoker
+class EditorInvoker {
+    private final Stack<Command> executedCommands = new Stack<>();
+    private final Stack<Command> undoneCommands = new Stack<>();
     
-    // 初始化遥控器，预设7个按钮
-    public RemoteControl() {
-        onCommands = new Command[7];
-        offCommands = new Command[7];
-        
-        Command noCommand = new NoCommand();
-        for (int i = 0; i < 7; i++) {
-            onCommands[i] = noCommand;
-            offCommands[i] = noCommand;
+    public void executeCommand(Command command) {
+        command.execute();
+        if(command instanceof CanUndoCommand){
+            executedCommands.push(command);
+            undoneCommands.clear(); // 若有新命令执行，则清空 redo 栈
         }
-        undoCommand = noCommand;
     }
     
-    // 设置按钮对应的命令
-    public void setCommand(int slot, Command onCommand, Command offCommand) {
-        onCommands[slot] = onCommand;
-        offCommands[slot] = offCommand;
-    }
-    
-    // 按下开按钮
-    public void onButtonWasPushed(int slot) {
-        onCommands[slot].execute();
-        undoCommand = onCommands[slot];
-    }
-    
-    // 按下关按钮
-    public void offButtonWasPushed(int slot) {
-        offCommands[slot].execute();
-        undoCommand = offCommands[slot];
-    }
-    
-    // 按下撤销按钮
-    public void undoButtonWasPushed() {
-        undoCommand.undo();
-    }
-    
-    @Override
-    public String toString() {
-        StringBuffer stringBuff = new StringBuffer();
-        stringBuff.append("\n------ Remote Control -------\n");
-        for (int i = 0; i < onCommands.length; i++) {
-            stringBuff.append("[slot " + i + "] " + onCommands[i].getClass().getName()
-                + "    " + offCommands[i].getClass().getName() + "\n");
+    public void undoLast() {
+        if (!executedCommands.isEmpty()) {
+            Command command = executedCommands.pop();
+            command.undo();
+            undoneCommands.push(command); // 将撤销的命令加入 redo 栈，便于恢复
         }
-        stringBuff.append("[undo] " + undoCommand.getClass().getName() + "\n");
-        return stringBuff.toString();
+    }
+    
+    public void redoLast() {
+        if (!undoneCommands.isEmpty()) {
+            Command command = undoneCommands.pop();
+            command.execute();
+            executedCommands.push(command);
+        }
     }
 }
 ```
@@ -273,38 +265,35 @@ class RemoteControl {
 ##### 客户端使用代码
 
 ```java
-// 客户端代码
-public class RemoteControlTest {
+// Client
+public class Console {
+
+    public Command commandParser(String newCommand){
+        // 通过 newCommand 分析得出命令类型
+        // 返回已经传入参数的 ConcreteCommand 对象(实现 Command 接口)
+    }
+
     public static void main(String[] args) {
-        RemoteControl remote = new RemoteControl();
+
+        // 定义调用者和接受者
+        StringBuffer buffer = new StringBuffer();
+        EditorInvoker editor = new EditorInvoker();
         
-        // 创建接收者
-        Light livingRoomLight = new Light("Living Room");
-        Light kitchenLight = new Light("Kitchen");
-        Stereo livingRoomStereo = new Stereo("Living Room");
-        
-        // 创建命令对象，将接收者传入
-        LightOnCommand livingRoomLightOn = new LightOnCommand(livingRoomLight);
-        LightOffCommand livingRoomLightOff = new LightOffCommand(livingRoomLight);
-        LightOnCommand kitchenLightOn = new LightOnCommand(kitchenLight);
-        LightOffCommand kitchenLightOff = new LightOffCommand(kitchenLight);
-        StereoOnWithCDCommand stereoOnWithCD = new StereoOnWithCDCommand(livingRoomStereo);
-        StereoOffCommand stereoOff = new StereoOffCommand(livingRoomStereo);
-        
-        // 设置遥控器按钮
-        remote.setCommand(0, livingRoomLightOn, livingRoomLightOff);
-        remote.setCommand(1, kitchenLightOn, kitchenLightOff);
-        remote.setCommand(2, stereoOnWithCD, stereoOff);
-        
-        // 使用遥控器
-        System.out.println(remote);
-        remote.onButtonWasPushed(0);
-        remote.offButtonWasPushed(0);
-        remote.onButtonWasPushed(1);
-        remote.offButtonWasPushed(1);
-        remote.onButtonWasPushed(2);
-        remote.offButtonWasPushed(2);
-        remote.undoButtonWasPushed();
+        Scanner scanner = new Scanner(System.in);
+        boolean running = true;
+
+        while (running) {
+            String newCommand = Scanner.nextLine();
+            
+            try{
+                Command command = commandParser(newCommand);
+                editor.executeCommand(command);
+            } catch(Exception e){
+                System.out.println(e.getMessage())
+            }
+        }
+
+        scanner.close();
     }
 }
 ```
@@ -333,7 +322,6 @@ public class RemoteControlTest {
 
 2. **复杂状态管理**：
    - 复杂的撤销/重做功能需要保存更多的状态信息
-   - 可能需要使用备忘录模式配合使用
 
 3. **性能考量**：
    - 增加了系统的间接层次，可能带来轻微性能损失
@@ -407,97 +395,95 @@ ConcreteCommand2 --> Receiver
 
 
 <!--
-@startuml commandRemote
+@startuml string
+
+' 定义接口和类
 interface Command {
   + execute()
   + undo()
 }
 
-class LightOnCommand {
-  - light: Light
+class AppendCommand {
+  - buffer: StringBuffer
+  - text: String
   + execute()
   + undo()
 }
 
-class LightOffCommand {
-  - light: Light
+class InsertCommand {
+  - buffer: StringBuffer
+  - position: int
+  - text: String
   + execute()
   + undo()
 }
 
-class StereoOnWithCDCommand {
-  - stereo: Stereo
+class DeleteCommand {
+  - buffer: StringBuffer
+  - position: int
+  - length: int
+  - deletedText: String
   + execute()
   + undo()
 }
 
-class RemoteControl {
-  - onCommands[7]: Command
-  - offCommands[7]: Command
-  - undoCommand: Command
-  + setCommand(slot, onCommand, offCommand)
-  + onButtonWasPushed(slot)
-  + offButtonWasPushed(slot)
-  + undoButtonWasPushed()
+class EditorInvoker {
+  - executedCommands: List<Command>
+  - undoneCommands: List<Command>
+  + executeCommand(Command)
+  + undo()
+  + redo()
 }
 
-class Light {
-  - location: String
-  + on()
-  + off()
+class StringBuffer {
+  - content: StringBuilder
+  + append(String)
+  + insert(int, String)
+  + delete(int, int)
+  + getContent(): String
 }
 
-class Stereo {
-  - location: String
-  + on()
-  + off()
-  + setCD()
-  + setVolume(volume)
+class Client
+
+' 设置水平布局
+together {
+  Client
+  EditorInvoker
+  Command
 }
 
-class Client {
+together {
+  AppendCommand
+  InsertCommand
+  DeleteCommand
 }
 
-Command <|.. LightOnCommand
-Command <|.. LightOffCommand
-Command <|.. StereoOnWithCDCommand
-RemoteControl o--> Command
-LightOnCommand --> Light
-LightOffCommand --> Light
-StereoOnWithCDCommand --> Stereo
-Client --> RemoteControl
-Client --> LightOnCommand
-Client --> LightOffCommand
-Client --> StereoOnWithCDCommand
-Client --> Light
-Client --> Stereo
+together {
+  StringBuffer
+}
+
+' 定义关系
+Command <|.. AppendCommand
+Command <|.. InsertCommand
+Command <|.. DeleteCommand
+EditorInvoker o--> Command
+AppendCommand --> StringBuffer
+InsertCommand --> StringBuffer
+DeleteCommand --> StringBuffer
+Client --> Command
+Client --> StringBuffer
+Client --> EditorInvoker
+
+' 隐藏空成员
+hide empty members
 
 note "调用者" as N1
 note "命令" as N2
 note "接收者" as N3
 
-RemoteControl .. N1
+EditorInvoker .. N1
 Command .. N2
-Light .. N3
-@enduml
--->
+StringBuffer .. N3
 
-<!--
-@startuml remote
-!include <material/computer>
-!include <material/lightbulb_outline>
-!include <material/speaker>
-!include <material/air>
-
-cloud "智能家居系统" {
-  rectangle "<$computer>" as remote
-  rectangle "<$lightbulb_outline>" as light
-  rectangle "<$speaker>" as stereo
-  rectangle "<$air>" as aircon
-}
-
-remote -[#red]-> light: 开/关灯
-remote -[#green]-> stereo: 开/关音响
-remote -[#blue]-> aircon: 开/关空调
 @enduml
 -->
