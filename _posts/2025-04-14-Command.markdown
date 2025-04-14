@@ -22,10 +22,10 @@ Command 模式，又称命令模式，它将一个请求封装为一个对象，
 在 Command 模式中，我们可以抽象出以下参与者：
 - **Command（命令）**
 
-    声明执行操作的接口，通常只包含一个 execute() 方法。
+    声明执行操作的接口，通常只包含一个执行命令方法。
 - **ConcreteCommand（具体命令）**
 
-    定义一个接收者和行为的绑定关系，实现 execute() 方法时会调用接收者的相应操作。
+    定义一个接收者和行为的绑定关系，实现某个执行命令方法时会调用接收者的相应操作。
 - **Invoker（调用者）**
 
     负责要求命令对象执行请求，不直接与接收者交互。
@@ -34,30 +34,25 @@ Command 模式，又称命令模式，它将一个请求封装为一个对象，
     知道如何实施与执行一个请求相关的操作，任何类都可能作为一个接收者。
 - **Client（客户）**
 
-    创建具体的命令对象并设定它的接收者。
+    接收并创建具体的命令对象并设定它的接收者。
 
 #### 类图结构
 
 ![](/img/posts/2025-04-14-Command/command.svg)
 
-- `Command`: 命令接口，定义执行命令的方法。通常包含一个 execute() 方法，有时也会包含 undo() 方法用于支持撤销操作。
-- `ConcreteCommand`: 具体命令类，实现 Command 接口。它将一个接收者对象与一个动作绑定，调用接收者相应的操作来实现 execute() 方法。
-- `Invoker`: 调用者，负责调用命令对象执行请求。可以持有多个命令对象，并按照一定的规则（如队列、栈等）来执行这些命令。
-- `Receiver`: 接收者，知道如何执行与请求相关的操作。它具体实现了命令要执行的动作。
-- `Client`: 客户端，创建具体的命令对象，并指定它的接收者。客户端负责组装命令对象与接收者。
+
+- `Client`: 客户端，创建具体的 `command` 对象，并指定它的 `Receiver` 。`Client` 负责组装命令 `command` 与 `Receiver` 。
+
+- `Command`: 命令接口，定义执行命令的方法。通常包含一个 `execute()` 方法，有时（子接口）也会包含 `undo()` 方法用于支持撤销操作。
+
+- `ConcreteCommand`: 具体命令类，实现 `Command` 接口。它将一个 `Receiver` 对象与一个动作绑定，调用 `Receiver` 相应的 `action()` 来实现 `execute()` 方法。
+
+- `Invoker`: 调用者，负责调用 `command` 对象执行请求。可以持有多个 `command` 对象，并按照一定的规则（如队列、栈等）来执行这些 `command`。
+
+- `Receiver`: 接收者，知道如何执行与请求相关的操作。`action()` 具体实现了 `command` 要执行的动作。
 
 
-### Java中的命令模式应用
 
-在Java中，命令模式经常被用于GUI编程、线程池任务执行、事务处理等场景。Java标准库中的`Runnable`接口就是命令模式的一个很好的例子：
-
-```java
-public interface Runnable {
-    void run();
-}
-```
-
-`Runnable`接口就相当于Command接口，而`run()`方法相当于`execute()`方法。线程池就是一个典型的调用者(Invoker)。
 
 ### 实例演示
 
@@ -318,13 +313,13 @@ public class RemoteControlTest {
 
 本例中命令模式实现的主要优势：
 
-1. **松耦合**：调用者(遥控器)与接收者(家电)完全解耦，调用者无需知道接收者的具体实现
+1. **松耦合**：调用者与接收者完全解耦，调用者无需知道接收者的具体实现
 
 2. **扩展性强**：
    - 可以轻松添加新的命令而不修改现有代码
    - 可以轻松添加新的接收者而不影响现有命令
 
-3. **支持撤销操作**：每个命令都可以实现undo方法，使系统支持撤销功能
+3. **支持撤销操作**
 
 4. **命令组合**：可以创建宏命令，将多个命令组合在一起执行
 
@@ -353,39 +348,63 @@ public class RemoteControlTest {
 命令模式是一种强大的行为型设计模式，它通过将请求封装为对象，实现了调用者与接收者的解耦。这种分离使系统更加灵活，可以独立地扩展和修改命令的执行方式和接收者的实现。命令模式特别适合需要队列执行、请求日志、撤销功能或事务操作的场景。在面对复杂交互系统时，命令模式能够提供清晰的结构和良好的扩展性，但对于简单系统可能会带来不必要的复杂度。在实际应用中，应当根据具体需求权衡是否使用这种模式。
 
 
-<!--
+
+```
 @startuml command
-interface Command {
-  + execute()
-  + undo()
-}
 
-class ConcreteCommand {
-  - receiver
-  + execute()
-  + undo()
-}
 
-class Invoker {
-  - commands
-  + setCommand()
-  + executeCommand()
-}
+    interface Command {
+    + execute()
+    }
+
+    interface CanUndoCommand{
+        + undo()
+    }
+
+    class ConcreteCommand2 {
+        - receiver
+        + execute()
+        + undo()
+    }
+
+    class ConcreteCommand1 {
+        - receiver
+        + execute()
+    }
+
+    class Invoker {
+        - commands
+        + executeCommand(command: Command)
+        + undo()
+        + redo()
+    }
+
 
 class Receiver {
-  + action()
++ action1()
++ action2()
 }
 
-class Client {
-}
+class Client
 
-Command <|.. ConcreteCommand
-Invoker o--> Command
-ConcreteCommand --> Receiver
-Client --> ConcreteCommand
+
+
+Client --> Invoker
 Client --> Receiver
+Client --> Command
+Invoker o-- Command
+
+Command <|. ConcreteCommand1
+Command <|-- CanUndoCommand 
+CanUndoCommand <|.. ConcreteCommand2
+
+ConcreteCommand1 --> Receiver
+ConcreteCommand2 --> Receiver
+
+
 @enduml
--->
+```
+
 
 <!--
 @startuml commandRemote

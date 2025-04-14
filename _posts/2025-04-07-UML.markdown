@@ -397,7 +397,7 @@ class D
 ' 使用不可见连接线调整布局
 A -[hidden]-> B
 B -[hidden]-> C
-A -[hidden]-> D
+B -[hidden]-> D
 
 ' 可见的实际关系
 A --> C
