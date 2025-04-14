@@ -1,0 +1,483 @@
+---
+layout:     post
+title:      "命令模式（Command）"
+subtitle:   "当需要将请求封装为一个对象，使得可以用不同的请求对客户进行参数化时，Command 模式是理想的解决方案。"
+date:       2025-04-14
+author:     "CloudingYu"
+header-style: picture
+mathjax: 
+tags:
+    - 面向对象
+    - 设计模式
+    - 行为型模式
+    - 软件设计
+---
+
+Command 模式，又称命令模式，它将一个请求封装为一个对象，从而使你可用不同的请求对客户进行参数化，对请求排队或记录请求日志，以及支持可撤销的操作。这种模式将发出请求的对象和执行请求的对象解耦，使系统更加灵活，易于扩展。
+
+### 基本结构
+
+#### 参与者
+在 Command 模式中，我们可以抽象出以下参与者：
+- **Command（命令）**
+
+    声明执行操作的接口，通常只包含一个 execute() 方法。
+- **ConcreteCommand（具体命令）**
+
+    定义一个接收者和行为的绑定关系，实现 execute() 方法时会调用接收者的相应操作。
+- **Invoker（调用者）**
+
+    负责要求命令对象执行请求，不直接与接收者交互。
+- **Receiver（接收者）**
+
+    知道如何实施与执行一个请求相关的操作，任何类都可能作为一个接收者。
+- **Client（客户）**
+
+    创建具体的命令对象并设定它的接收者。
+
+#### 类图结构
+
+![](/img/posts/2025-04-14-Command/command.svg)
+
+- `Command`: 命令接口，定义执行命令的方法。通常包含一个 execute() 方法，有时也会包含 undo() 方法用于支持撤销操作。
+- `ConcreteCommand`: 具体命令类，实现 Command 接口。它将一个接收者对象与一个动作绑定，调用接收者相应的操作来实现 execute() 方法。
+- `Invoker`: 调用者，负责调用命令对象执行请求。可以持有多个命令对象，并按照一定的规则（如队列、栈等）来执行这些命令。
+- `Receiver`: 接收者，知道如何执行与请求相关的操作。它具体实现了命令要执行的动作。
+- `Client`: 客户端，创建具体的命令对象，并指定它的接收者。客户端负责组装命令对象与接收者。
+
+
+### Java中的命令模式应用
+
+在Java中，命令模式经常被用于GUI编程、线程池任务执行、事务处理等场景。Java标准库中的`Runnable`接口就是命令模式的一个很好的例子：
+
+```java
+public interface Runnable {
+    void run();
+}
+```
+
+`Runnable`接口就相当于Command接口，而`run()`方法相当于`execute()`方法。线程池就是一个典型的调用者(Invoker)。
+
+### 实例演示
+
+#### 问题
+假设我们正在开发一个智能家居控制系统，需要通过遥控器（调用者）来控制不同的智能设备（接收者），如灯、音响、空调等。遥控器上有多个按钮，每个按钮可以对应不同的设备操作，我们希望能够灵活地配置这些按钮，甚至可以支持撤销上一次操作。
+
+![](/img/posts/2025-04-14-Command/remote.svg)
+
+
+#### 解决方案 1（不使用命令模式）
+直接在遥控器类中处理所有设备的操作逻辑。这种方法的缺点是：
+- 遥控器类会变得非常庞大和复杂
+- 每增加一种设备或操作，都需要修改遥控器类
+- 很难实现撤销功能
+
+```java
+public class RemoteControl {
+    public void turnOnLight() {
+        Light light = new Light();
+        light.on();
+    }
+    
+    public void turnOffLight() {
+        Light light = new Light();
+        light.off();
+    }
+    
+    public void turnOnStereo() {
+        Stereo stereo = new Stereo();
+        stereo.on();
+        stereo.setVolume(5);
+    }
+    
+    // 更多的操作...
+}
+```
+
+#### 解决方案 2（使用命令模式）
+
+![](/img/posts/2025-04-14-Command/commandRemote.svg)
+
+以下代码已省略构造器及一些基本方法
+
+##### 定义命令接口与接收者类
+```java
+// 命令接口
+interface Command {
+    void execute();
+    void undo();
+}
+
+// 灯光接收者
+class Light {
+    private String location;
+    
+    public void on() {
+        System.out.println(location + " light is on");
+    }
+    
+    public void off() {
+        System.out.println(location + " light is off");
+    }
+}
+
+// 音响接收者
+class Stereo {
+    private String location;
+    
+    public void on() {
+        System.out.println(location + " stereo is on");
+    }
+    
+    public void off() {
+        System.out.println(location + " stereo is off");
+    }
+    
+    public void setCD() {
+        System.out.println(location + " stereo is set for CD input");
+    }
+    
+    public void setVolume(int volume) {
+        System.out.println(location + " stereo volume set to " + volume);
+    }
+}
+```
+
+##### 实现具体命令类
+
+```java
+// 开灯命令
+class LightOnCommand implements Command {
+    private Light light;
+    
+    public LightOnCommand(Light light) {
+        this.light = light;
+    }
+    
+    @Override
+    public void execute() {
+        light.on();
+    }
+    
+    @Override
+    public void undo() {
+        light.off();
+    }
+}
+
+// 关灯命令
+class LightOffCommand implements Command {
+    private Light light;
+    
+    public LightOffCommand(Light light) {
+        this.light = light;
+    }
+    
+    @Override
+    public void execute() {
+        light.off();
+    }
+    
+    @Override
+    public void undo() {
+        light.on();
+    }
+}
+
+// 打开音响命令
+class StereoOnWithCDCommand implements Command {
+    private Stereo stereo;
+    
+    public StereoOnWithCDCommand(Stereo stereo) {
+        this.stereo = stereo;
+    }
+    
+    @Override
+    public void execute() {
+        stereo.on();
+        stereo.setCD();
+        stereo.setVolume(5);
+    }
+    
+    @Override
+    public void undo() {
+        stereo.off();
+    }
+}
+
+// 空命令，用于初始化遥控器按钮
+class NoCommand implements Command {
+    @Override
+    public void execute() {}
+    
+    @Override
+    public void undo() {}
+}
+```
+
+##### 实现调用者类
+
+```java
+// 遥控器 - 调用者
+class RemoteControl {
+    private Command[] onCommands;
+    private Command[] offCommands;
+    private Command undoCommand;
+    
+    // 初始化遥控器，预设7个按钮
+    public RemoteControl() {
+        onCommands = new Command[7];
+        offCommands = new Command[7];
+        
+        Command noCommand = new NoCommand();
+        for (int i = 0; i < 7; i++) {
+            onCommands[i] = noCommand;
+            offCommands[i] = noCommand;
+        }
+        undoCommand = noCommand;
+    }
+    
+    // 设置按钮对应的命令
+    public void setCommand(int slot, Command onCommand, Command offCommand) {
+        onCommands[slot] = onCommand;
+        offCommands[slot] = offCommand;
+    }
+    
+    // 按下开按钮
+    public void onButtonWasPushed(int slot) {
+        onCommands[slot].execute();
+        undoCommand = onCommands[slot];
+    }
+    
+    // 按下关按钮
+    public void offButtonWasPushed(int slot) {
+        offCommands[slot].execute();
+        undoCommand = offCommands[slot];
+    }
+    
+    // 按下撤销按钮
+    public void undoButtonWasPushed() {
+        undoCommand.undo();
+    }
+    
+    @Override
+    public String toString() {
+        StringBuffer stringBuff = new StringBuffer();
+        stringBuff.append("\n------ Remote Control -------\n");
+        for (int i = 0; i < onCommands.length; i++) {
+            stringBuff.append("[slot " + i + "] " + onCommands[i].getClass().getName()
+                + "    " + offCommands[i].getClass().getName() + "\n");
+        }
+        stringBuff.append("[undo] " + undoCommand.getClass().getName() + "\n");
+        return stringBuff.toString();
+    }
+}
+```
+
+##### 客户端使用代码
+
+```java
+// 客户端代码
+public class RemoteControlTest {
+    public static void main(String[] args) {
+        RemoteControl remote = new RemoteControl();
+        
+        // 创建接收者
+        Light livingRoomLight = new Light("Living Room");
+        Light kitchenLight = new Light("Kitchen");
+        Stereo livingRoomStereo = new Stereo("Living Room");
+        
+        // 创建命令对象，将接收者传入
+        LightOnCommand livingRoomLightOn = new LightOnCommand(livingRoomLight);
+        LightOffCommand livingRoomLightOff = new LightOffCommand(livingRoomLight);
+        LightOnCommand kitchenLightOn = new LightOnCommand(kitchenLight);
+        LightOffCommand kitchenLightOff = new LightOffCommand(kitchenLight);
+        StereoOnWithCDCommand stereoOnWithCD = new StereoOnWithCDCommand(livingRoomStereo);
+        StereoOffCommand stereoOff = new StereoOffCommand(livingRoomStereo);
+        
+        // 设置遥控器按钮
+        remote.setCommand(0, livingRoomLightOn, livingRoomLightOff);
+        remote.setCommand(1, kitchenLightOn, kitchenLightOff);
+        remote.setCommand(2, stereoOnWithCD, stereoOff);
+        
+        // 使用遥控器
+        System.out.println(remote);
+        remote.onButtonWasPushed(0);
+        remote.offButtonWasPushed(0);
+        remote.onButtonWasPushed(1);
+        remote.offButtonWasPushed(1);
+        remote.onButtonWasPushed(2);
+        remote.offButtonWasPushed(2);
+        remote.undoButtonWasPushed();
+    }
+}
+```
+
+### 优势分析
+
+本例中命令模式实现的主要优势：
+
+1. **松耦合**：调用者(遥控器)与接收者(家电)完全解耦，调用者无需知道接收者的具体实现
+
+2. **扩展性强**：
+   - 可以轻松添加新的命令而不修改现有代码
+   - 可以轻松添加新的接收者而不影响现有命令
+
+3. **支持撤销操作**：每个命令都可以实现undo方法，使系统支持撤销功能
+
+4. **命令组合**：可以创建宏命令，将多个命令组合在一起执行
+
+5. **队列请求**：命令对象可以存储在队列中，实现请求的延迟执行或日志记录
+
+### 局限性分析
+
+1. **类爆炸**：
+   - 每个具体命令都需要一个单独的类，可能导致类数量剧增
+   - 对于简单系统可能显得过于复杂
+
+2. **复杂状态管理**：
+   - 复杂的撤销/重做功能需要保存更多的状态信息
+   - 可能需要使用备忘录模式配合使用
+
+3. **性能考量**：
+   - 增加了系统的间接层次，可能带来轻微性能损失
+   - 命令对象可能消耗额外内存
+
+4. **难以调试**：
+   - 命令的执行流程更分散，可能增加调试难度
+   - 错误追踪需要跨越多个类
+
+### 总结
+
+命令模式是一种强大的行为型设计模式，它通过将请求封装为对象，实现了调用者与接收者的解耦。这种分离使系统更加灵活，可以独立地扩展和修改命令的执行方式和接收者的实现。命令模式特别适合需要队列执行、请求日志、撤销功能或事务操作的场景。在面对复杂交互系统时，命令模式能够提供清晰的结构和良好的扩展性，但对于简单系统可能会带来不必要的复杂度。在实际应用中，应当根据具体需求权衡是否使用这种模式。
+
+
+<!--
+@startuml command
+interface Command {
+  + execute()
+  + undo()
+}
+
+class ConcreteCommand {
+  - receiver
+  + execute()
+  + undo()
+}
+
+class Invoker {
+  - commands
+  + setCommand()
+  + executeCommand()
+}
+
+class Receiver {
+  + action()
+}
+
+class Client {
+}
+
+Command <|.. ConcreteCommand
+Invoker o--> Command
+ConcreteCommand --> Receiver
+Client --> ConcreteCommand
+Client --> Receiver
+@enduml
+-->
+
+<!--
+@startuml commandRemote
+interface Command {
+  + execute()
+  + undo()
+}
+
+class LightOnCommand {
+  - light: Light
+  + execute()
+  + undo()
+}
+
+class LightOffCommand {
+  - light: Light
+  + execute()
+  + undo()
+}
+
+class StereoOnWithCDCommand {
+  - stereo: Stereo
+  + execute()
+  + undo()
+}
+
+class RemoteControl {
+  - onCommands[7]: Command
+  - offCommands[7]: Command
+  - undoCommand: Command
+  + setCommand(slot, onCommand, offCommand)
+  + onButtonWasPushed(slot)
+  + offButtonWasPushed(slot)
+  + undoButtonWasPushed()
+}
+
+class Light {
+  - location: String
+  + on()
+  + off()
+}
+
+class Stereo {
+  - location: String
+  + on()
+  + off()
+  + setCD()
+  + setVolume(volume)
+}
+
+class Client {
+}
+
+Command <|.. LightOnCommand
+Command <|.. LightOffCommand
+Command <|.. StereoOnWithCDCommand
+RemoteControl o--> Command
+LightOnCommand --> Light
+LightOffCommand --> Light
+StereoOnWithCDCommand --> Stereo
+Client --> RemoteControl
+Client --> LightOnCommand
+Client --> LightOffCommand
+Client --> StereoOnWithCDCommand
+Client --> Light
+Client --> Stereo
+
+note "调用者" as N1
+note "命令" as N2
+note "接收者" as N3
+
+RemoteControl .. N1
+Command .. N2
+Light .. N3
+@enduml
+-->
+
+<!--
+@startuml remote
+!include <material/computer>
+!include <material/lightbulb_outline>
+!include <material/speaker>
+!include <material/air>
+
+cloud "智能家居系统" {
+  rectangle "<$computer>" as remote
+  rectangle "<$lightbulb_outline>" as light
+  rectangle "<$speaker>" as stereo
+  rectangle "<$air>" as aircon
+}
+
+remote -[#red]-> light: 开/关灯
+remote -[#green]-> stereo: 开/关音响
+remote -[#blue]-> aircon: 开/关空调
+@enduml
+-->
