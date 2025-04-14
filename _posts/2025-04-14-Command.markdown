@@ -1,7 +1,7 @@
 ---
 layout:     post
 title:      "命令模式（Command）"
-subtitle:   "当需要将请求封装为一个对象，使得可以用不同的请求对客户进行参数化时，Command 模式是理想的解决方案。"
+subtitle:   "当需要将请求封装为一个对象，使得可以用不同的请求对客户进行参数化时......"
 date:       2025-04-14
 author:     "CloudingYu"
 header-style: picture
