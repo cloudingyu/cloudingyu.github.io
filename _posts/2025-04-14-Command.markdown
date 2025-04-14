@@ -96,10 +96,9 @@ public class StringEditor {
 
 #### 解决方案 2（使用命令模式）
 
-![](/img/posts/2025-04-14-Command/String.svg)
+![](/img/posts/2025-04-14-Command/string.svg)
 
-以下代码实现了基于命令模式的字符串编辑器：
-
+以下代码省略了构造函数以及部分基本函数
 ##### 定义命令接口
 ```java
 interface Command {
