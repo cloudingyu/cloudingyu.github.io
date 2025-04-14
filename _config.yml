@@ -84,8 +84,11 @@ featured-condition-size: 1 # A tag will be featured if the size of it is more th
 
 # Progressive Web Apps
 chrome-tab-theme-color: "#000000"
-service-worker: true
+service-worker: false  # 修改为 false 以禁用 Service Worker
 pwa-offline-page: "/404.html"
+# 缓存配置被禁用
+# cache-version: "v1.0.1"
+# cache-timeout: 3600
 
 # MathJax rendering for layout:page (e.g. post preview)
 page-mathjax: false
