@@ -1,0 +1,37 @@
+/* LXGW WenKai 字体引入 */
+@font-face {
+    font-family: 'LXGW WenKai';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.1.0/style/lxgw-wenkai-regular.woff2') format('woff2'),
+         url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.1.0/style/lxgw-wenkai-regular.woff') format('woff');
+}
+
+@font-face {
+    font-family: 'LXGW WenKai';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.1.0/style/lxgw-wenkai-bold.woff2') format('woff2'),
+         url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.1.0/style/lxgw-wenkai-bold.woff') format('woff');
+}
+
+/* LXGW WenKai GB 字体引入 */
+@font-face {
+    font-family: 'LXGW WenKai GB';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-gb-webfont@1.1.0/style/lxgw-wenkai-gb-regular.woff2') format('woff2'),
+         url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-gb-webfont@1.1.0/style/lxgw-wenkai-gb-regular.woff') format('woff');
+}
+
+@font-face {
+    font-family: 'LXGW WenKai GB';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-gb-webfont@1.1.0/style/lxgw-wenkai-gb-bold.woff2') format('woff2'),
+         url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-gb-webfont@1.1.0/style/lxgw-wenkai-gb-bold.woff') format('woff');
+}

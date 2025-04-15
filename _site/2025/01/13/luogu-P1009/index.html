@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="技术宅拯救世界真的很酷！">
+    <meta name="keywords" content="">
+    <meta name="theme-color" content="#000000">
+
+    <!-- Open Graph -->
+    <meta property="og:title"
+        content="[洛谷]P1009 [NOIP1998 普及组] 阶乘之和 - 小鱼儿clouding的博客 | CY's Blog">
+    
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="题目描述
+用高精度计算出 $S=1!+2!+3!+···+n!$ $($ $n$ $\le$ $50$ $)$ 。
+">
+    
+    <meta property="article:published_time" content=" 2025-01-13T00:00:00Z">
+    
+    
+    <meta property="article:author" content="CloudingYu">
+    
+    
+    <meta property="article:tag" content="题解">
+    
+    <meta property="article:tag" content="洛谷">
+    
+    <meta property="article:tag" content="算法">
+    
+    
+    <meta property="og:image" content="http://localhost:4000/img/profile_pic.jpg">
+    <meta property="og:url" content="http://localhost:4000/2025/01/13/luogu-P1009/">
+    <meta property="og:site_name" content="小鱼儿clouding的博客 | CY's Blog">
+
+    <title>[洛谷]P1009 [NOIP1998 普及组] 阶乘之和 - 小鱼儿clouding的博客 | CY's Blog</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/pwa/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="http://localhost:4000/2025/01/13/luogu-P1009/">
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href=" /css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href=" /css/hux-blog.min.css">
+
+    <!-- LXGW WenKai Font -->
+    <link rel="stylesheet" href=" /css/lxgw-font.css">
+
+    <!-- Custom Fonts -->
+    <!-- <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+    <!-- Hux change font-awesome CDN to qiniu -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet"
+        type="text/css">
+        
+    <!-- Maple Mono Font -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ssmi/maple-font/dist/mapleFont.css" />
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+
+    <!-- Google AdSense 
+    <script data-ad-client="ca-pub-6487568398225121" async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        -->
+</head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- Navigation -->
+
+    <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+        
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header page-scroll">
+                <button type="button" class="navbar-toggle">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">CloudingYu的博客</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div id="huxblog_navbar">
+                <div class="navbar-collapse">
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="/">Home</a>
+                        </li>
+                        
+                        
+                        
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                        
+                        
+                        <li>
+                            <a href="/archive/">Archive</a>
+                        </li>
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        <li class="search-icon">
+                            <a href="javascript:void(0)">
+                                <i class="fa fa-search"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <script>
+        // Drop Bootstarp low-performance Navbar
+        // Use customize navbar with high-quality material design animation
+        // in high-perf jank-free CSS3 implementation
+        var $body = document.body;
+        var $toggle = document.querySelector('.navbar-toggle');
+        var $navbar = document.querySelector('#huxblog_navbar');
+        var $collapse = document.querySelector('.navbar-collapse');
+
+        var __HuxNav__ = {
+            close: function () {
+                $navbar.className = " ";
+                // wait until animation end.
+                setTimeout(function () {
+                    // prevent frequently toggle
+                    if ($navbar.className.indexOf('in') < 0) {
+                        $collapse.style.height = "0px"
+                    }
+                }, 400)
+            },
+            open: function () {
+                $collapse.style.height = "auto"
+                $navbar.className += " in";
+            }
+        }
+
+        // Bind Event
+        $toggle.addEventListener('click', function (e) {
+            if ($navbar.className.indexOf('in') > 0) {
+                __HuxNav__.close()
+            } else {
+                __HuxNav__.open()
+            }
+        })
+
+        /**
+         * Since Fastclick is used to delegate 'touchstart' globally
+         * to hack 300ms delay in iOS by performing a fake 'click',
+         * Using 'e.stopPropagation' to stop 'touchstart' event from 
+         * $toggle/$collapse will break global delegation.
+         * 
+         * Instead, we use a 'e.target' filter to prevent handler
+         * added to document close HuxNav.  
+         *
+         * Also, we use 'click' instead of 'touchstart' as compromise
+         */
+        document.addEventListener('click', function (e) {
+            if (e.target == $toggle) return;
+            if (e.target.className == 'icon-bar') return;
+            __HuxNav__.close();
+        })
+    </script>
+    <!-- Search -->
+<div class="search-page">
+  <div class="search-icon-close-container">
+    <span class="search-icon-close">
+      <i class="fa fa-chevron-down"></i>
+    </span>
+  </div>
+  <div class="search-main container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <form></form>
+        <input type="text" id="search-input" placeholder="$ grep...">
+        </form>
+        <div id="search-results" class="mini-post-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <!-- Image to hack wechat -->
+<!-- <img src="/img/icon_wechat.png" width="0" height="0"> -->
+<!-- <img src="/img/home-bg.jpg" width="0" height="0"> -->
+
+<!-- Post Header -->
+
+
+
+<style type="text/css">
+    header.intro-header{
+        position: relative;
+        background-image: url('/img/home-bg.jpg');
+        background: ;
+    }
+
+    
+</style>
+
+
+
+
+<header class="intro-header" >
+
+    <div class="header-mask"></div>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/archive/?tag=%E9%A2%98%E8%A7%A3" title="题解">题解</a>
+                        
+                        <a class="tag" href="/archive/?tag=%E6%B4%9B%E8%B0%B7" title="洛谷">洛谷</a>
+                        
+                        <a class="tag" href="/archive/?tag=%E7%AE%97%E6%B3%95" title="算法">算法</a>
+                        
+                    </div>
+                    <h1>[洛谷]P1009 [NOIP1998 普及组] 阶乘之和</h1>
+                    
+                    <h2 class="subheading">高精度加+高精度乘（优化码风.ver)</h2>
+                    <span class="meta">Posted by CloudingYu on January 13, 2025</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+
+
+
+<!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <!-- Multi-Lingual -->
+                
+
+				<h2 id="题目描述"><a href="https://www.luogu.com.cn/problem/P1009">题目描述</a></h2>
+<p>用高精度计算出 $S=1!+2!+3!+···+n!$ $($ $n$ $\le$ $50$ $)$ 。</p>
+
+<p>其中 $!$ 表示阶乘，例如：$5!=5\times4\times3\times2\times1$ 。</p>
+
+<h2 id="整体思路">整体思路</h2>
+<p>这道题的思路非常简单，就是一个很普通的循环嵌套，而难点在于高精度代码的书写，部分代码如下：</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+</pre></td><td class="rouge-code"><pre><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;cstring&gt;</span><span class="c1"> //memset函数头文件</span><span class="cp">
+</span><span class="n">using</span> <span class="n">namespace</span> <span class="n">std</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">ans</span><span class="p">[</span><span class="mi">1000</span><span class="p">],</span> <span class="n">facto</span><span class="p">[</span><span class="mi">1000</span><span class="p">];</span>
+<span class="kt">void</span> <span class="nf">mul</span><span class="p">(</span><span class="kt">int</span> <span class="n">k</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// 这里写高精度乘法</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">plu</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">// 这里写高精度加法</span>
+<span class="p">}</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">cin</span> <span class="o">&gt;&gt;</span> <span class="n">n</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">memset</span><span class="p">(</span><span class="n">facto</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">facto</span><span class="p">));</span> <span class="c1">// 清空数组</span>
+        <span class="n">facto</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>                    <span class="c1">// 因为是乘法，初始值为1，位数也为1，</span>
+        <span class="n">facto</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">i</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="c1">// 计算阶乘</span>
+            <span class="n">mul</span><span class="p">(</span><span class="n">j</span><span class="p">);</span>
+        <span class="n">plu</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">ans</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="c1">// 将结果逆序输出</span>
+        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>我们只需要将两个函数补充完整便可以<del>轻松AC</del>这道题</p>
+
+<h2 id="高精度存储">高精度存储</h2>
+<p>因为有些计算的位数可达几十位甚至几百位，所以需要使用高精度算法进行计算。</p>
+
+<p>为了方便计算，在使用高精度算法时，通常会使用<strong>逆序输入</strong>，如：</p>
+
+<p>$123$ 可将其存储在一个长度为4的数组a中，其中$\displaystyle a[1]=3$， $\displaystyle a[2]=2$ ，$\displaystyle a[3]=1$ ，并用 $\displaystyle a[0]=3$ 代表此数的位数是 $3$。</p>
+
+<h2 id="高精度加法">高精度加法</h2>
+<p>已知有两数 $\displaystyle a[MAXN]$ ， $b[MAXN]$ ，求其和$\displaystyle c[MAXN]$ 。
+先随便蒟个栗子，找一下规律：</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre>        4 5 6
+          9 3
+    +___1_______
+        5 4 9
+                
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>可以看到，得到结果的第 $i$ 位，就等于两个加数的第 $i$ 位之和，加上 $i-1$ 位的进位值。
+若得到的结果大于等于 $10$ ，则将第 $i+1$ 位的数 $+1$ ，同时自身取模 $10$ 。
+则有以下程序：</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre></td><td class="rouge-code"><pre><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">max</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>       <span class="c1">// 更新位数</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">10</span><span class="p">)</span> <span class="c1">// 若二者之和大于等于10，需进位</span>
+    <span class="p">{</span>
+        <span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">%=</span> <span class="mi">10</span><span class="p">;</span>   <span class="c1">// 取个位数</span>
+        <span class="n">c</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">++</span><span class="p">;</span>   <span class="c1">// 进位</span>
+        <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// 更新位数</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h2 id="高精度乘法">高精度乘法</h2>
+<p>相较于加法，高精度乘法更加复杂，
+已知有两数 $\displaystyle a [MAXN]$ ，$\displaystyle b [MAXN]$ ，求其积 $\displaystyle c [MAXN]$ 。
+还是先找个栗子：</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre>        4 5 6
+          9 3
+    ×_________ 
+      1 3 6 8
+    4 1 0 4
+  ______1_____
+    4 2 4 0 8
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>也可以得出规律 $\displaystyle c[i+j-1]+=a[i]\times b[j]+x$ ，
+其中$1 \le i \le a[0]$， $\displaystyle 1\le j \le b[0]$ ，$\displaystyle x = c[i+j-1]/10 $ 。
+则有以下程序：</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="rouge-code"><pre><span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">c</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">10</span><span class="p">;</span>
+        <span class="n">c</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="mi">10</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">c</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="k">while</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="c1">// 去除多余的0，得到精确的位数</span>
+    <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">--</span><span class="p">;</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>接下来，只需要按照两种模版和题目要求依葫芦画瓢就行了。</p>
+
+<h2 id="代码实现">代码实现</h2>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+</pre></td><td class="rouge-code"><pre><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;cstring&gt;</span><span class="c1"> //memset函数头文件</span><span class="cp">
+</span><span class="n">using</span> <span class="n">namespace</span> <span class="n">std</span><span class="p">;</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">MAXN</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span> <span class="c1">// 数组开大点没关系</span>
+<span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">ans</span><span class="p">[</span><span class="n">MAXN</span><span class="p">],</span> <span class="n">facto</span><span class="p">[</span><span class="n">MAXN</span><span class="p">],</span> <span class="n">ans_</span><span class="p">[</span><span class="n">MAXN</span><span class="p">],</span> <span class="n">facto_</span><span class="p">[</span><span class="n">MAXN</span><span class="p">],</span> <span class="n">k_</span><span class="p">[</span><span class="n">MAXN</span><span class="p">];</span>
+<span class="kt">void</span> <span class="nf">mul</span><span class="p">(</span><span class="kt">int</span> <span class="n">k</span><span class="p">)</span> <span class="c1">// 与上面高精度乘法类似</span>
+<span class="p">{</span>
+    <span class="n">memset</span><span class="p">(</span><span class="n">facto_</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">facto_</span><span class="p">));</span> <span class="c1">// 清空临时数组</span>
+    <span class="n">memset</span><span class="p">(</span><span class="n">k_</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">k_</span><span class="p">));</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">k</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="c1">// 将k逆序存储</span>
+    <span class="p">{</span>
+        <span class="n">k_</span><span class="p">[</span><span class="o">++</span><span class="n">k_</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">k</span> <span class="o">%</span> <span class="mi">10</span><span class="p">;</span>
+        <span class="n">k</span> <span class="o">/=</span> <span class="mi">10</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">k_</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">facto</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">facto_</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">k_</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">facto</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">;</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">facto_</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">10</span><span class="p">;</span>
+            <span class="n">facto_</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">%=</span> <span class="mi">10</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">facto_</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">facto</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">facto_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">facto</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">k_</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">facto_</span><span class="p">[</span><span class="n">facto_</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">facto_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">--</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">facto_</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+        <span class="n">facto</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">facto_</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">plu</span><span class="p">()</span> <span class="c1">// 与上面高精度加法类似</span>
+<span class="p">{</span>
+    <span class="n">memset</span><span class="p">(</span><span class="n">ans_</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">ans_</span><span class="p">));</span> <span class="c1">// 清空临时数组</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">max</span><span class="p">(</span><span class="n">ans</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">facto</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">ans_</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">facto</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+        <span class="n">ans_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">ans_</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">ans_</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">%=</span> <span class="mi">10</span><span class="p">;</span>
+            <span class="n">ans_</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">++</span><span class="p">;</span>
+            <span class="n">ans_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">ans_</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+        <span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ans_</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">cin</span> <span class="o">&gt;&gt;</span> <span class="n">n</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">memset</span><span class="p">(</span><span class="n">facto</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">facto</span><span class="p">));</span> <span class="c1">// 清空数组</span>
+        <span class="n">facto</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>                    <span class="c1">// 因为是乘法，初始值为1，位数也为1，</span>
+        <span class="n">facto</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">i</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="c1">// 计算阶乘</span>
+            <span class="n">mul</span><span class="p">(</span><span class="n">j</span><span class="p">);</span>
+        <span class="n">plu</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">ans</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span><span class="o">--</span><span class="p">)</span> <span class="c1">// 将结果逆序输出</span>
+        <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">ans</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h2 id="三年后的我">三年后的我</h2>
+<p>在大一系统学习了 <em>《程序设计》</em> 之后，我才意识到我高中写的这段代码有多么的丑陋且不具有普遍性，遂重构一份代码，也献给三年前的自己VAV</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+</pre></td><td class="rouge-code"><pre><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="c1"> //C++是什么，没学过</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span><span class="k">const</span> <span class="kt">int</span> <span class="n">MAXN</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">big_digits</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">len</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">digit</span><span class="p">[</span><span class="n">MAXN</span><span class="p">];</span>
+<span class="p">};</span>
+
+<span class="c1">// 将int型转为big_digits型</span>
+<span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="nf">trans</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="n">ans</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">big_digits</span><span class="p">));</span>
+    <span class="n">ans</span><span class="o">-&gt;</span><span class="n">len</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">memset</span><span class="p">(</span><span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">));</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">ans</span><span class="o">-&gt;</span><span class="n">len</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">ans</span><span class="o">-&gt;</span><span class="n">len</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span> <span class="o">%</span> <span class="mi">10</span><span class="p">;</span>
+            <span class="n">n</span> <span class="o">/=</span> <span class="mi">10</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// 返回a+b的结果</span>
+<span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="nf">plus</span><span class="p">(</span><span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="n">b</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="n">ans</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">big_digits</span><span class="p">));</span>
+    <span class="n">memset</span><span class="p">(</span><span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">));</span>
+    <span class="kt">int</span> <span class="n">carry</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">MAXN</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">carry</span><span class="p">;</span>
+        <span class="n">carry</span> <span class="o">=</span> <span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="mi">10</span><span class="p">;</span>
+        <span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">%=</span> <span class="mi">10</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">ans</span><span class="o">-&gt;</span><span class="n">len</span> <span class="o">=</span> <span class="n">MAXN</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">ans</span><span class="o">-&gt;</span><span class="n">len</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">ans</span><span class="o">-&gt;</span><span class="n">len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">ans</span><span class="o">-&gt;</span><span class="n">len</span><span class="o">--</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// 返回a*b的结果</span>
+<span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="nf">mult</span><span class="p">(</span><span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="n">b</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="n">ans</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">big_digits</span><span class="p">));</span>
+    <span class="n">memset</span><span class="p">(</span><span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">));</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">a</span><span class="o">-&gt;</span><span class="n">len</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">b</span><span class="o">-&gt;</span><span class="n">len</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">a</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+            <span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">/</span> <span class="mi">10</span><span class="p">;</span>
+            <span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">%=</span> <span class="mi">10</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">ans</span><span class="o">-&gt;</span><span class="n">len</span> <span class="o">=</span> <span class="n">a</span><span class="o">-&gt;</span><span class="n">len</span> <span class="o">+</span> <span class="n">b</span><span class="o">-&gt;</span><span class="n">len</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">ans</span><span class="o">-&gt;</span><span class="n">len</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="n">ans</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">ans</span><span class="o">-&gt;</span><span class="n">len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">ans</span><span class="o">-&gt;</span><span class="n">len</span><span class="o">--</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// 输出big_digits型</span>
+<span class="kt">void</span> <span class="nf">prin</span><span class="p">(</span><span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="n">a</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">a</span><span class="o">-&gt;</span><span class="n">len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">--</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span> <span class="n">a</span><span class="o">-&gt;</span><span class="n">digit</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
+    <span class="n">scanf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">n</span><span class="p">);</span>
+    <span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="n">ans</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">big_digits</span><span class="p">));</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="n">trans</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="n">temp</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">big_digits</span> <span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">big_digits</span><span class="p">));</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">trans</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">i</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">mult</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">trans</span><span class="p">(</span><span class="n">j</span><span class="p">));</span>
+        <span class="n">ans</span> <span class="o">=</span> <span class="n">plus</span><span class="p">(</span><span class="n">ans</span><span class="p">,</span> <span class="n">temp</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">prin</span><span class="p">(</span><span class="n">ans</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+
+                <hr style="visibility: hidden;">
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2022/02/10/luogu-P1010/" data-toggle="tooltip" data-placement="top" title="[洛谷]P1010 幂次方">
+                        Previous<br>
+                        <span>[洛谷]P1010 幂次方</span>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2025/01/26/vim-VScode/" data-toggle="tooltip" data-placement="top" title="在VSCode中使用Vim">
+                        Next<br>
+                        <span>在VSCode中使用Vim</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+                <hr style="visibility: hidden;">
+
+                
+
+                
+            </div>  
+
+    <!-- Side Catalog Container -->
+        
+            <div class="
+                col-lg-2 col-lg-offset-0
+                visible-lg-block
+                sidebar-container
+                catalog-container">
+                <div class="side-catalog">
+                    <hr class="hidden-sm hidden-xs">
+                    <h5>
+                        <a class="catalog-toggle" href="#">CATALOG</a>
+                    </h5>
+                    <ul class="catalog-body"></ul>
+                </div>
+            </div>
+        
+
+    <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+
+
+<section>
+    
+        <hr class="hidden-sm hidden-xs">
+    
+    <h5><a href="/archive/">FEATURED TAGS</a></h5>
+    <div class="tags">
+        
+        
+        
+        
+        
+        
+                <a data-sort="0006" 
+                    href="/archive/?tag=%E9%A2%98%E8%A7%A3"
+                    title="题解"
+                    rel="7">题解</a>
+        
+                <a data-sort="0007" 
+                    href="/archive/?tag=%E6%B4%9B%E8%B0%B7"
+                    title="洛谷"
+                    rel="6">洛谷</a>
+        
+                <a data-sort="0009" 
+                    href="/archive/?tag=%E8%BD%AF%E4%BB%B6%E8%AE%BE%E8%AE%A1"
+                    title="软件设计"
+                    rel="4">软件设计</a>
+        
+                <a data-sort="0009" 
+                    href="/archive/?tag=%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1"
+                    title="面向对象"
+                    rel="4">面向对象</a>
+        
+                <a data-sort="0010" 
+                    href="/archive/?tag=%E8%A1%8C%E4%B8%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F"
+                    title="行为型模式"
+                    rel="3">行为型模式</a>
+        
+                <a data-sort="0010" 
+                    href="/archive/?tag=%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F"
+                    title="设计模式"
+                    rel="3">设计模式</a>
+        
+                <a data-sort="0011" 
+                    href="/archive/?tag=%E7%AE%97%E6%B3%95"
+                    title="算法"
+                    rel="2">算法</a>
+    </div>
+</section>
+
+
+                <!-- Friends Blog -->
+                
+<hr>
+<h5>FRIENDS</h5>
+<ul class="list-inline">
+  
+  <li><a href="http://sqzr2319.github.io">顺其自然2319</a></li>
+  
+</ul>
+
+            </div>
+        </div>
+    </div>
+</article>
+
+<!-- add support for mathjax by voleking-->
+
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    TeX: {
+      equationNumbers: {
+        autoNumber: "AMS"
+      }
+    },
+    SVG: {
+      scale: 90
+    },
+    tex2jax: {
+      inlineMath: [ ['$','$'] ],
+      displayMath: [ ['$$','$$'] ],
+      processEscapes: true,
+    }
+  });
+</script>
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG">
+</script>
+
+
+
+
+
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'right',
+          // icon: '#'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+<style>
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <!-- SNS Link -->
+                
+
+
+<ul class="list-inline text-center">
+
+
+  
+  
+  
+  <li>
+    <a target="_blank" href="https://www.zhihu.com/people/xian-min-77-58">
+      <span class="fa-stack fa-lg">
+        <i class="fa fa-circle fa-stack-2x"></i>
+        <i class="fa  fa-stack-1x fa-inverse">知</i>
+      </span>
+    </a>
+  </li>
+  
+  
+  <li>
+    <a target="_blank" href="http://weibo.com/u/7749674615">
+      <span class="fa-stack fa-lg">
+        <i class="fa fa-circle fa-stack-2x"></i>
+        <i class="fa fa-weibo fa-stack-1x fa-inverse"></i>
+      </span>
+    </a>
+  </li>
+  
+  
+  
+  <li>
+    <a target="_blank" href="https://github.com/cloudingyu">
+      <span class="fa-stack fa-lg">
+        <i class="fa fa-circle fa-stack-2x"></i>
+        <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+    </a>
+  </li>
+  
+  
+</ul>
+
+                <p class="copyright text-muted">
+                    Copyright &copy; CloudingYu的博客 2025
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js "></script>
+
+<!-- Bootstrap Core JavaScript -->
+<!-- Currently, only navbar scroll-down effect at desktop still depends on this -->
+<script src="/js/bootstrap.min.js "></script>
+
+<!-- Custom Theme JavaScript -->
+<script src="/js/hux-blog.min.js "></script>
+
+<!-- Simple Jekyll Search -->
+<script src="/js/simple-jekyll-search.min.js"></script>
+
+<!-- Code Copy Button -->
+<script src="/js/code-copy.js"></script>
+
+<!-- Service Worker -->
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+        var d = document, t = 'script',
+            o = d.createElement(t),
+            s = d.getElementsByTagName(t)[0];
+        o.src = u;
+        if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+        s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+<!--
+     Because of the native support for backtick-style fenced code blocks
+     right within the Markdown is landed in Github Pages,
+     From V1.6, There is no need for Highlight.js,
+     so Huxblog drops it officially.
+
+     - https://github.com/blog/2100-github-pages-now-faster-and-simpler-with-jekyll-3-0
+     - https://help.github.com/articles/creating-and-highlighting-code-blocks/
+     - https://github.com/jneen/rouge/wiki/list-of-supported-languages-and-lexers
+-->
+<!--
+    <script>
+        async("http://cdn.bootcss.com/highlight.js/8.6/highlight.min.js", function(){
+            hljs.initHighlightingOnLoad();
+        })
+    </script>
+    <link href="http://cdn.bootcss.com/highlight.js/8.6/styles/github.min.css" rel="stylesheet">
+-->
+
+
+
+
+
+
+
+<!--fastClick.js -->
+<script>
+    async("//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js", function () {
+        var $nav = document.querySelector("nav");
+        if ($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+
+<!-- Side Catalog -->
+
+<script type="text/javascript">
+    function generateCatalog(selector) {
+
+        // interop with multilangual 
+        if ('' == 'true') {
+            _containerSelector = 'div.post-container.active'
+        } else {
+            _containerSelector = 'div.post-container'
+        }
+
+        // init
+        var P = $(_containerSelector), a, n, t, l, i, c;
+        a = P.find('h1,h2,h3,h4');
+
+        // clean
+        $(selector).html('')
+
+        // appending
+        a.each(function () {
+            n = $(this).prop('tagName').toLowerCase();
+            i = "#" + $(this).prop('id');
+            t = $(this).text();
+            c = $('<a href="' + i + '" rel="nofollow">' + t + '</a>');
+            l = $('<li class="' + n + '_nav"></li>').append(c);
+            $(selector).append(l);
+        });
+        return true;
+    }
+
+    generateCatalog(".catalog-body");
+
+    // toggle side catalog
+    $(".catalog-toggle").click((function (e) {
+        e.preventDefault();
+        $('.side-catalog').toggleClass("fold")
+    }))
+
+    /*
+     * Doc: https://github.com/davist11/jQuery-One-Page-Nav
+     * Fork by Hux to support padding
+     */
+    async("/js/jquery.nav.js", function () {
+        $('.catalog-body').onePageNav({
+            currentClass: "active",
+            changeHash: !1,
+            easing: "swing",
+            filter: "",
+            scrollSpeed: 700,
+            scrollOffset: 0,
+            scrollThreshold: .2,
+            begin: null,
+            end: null,
+            scrollChange: null,
+            padding: 80
+        });
+    });
+</script>
+
+
+
+<!-- Multi-Lingual -->
+
+
+<!-- Simple Jekyll Search -->
+<script>
+    // https://stackoverflow.com/questions/1912501/unescape-html-entities-in-javascript
+    function htmlDecode(input) {
+        var e = document.createElement('textarea');
+        e.innerHTML = input;
+        // handle case of empty input
+        return e.childNodes.length === 0 ? "" : e.childNodes[0].nodeValue;
+    }
+
+    SimpleJekyllSearch({
+        searchInput: document.getElementById('search-input'),
+        resultsContainer: document.getElementById('search-results'),
+        json: '/search.json',
+        searchResultTemplate: '<div class="post-preview item"><a href="{url}"><h2 class="post-title">{title}</h2><h3 class="post-subtitle">{subtitle}</h3><hr></a></div>',
+        noResultsText: 'No results',
+        limit: 50,
+        fuzzy: false,
+        // a hack to get escaped subtitle unescaped. for some reason, 
+        // post.subtitle w/o escape filter nuke entire search.
+        templateMiddleware: function (prop, value, template) {
+            if (prop === 'subtitle' || prop === 'title') {
+                if (value.indexOf("code")) {
+                    return htmlDecode(value);
+                } else {
+                    return value;
+                }
+            }
+        }
+    });
+
+    $(document).ready(function () {
+        var $searchPage = $('.search-page');
+        var $searchOpen = $('.search-icon');
+        var $searchClose = $('.search-icon-close');
+        var $searchInput = $('#search-input');
+        var $body = $('body');
+
+        $searchOpen.on('click', function (e) {
+            e.preventDefault();
+            $searchPage.toggleClass('search-active');
+            var prevClasses = $body.attr('class') || '';
+            setTimeout(function () {
+                $body.addClass('no-scroll');
+            }, 400)
+
+            if ($searchPage.hasClass('search-active')) {
+                $searchClose.on('click', function (e) {
+                    e.preventDefault();
+                    $searchPage.removeClass('search-active');
+                    $body.attr('class', prevClasses);  // from closure 
+                });
+                $searchInput.focus();
+            }
+        });
+    });
+</script>
+
+
+<!-- Image to hack wechat -->
+<img src="/img/icon_wechat.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+
+</html>
