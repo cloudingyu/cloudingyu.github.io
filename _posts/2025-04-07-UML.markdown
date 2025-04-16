@@ -404,6 +404,207 @@ A --> C
 B --> D
 ```
 
+
+### 七、样式自定义 (skinparam)
+
+通过 skinparam 命令，可以自定义 UML 图表的视觉样式，使其更美观、易读，或符合企业风格指南。
+
+#### 1. 基本使用方法
+
+skinparam 有两种使用语法：
+
+```
+' 单行语法
+skinparam 元素类型 属性值
+
+' 块语法
+skinparam 元素类型 {
+    属性1 值1
+    属性2 值2
+}
+```
+
+#### 2. 全局样式设置
+
+![](/img/posts/2025-04-07-UML/global-style.svg)
+
+```
+' 全局样式设置
+skinparam {
+    DefaultFontName "Microsoft YaHei"
+    DefaultFontSize 12
+    Shadowing false
+    BackgroundColor transparent
+    Monochrome false
+}
+```
+
+#### 3. 特定元素样式设置
+
+![](/img/posts/2025-04-07-UML/element-style.svg)
+
+```
+' 设置类样式
+skinparam class {
+    BackgroundColor LightBlue
+    BorderColor DarkBlue
+    FontColor Black
+    FontSize 14
+    BorderThickness 1
+    AttributeFontColor Navy
+    AttributeFontSize 12
+}
+
+' 设置接口样式
+skinparam interface {
+    BackgroundColor LightGreen
+    BorderColor ForestGreen
+}
+
+' 设置箭头样式
+skinparam arrow {
+    Color DarkSlateGray
+    Thickness 1.2
+}
+
+' 设置注释样式
+skinparam note {
+    BackgroundColor LemonChiffon
+    BorderColor Gold
+    FontSize 10
+}
+```
+
+#### 4. 条件样式设置
+
+可以根据特定的构造型（stereotype）设置不同样式，非常适合表示不同类型的组件。
+
+![](/img/posts/2025-04-07-UML/conditional-style.svg)
+
+```
+skinparam class {
+    BackgroundColor<<Service>> PaleGreen
+    BorderColor<<Service>> Green
+    
+    BackgroundColor<<Entity>> LightBlue
+    BorderColor<<Entity>> Blue
+    
+    BackgroundColor<<DTO>> Wheat
+    BorderColor<<DTO>> Tan
+}
+
+```
+
+#### 5. 使用主题
+
+PlantUML 提供了多种内置主题，可以快速应用一致的样式。
+
+![](/img/posts/2025-04-07-UML/themes.svg)
+
+```
+!theme cerulean
+
+class User {
+  -id: Long
+  +getName(): String
+}
+
+class Account {
+  -balance: Double
+  +withdraw(): Boolean
+}
+
+User -- Account
+
+note bottom of User
+  可以应用以下主题：
+  cerulean, materia, cyborg, 
+  spacelab, superhero 等
+end note
+
+@enduml
+```
+
+#### 6. 实用样式技巧
+
+##### 手绘风格
+
+![](/img/posts/2025-04-07-UML/handwritten.svg)
+
+```
+skinparam handwritten true
+
+class User {
+  -name: String
+  +login(): boolean
+}
+
+class Order {
+  -items: List
+  +checkout(): void
+}
+
+User --> Order : places >
+```
+
+##### 定制包样式
+
+![](/img/posts/2025-04-07-UML/package-style.svg)
+
+```
+skinparam packageStyle Rectangle
+
+' 自定义包样式
+skinparam package {
+    BackgroundColor LightGrey
+    BorderColor DimGrey
+    FontColor Black
+    FontSize 14
+    BorderThickness 1
+}
+```
+
+除了前面介绍的样式设置，以下是一些特别实用的 skinparam 参数：
+
+##### 包样式设置
+
+```
+skinparam packageStyle rectangle
+```
+
+packageStyle 可选值包括:
+- `rectangle`: 矩形样式（最常用）
+- `folder`: 文件夹样式
+- `node`: 节点样式
+- `frame`: 框架样式
+- `cloud`: 云样式
+- `database`: 数据库样式
+
+
+##### 线型设置
+
+```
+skinparam linetype ortho
+```
+
+控制连接线的绘制方式:
+- `ortho`: 正交线（直角转折）
+- `polyline`: 多段线（允许任意角度）
+- `splines`: 曲线
+
+
+##### 黑白模式
+
+```
+skinparam monochrome true
+```
+
+将所有颜色转换为黑白模式:
+- `true`: 使用黑白色调
+- `false`: 使用彩色模式（默认）
+
+通过灵活运用 skinparam，可以大幅提升 UML 图表的视觉效果和可读性，使其不仅功能强大，而且赏心悦目。
+
 ## 生成 UML 静态类图（以 VSCode 为例）
 
 ### 安装 PlantUML 插件
