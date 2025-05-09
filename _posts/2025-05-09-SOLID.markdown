@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "面向对象程序设计基本原则(SOLID)"
+title:      "面向对象程序设计基本原则（SOLID）"
 subtitle:   "编写可维护、可扩展代码的五大核心原则"
 date:       2025-05-09
 author:     "CloudingYu"
