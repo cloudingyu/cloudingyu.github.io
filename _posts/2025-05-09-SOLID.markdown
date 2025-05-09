@@ -1,0 +1,12 @@
+---
+layout:     post
+title:      "SOLID 面向对象程序设计原则"
+subtitle:   ""
+date:       2025-05-09
+author:     "CloudingYu"
+header-style: picture
+mathjax: 
+tags:
+    - 面向对象
+    - 软件设计
+---
