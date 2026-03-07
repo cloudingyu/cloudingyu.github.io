@@ -1,0 +1,16 @@
+---
+layout:     post
+title:      "人工智能哲学"
+subtitle:   "郑老师的教学"
+date:       2025-03-07
+author:     "CloudingYu"
+header-style: picture
+mathjax: 
+tags:
+    - 机器学习
+    - 人工智能
+---
+
+## 引言
+
+还没开始
