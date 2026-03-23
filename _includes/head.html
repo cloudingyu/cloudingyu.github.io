@@ -77,4 +77,7 @@
     <script data-ad-client="ca-pub-6487568398225121" async
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
         -->
+    {% if page.math or page.mathjax %}
+        {% include mathjax_support.html %}
+    {% endif %}
 </head>

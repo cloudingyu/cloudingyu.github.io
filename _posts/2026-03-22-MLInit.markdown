@@ -5,6 +5,7 @@ subtitle:   ""
 date:       2026-03-22
 author:     "cloudingyu"
 header-style: picture
+math: true
 mathjax: true
 tags:
     - 人工智能
