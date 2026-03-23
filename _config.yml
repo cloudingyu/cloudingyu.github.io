@@ -63,9 +63,6 @@ kramdown:
 # Disqus settings
 #disqus_username: hux
 
-# Netease settings
-netease_comment: false
-
 # Analytics settings
 # Baidu Analytics
 # ba_track_id: [your track id]
