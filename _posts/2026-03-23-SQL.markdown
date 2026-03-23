@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "SQL语法"
+title:      "SQL核心语法概览"
 subtitle:   ""
 date:       2026-03-23
 author:     "cloudingyu"
@@ -11,4 +11,3 @@ tags:
     - SQL
 ---
 
-## 引言

@@ -1,7 +1,7 @@
 ---
 layout:     post
-title:      "机器学习中不同任务激活函数与损失函数选用的数学推导"
-subtitle:   ""
+title:      "从数学推导看机器学习的激活函数与损失函数"
+subtitle:   "关于回归任务和分类任务在不同函数上的选择"
 date:       2026-03-22
 author:     "cloudingyu"
 header-style: picture
