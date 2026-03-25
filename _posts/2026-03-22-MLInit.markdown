@@ -28,7 +28,7 @@ $$
 
 似然越大，说明模型参数 $\theta$ 越契合真实数据，所以机器学习初步的任务是最大化似然。
 
-概率 $P(y_i | \theta)$ 通常是很小的数（比如 $0.1$）。如果有过多的样本连乘，可能会导致数值下溢。同时，求和导数的求取难度远小于求乘积的导数。取对数可以把 $\prod$ 变成 $\sum$：
+概率 $P(y_i \mid \theta)$ 通常是很小的数（比如 $0.1$）。如果有过多的样本连乘，可能会导致数值下溢。同时，求和导数的求取难度远小于求乘积的导数。取对数可以把 $\prod$ 变成 $\sum$：
 
 $$
 \ln L(\theta) = \ln\left[\prod_{i=1}^n P(y_i | \theta)\right]=\sum_{i=1}^n \ln P(y_i | \theta)
@@ -40,7 +40,7 @@ $$
 
 ### 回归任务
 
-在回归任务中，预测值是连续的实数。假设真实值 $y$ 是在模型预测值 $f(x)$ 的基础上，叠加了一个服从高斯分布（正态分布）的随机噪声 $\epsilon$。即：
+在回归任务中，预测值是连续的实数。假设真实值 $y$ 是在模型预测值 $f(x)$ 的基础上，叠加了一个服从高斯分布的随机噪声 $\epsilon$。即：
 
 $$
 y = f(x) + \epsilon, \quad \epsilon \sim \mathcal{N}(0, \sigma^2)
@@ -103,29 +103,29 @@ $$
 
 ## 激活函数
 
-对于不同任务激活函数的选择，往往不仅取决于其对于输出的物理约束，更在工程上保持了不同任务的一致性。在三种机器学习任务的反向传播过程中，
+激活函数的选择并不是独立于损失函数和任务目标而存在的。更自然的理解顺序是先看输出需要满足什么约束，再看在该约束下反向传播会得到怎样的梯度形式。
 
 ### 回归任务
 
-设模型最后一层输出为
+回归任务的目标值是连续实数，因此模型末层需要保留实数域上的自由表达能力，最自然的选择就是线性激活。设模型最后一层输出为
 
 $$
 z = w^T x + b,
 $$
 
-回归任务通常直接取线性激活，即
+并令
 
 $$
 t = z.
 $$
 
-若采用带 $\frac{1}{2}$ 系数的均方误差
+在使用带 $\frac{1}{2}$ 系数的均方误差
 
 $$
 Loss = \frac{1}{2}(t-y)^2,
 $$
 
-则根据链式法则
+时，根据链式法则有
 
 $$
 \frac{\partial Loss}{\partial z}
@@ -134,23 +134,23 @@ $$
 = t-y.
 $$
 
-所以回归任务中，对最后一层线性输出 $z$ 的梯度就是 $t-y$。
+也就是说，线性激活既满足回归输出范围的需求，也使末层梯度直接化为 $t-y$。
 
 ### 二分类任务
 
-设最后一层先得到 $\mathrm{logit}$ $z$，再经过 $\mathrm{Sigmoid}$：
+二分类任务需要输出可解释为“属于正类的概率”，因此输出应落在 $(0,1)$ 内，这正是 $\mathrm{Sigmoid}$ 的作用。设最后一层先产生 $\mathrm{logit}$ $z$，再经过 $\mathrm{Sigmoid}$：
 
 $$
 t = \sigma(z) = \frac{1}{1+e^{-z}}.
 $$
 
-二元交叉熵损失为
+对应该任务的二元交叉熵损失为
 
 $$
 Loss = -\big[y\ln t + (1-y)\ln(1-t)\big].
 $$
 
-先对 $t$ 求导：
+先对 $t$ 求导可得
 
 $$
 \frac{\partial Loss}{\partial t}
@@ -158,13 +158,13 @@ $$
 = \frac{t-y}{t(1-t)}.
 $$
 
-再对 $\mathrm{Sigmoid}$ 求导：
+再由 $\mathrm{Sigmoid}$ 导数
 
 $$
 \frac{\partial t}{\partial z} = t(1-t).
 $$
 
-链式相乘得到：
+二者链式相乘得到
 
 $$
 \frac{\partial Loss}{\partial z}
@@ -173,39 +173,57 @@ $$
 = t-y.
 $$
 
-因此，二分类中 $\mathrm{Sigmoid} + \mathrm{BCE}$ 的组合把梯度自然化简为 $t-y$。
+因此，$\mathrm{Sigmoid}$ 在给出概率语义的同时，也与 $\mathrm{BCE}$ 配对出简洁的末层梯度 $t-y$。
 
 ### 多分类任务
 
-设最后一层 $\mathrm{logits}$ 为 $z=[z_1,\cdots,z_K]^T$，$\mathrm{Softmax}$ 输出为
+多分类任务要求输出是一个合法的类别概率分布，即各分量非负且总和为 1，因此末层选择 $\mathrm{Softmax}$。设最后一层 $\mathrm{logits}$ 为 $z=[z_1,\cdots,z_K]^T$，其输出为
 
 $$
 t_i = \frac{e^{z_i}}{\sum_{j=1}^K e^{z_j}}.
 $$
 
-交叉熵损失（$y$ 为 $\mathrm{one-hot}$）为
+对应交叉熵损失
 
 $$
 Loss = -\sum_{i=1}^K y_i\ln t_i.
 $$
 
-$\mathrm{Softmax}$ 的雅可比矩阵元素为
+$\mathrm{Softmax}$ 导数可以分两种情况讨论。记
 
 $$
-\frac{\partial t_i}{\partial z_k} = t_i(\delta_{ik}-t_k),
+t_i=\frac{e^{z_i}}{\sum_{j=1}^K e^{z_j}}.
 $$
 
-其中 $\delta_{ik}$ 为 $\mathrm{Kronecker\ delta}$。
+当 $i=k$ 时，有
 
-对任意第 $k$ 个 $\mathrm{logit}$，有
+$$
+\frac{\partial t_i}{\partial z_i}
+=\frac{e^{z_i}\left(\sum_{j=1}^K e^{z_j}\right)-e^{z_i}e^{z_i}}{\left(\sum_{j=1}^K e^{z_j}\right)^2}
+=\frac{e^{z_i}}{\sum_{j=1}^K e^{z_j}}\left(1-\frac{e^{z_i}}{\sum_{j=1}^K e^{z_j}}\right)
+=t_i(1-t_i).
+$$
+
+当 $i\neq k$ 时，有
+
+$$
+\frac{\partial t_i}{\partial z_k}
+=\frac{0\cdot\left(\sum_{j=1}^K e^{z_j}\right)-e^{z_i}e^{z_k}}{\left(\sum_{j=1}^K e^{z_j}\right)^2}
+=-\frac{e^{z_i}}{\sum_{j=1}^K e^{z_j}}\frac{e^{z_k}}{\sum_{j=1}^K e^{z_j}}
+=-t_i t_k.
+$$
+
+于是对任意第 $k$ 个 $\mathrm{logit}$，利用链式法则可得
 
 $$
 \begin{aligned}
 \frac{\partial Loss}{\partial z_k}
-&= \sum_{i=1}^K \frac{\partial Loss}{\partial t_i}\frac{\partial t_i}{\partial z_k}
-= \sum_{i=1}^K \left(-\frac{y_i}{t_i}\right)t_i(\delta_{ik}-t_k) \\
-&= -\sum_{i=1}^K y_i\delta_{ik} + \sum_{i=1}^K y_i t_k
-= -y_k + t_k\sum_{i=1}^K y_i.
+&= \sum_{i=1}^K \frac{\partial Loss}{\partial t_i}\frac{\partial t_i}{\partial z_k}\\
+&=\sum_{i=1}^K\left(-\frac{y_i}{t_i}\right)\frac{\partial t_i}{\partial z_k}\\
+&=\left(-\frac{y_k}{t_k}\right)t_k(1-t_k)+\sum_{i\neq k}\left(-\frac{y_i}{t_i}\right)(-t_i t_k)\\
+&=-y_k(1-t_k)+\sum_{i\neq k}y_i t_k\\
+&=-y_k+y_k t_k+t_k\sum_{i\neq k}y_i\\
+&=-y_k+t_k\sum_{i=1}^K y_i.
 \end{aligned}
 $$
 
@@ -221,19 +239,15 @@ $$
 \nabla_z Loss = t-y.
 $$
 
-## 统一视角与结论
+可见，$\mathrm{Softmax}$ 不仅满足多分类分布约束，也在与交叉熵联用时给出统一的末层梯度形式 $t-y$。
 
-可以看到，三种任务在最后一层都得到同一个核心误差信号：
+## 统一视角
+
+可以看到，三种任务在最后一层都得到同一个核心误差：
 
 $$
 \frac{\partial Loss}{\partial z}=t-y.
 $$
 
-这也是工程上常说“预测减真值”的来源。不同任务激活函数不同，本质是因为输出空间和概率模型不同：
-
-1. 回归任务：目标是实数，故使用线性激活，配合高斯假设下的 $\mathrm{MSE}$。
-2. 二分类任务：目标是 $[0,1]$ 概率，故使用 $\mathrm{Sigmoid}$，配合伯努利分布下的 $\mathrm{BCE}$。
-3. 多分类任务：目标是概率分布且各类概率和为 $1$，故使用 $\mathrm{Softmax}$，配合类别分布下的 $\mathrm{CE}$。
-
-从反向传播角度看，正是这些“激活函数 + 损失函数”的配对，使梯度形式统一、计算稳定、实现简洁。
+不同任务激活函数不同，本质是因为输出空间和概率模型不同。从反向传播角度看，正是这些激活函数与损失函数的配对，使得梯度形式统一、实现简洁。
 
