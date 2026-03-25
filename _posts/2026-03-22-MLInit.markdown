@@ -28,7 +28,7 @@ $$
 
 似然越大，说明模型参数 $\theta$ 越契合真实数据，所以机器学习初步的任务是最大化似然。
 
-概率 $P(y_i|\theta)$ 通常是很小的数（比如 $0.1$）。如果有过多的样本连乘，可能会导致数值下溢。同时，求和导数的求取难度远小于求乘积的导数。取对数可以把 $\prod$ 变成 $\sum$：
+概率 $P(y_i | \theta)$ 通常是很小的数（比如 $0.1$）。如果有过多的样本连乘，可能会导致数值下溢。同时，求和导数的求取难度远小于求乘积的导数。取对数可以把 $\prod$ 变成 $\sum$：
 
 $$
 \ln L(\theta) = \ln\left[\prod_{i=1}^n P(y_i | \theta)\right]=\sum_{i=1}^n \ln P(y_i | \theta)
@@ -87,7 +87,7 @@ $$
 
 ### 多分类任务
 
-多分类任务假设 $y$ 服从类别分布。若有 $K$ 个类别,输出的是一个概率向量 $t = [t_1,t_2,\cdots,t_n]^T$，其中 $t_k$ 代表属于第 $k$ 类的概率。
+多分类任务假设 $y$ 服从类别分布。若有 $K$ 个类别,输出的是一个概率向量 $t = [t_1,t_2,\cdots,t_K]^T$，其中 $t_k$ 代表属于第 $k$ 类的概率。
 
 同上，得到似然函数
 
@@ -103,6 +103,137 @@ $$
 
 ## 激活函数
 
-对于不同任务激活函数的选择，往往不仅取决于其对于输出的物理约束，更在工程上保持了不同任务的一致性。在三种不同任务重
+对于不同任务激活函数的选择，往往不仅取决于其对于输出的物理约束，更在工程上保持了不同任务的一致性。在三种机器学习任务的反向传播过程中，
 
 ### 回归任务
+
+设模型最后一层输出为
+
+$$
+z = w^T x + b,
+$$
+
+回归任务通常直接取线性激活，即
+
+$$
+t = z.
+$$
+
+若采用带 $\frac{1}{2}$ 系数的均方误差
+
+$$
+Loss = \frac{1}{2}(t-y)^2,
+$$
+
+则根据链式法则
+
+$$
+\frac{\partial Loss}{\partial z}
+= \frac{\partial Loss}{\partial t}\cdot\frac{\partial t}{\partial z}
+= (t-y)\cdot 1
+= t-y.
+$$
+
+所以回归任务中，对最后一层线性输出 $z$ 的梯度就是 $t-y$。
+
+### 二分类任务
+
+设最后一层先得到 $\mathrm{logit}$ $z$，再经过 $\mathrm{Sigmoid}$：
+
+$$
+t = \sigma(z) = \frac{1}{1+e^{-z}}.
+$$
+
+二元交叉熵损失为
+
+$$
+Loss = -\big[y\ln t + (1-y)\ln(1-t)\big].
+$$
+
+先对 $t$ 求导：
+
+$$
+\frac{\partial Loss}{\partial t}
+= -\frac{y}{t} + \frac{1-y}{1-t}
+= \frac{t-y}{t(1-t)}.
+$$
+
+再对 $\mathrm{Sigmoid}$ 求导：
+
+$$
+\frac{\partial t}{\partial z} = t(1-t).
+$$
+
+链式相乘得到：
+
+$$
+\frac{\partial Loss}{\partial z}
+= \frac{\partial Loss}{\partial t}\cdot\frac{\partial t}{\partial z}
+= \frac{t-y}{t(1-t)}\cdot t(1-t)
+= t-y.
+$$
+
+因此，二分类中 $\mathrm{Sigmoid} + \mathrm{BCE}$ 的组合把梯度自然化简为 $t-y$。
+
+### 多分类任务
+
+设最后一层 $\mathrm{logits}$ 为 $z=[z_1,\cdots,z_K]^T$，$\mathrm{Softmax}$ 输出为
+
+$$
+t_i = \frac{e^{z_i}}{\sum_{j=1}^K e^{z_j}}.
+$$
+
+交叉熵损失（$y$ 为 $\mathrm{one-hot}$）为
+
+$$
+Loss = -\sum_{i=1}^K y_i\ln t_i.
+$$
+
+$\mathrm{Softmax}$ 的雅可比矩阵元素为
+
+$$
+\frac{\partial t_i}{\partial z_k} = t_i(\delta_{ik}-t_k),
+$$
+
+其中 $\delta_{ik}$ 为 $\mathrm{Kronecker\ delta}$。
+
+对任意第 $k$ 个 $\mathrm{logit}$，有
+
+$$
+\begin{aligned}
+\frac{\partial Loss}{\partial z_k}
+&= \sum_{i=1}^K \frac{\partial Loss}{\partial t_i}\frac{\partial t_i}{\partial z_k}
+= \sum_{i=1}^K \left(-\frac{y_i}{t_i}\right)t_i(\delta_{ik}-t_k) \\
+&= -\sum_{i=1}^K y_i\delta_{ik} + \sum_{i=1}^K y_i t_k
+= -y_k + t_k\sum_{i=1}^K y_i.
+\end{aligned}
+$$
+
+由于 $\mathrm{one-hot}$ 满足 $\sum_{i=1}^K y_i=1$，故
+
+$$
+\frac{\partial Loss}{\partial z_k}=t_k-y_k.
+$$
+
+写成向量形式即
+
+$$
+\nabla_z Loss = t-y.
+$$
+
+## 统一视角与结论
+
+可以看到，三种任务在最后一层都得到同一个核心误差信号：
+
+$$
+\frac{\partial Loss}{\partial z}=t-y.
+$$
+
+这也是工程上常说“预测减真值”的来源。不同任务激活函数不同，本质是因为输出空间和概率模型不同：
+
+1. 回归任务：目标是实数，故使用线性激活，配合高斯假设下的 $\mathrm{MSE}$。
+2. 二分类任务：目标是 $[0,1]$ 概率，故使用 $\mathrm{Sigmoid}$，配合伯努利分布下的 $\mathrm{BCE}$。
+3. 多分类任务：目标是概率分布且各类概率和为 $1$，故使用 $\mathrm{Softmax}$，配合类别分布下的 $\mathrm{CE}$。
+
+从反向传播角度看，正是这些“激活函数 + 损失函数”的配对，使梯度形式统一、计算稳定、实现简洁。
+
