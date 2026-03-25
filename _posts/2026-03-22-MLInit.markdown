@@ -40,29 +40,29 @@ $$
 
 ### 回归任务
 
-在回归任务中，预测值是连续的实数。假设真实值 $y$ 是在模型预测值 $f(x)$ 的基础上，叠加了一个服从高斯分布的随机噪声 $\epsilon$。即：
+在回归任务中，预测值是连续的实数。记模型预测值为 $t=f(x)$，假设真实值 $y$ 是在该预测值基础上叠加一个服从高斯分布的随机噪声 $\epsilon$。即：
 
 $$
-y = f(x) + \epsilon, \quad \epsilon \sim \mathcal{N}(0, \sigma^2)
+y = t + \epsilon, \quad \epsilon \sim \mathcal{N}(0, \sigma^2)
 $$
 
-给定 $x$，$y$ 的条件概率分布是一个以模型预测值 $f(x)$ 为均值的高斯分布：
+给定 $x$，$y$ 的条件概率分布是一个以模型预测值 $t$ 为均值的高斯分布：
 
 $$
-P(y|x) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{(y - f(x))^2}{2\sigma^2}\right)
+P(y|x) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{(y - t)^2}{2\sigma^2}\right)
 $$
 
 $$
 \begin{aligned}
--\ln P(y|x) =& - \ln \left[ \frac{1}{\sqrt{2\pi\sigma^2}}  \exp \left( -\frac{(y - f(x))^2}{2\sigma^2} \right)\right]\\
-=& \frac{1}{2\sigma^2} (y - f(x))^2 -\ln\frac{1}{\sqrt{2\pi\sigma^2}}
+-\ln P(y|x) =& - \ln \left[ \frac{1}{\sqrt{2\pi\sigma^2}}  \exp \left( -\frac{(y - t)^2}{2\sigma^2} \right)\right]\\
+=& \frac{1}{2\sigma^2} (y - t)^2 -\ln\frac{1}{\sqrt{2\pi\sigma^2}}
 \end{aligned}
 $$
 
 在优化 $\theta$ 时，常数项和系数均不影响极值点。最终得到均方误差：
 
 $$
-Loss_{MSE} = (y - f(x))^2
+Loss_{MSE} = (y - t)^2
 $$
 
 ### 二分类任务
