@@ -61,7 +61,7 @@ kramdown:
     math_engine: mathjax
 
 # Disqus settings
-#disqus_username: hux
+#disqus_username: cy
 
 # Analytics settings
 # Baidu Analytics

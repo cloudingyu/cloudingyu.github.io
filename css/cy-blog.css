@@ -682,7 +682,7 @@ pre.highlight {
   font-size: 16px;
 }
 body {
-  /* Hux learn from
+  /* CY learn from
      *     TypeIsBeautiful,
      *     [This Post](http://zhuanlan.zhihu.com/ibuick/20186806) etc.
      */
@@ -711,7 +711,7 @@ h3,
 h4,
 h5,
 h6 {
-  /* Hux learn from
+  /* CY learn from
      *     TypeIsBeautiful,
      *     [This Post](http://zhuanlan.zhihu.com/ibuick/20186806) etc.
      */
@@ -729,6 +729,7 @@ a {
 a:hover,
 a:focus {
   color: #0085a1;
+  outline: none;
 }
 a img:hover,
 a img:focus {
@@ -814,6 +815,7 @@ samp {
 .post-container a:hover,
 .post-container a:focus {
   color: #0085a1;
+  outline: none;
 }
 .post-container h1,
 .post-container h2,
@@ -949,9 +951,9 @@ samp {
   }
   /**
    * Animation
-   * HuxBlog-Navbar using genuine Material Design Animation
+   * CYBlog-Navbar using genuine Material Design Animation
    */
-  #huxblog_navbar {
+  #cyblog_navbar {
     /**
      * Sharable code and 'out' function
      */
@@ -966,11 +968,11 @@ samp {
      *'In' Animation
      */
   }
-  #huxblog_navbar a {
+  #cyblog_navbar a {
     font-size: 13px;
     line-height: 28px;
   }
-  #huxblog_navbar .navbar-collapse {
+  #cyblog_navbar .navbar-collapse {
     height: 0px;
     transform: scaleY(0);
     transform-origin: top right;
@@ -979,25 +981,25 @@ samp {
     -webkit-transform-origin: top right;
     -webkit-transition: -webkit-transform 400ms cubic-bezier(0.32, 1, 0.23, 1) 0ms;
   }
-  #huxblog_navbar li {
+  #cyblog_navbar li {
     opacity: 0;
     transition: opacity 100ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
     -webkit-transition: opacity 100ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
   }
-  #huxblog_navbar.in {
+  #cyblog_navbar.in {
     transform: scaleX(1);
     -webkit-transform: scaleX(1);
     opacity: 1;
     transition: all 250ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
     -webkit-transition: all 250ms cubic-bezier(0.23, 1, 0.32, 1) 0ms;
   }
-  #huxblog_navbar.in .navbar-collapse {
+  #cyblog_navbar.in .navbar-collapse {
     transform: scaleY(1);
     -webkit-transform: scaleY(1);
     transition: transform 500ms cubic-bezier(0.23, 1, 0.32, 1);
     -webkit-transition: -webkit-transform 500ms cubic-bezier(0.23, 1, 0.32, 1);
   }
-  #huxblog_navbar.in li {
+  #cyblog_navbar.in li {
     opacity: 1;
     transition: opacity 450ms cubic-bezier(0.23, 1, 0.32, 1) 205ms;
     -webkit-transition: opacity 450ms cubic-bezier(0.23, 1, 0.32, 1) 205ms;
@@ -1011,7 +1013,7 @@ samp {
   left: 0;
   width: 100%;
   z-index: 3;
-  /* Hux learn from
+  /* CY learn from
      *     TypeIsBeautiful,
      *     [This Post](http://zhuanlan.zhihu.com/ibuick/20186806) etc.
      */
@@ -1142,7 +1144,7 @@ samp {
   background-size: cover;
   -o-background-size: cover;
   margin-bottom: 0px;
-  /* 0 on mobile, modify by Hux */
+  /* 0 on mobile, modify by CY */
 }
 .intro-header.style-text {
   background: none;
@@ -1207,7 +1209,7 @@ samp {
 }
 .intro-header .site-heading .subheading,
 .intro-header .page-heading .subheading {
-  /* Hux learn from
+  /* CY learn from
      *     TypeIsBeautiful,
      *     [This Post](http://zhuanlan.zhihu.com/ibuick/20186806) etc.
      */
@@ -1235,7 +1237,7 @@ samp {
   display: block;
 }
 .intro-header .post-heading .subheading {
-  /* Hux learn from
+  /* CY learn from
      *     TypeIsBeautiful,
      *     [This Post](http://zhuanlan.zhihu.com/ibuick/20186806) etc.
      */
@@ -1385,7 +1387,7 @@ footer .copyright a:focus {
   color: #0085a1;
 }
 .btn {
-  /* Hux learn from
+  /* CY learn from
      *     TypeIsBeautiful,
      *     [This Post](http://zhuanlan.zhihu.com/ibuick/20186806) etc.
      */
@@ -1414,7 +1416,7 @@ footer .copyright a:focus {
 }
 .pager li > a,
 .pager li > span {
-  /* Hux learn from
+  /* CY learn from
      *     TypeIsBeautiful,
      *     [This Post](http://zhuanlan.zhihu.com/ibuick/20186806) etc.
      */
@@ -1474,7 +1476,7 @@ img::-moz-selection {
   color: white;
   background: transparent;
 }
-/* Hux add tags support */
+/* CY add tags support */
 .d-none {
   display: none !important;
 }
@@ -1601,7 +1603,7 @@ img::-moz-selection {
 }
 .mini-post-list .tag-text {
   font-weight: 200;
-  /* Hux learn from
+  /* CY learn from
      *     TypeIsBeautiful,
      *     [This Post](http://zhuanlan.zhihu.com/ibuick/20186806) etc.
      */
@@ -1643,14 +1645,14 @@ img::-moz-selection {
   }
 }
 /* Tags support End*/
-/* Hux make all img responsible in post-container */
+/* CY make all img responsible in post-container */
 .post-container img {
   display: block;
   max-width: 100%;
   height: auto;
   margin: 1.5em auto 1.6em auto;
 }
-/* Hux Optimize UserExperience */
+/* CY Optimize UserExperience */
 .navbar-default .navbar-toggle:focus,
 .navbar-default .navbar-toggle:hover {
   background-color: inherit;
@@ -1658,7 +1660,7 @@ img::-moz-selection {
 .navbar-default .navbar-toggle:active {
   background-color: rgba(255, 255, 255, 0.25);
 }
-/* Hux customize Style for navBar button */
+/* CY customize Style for navBar button */
 .navbar-default .navbar-toggle {
   border-color: transparent;
   padding: 19px 16px;
