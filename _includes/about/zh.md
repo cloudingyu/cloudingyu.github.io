@@ -5,7 +5,6 @@
 - 💡 喜欢用优雅的代码简化复杂问题并解决实际问题
 - 🎮 业余游戏 ~~开发者~~ 玩家
 - 📚 终身学习者，始终保持好奇心
-- 🧬 从事宏基因组学研究，探索微生物组的奥秘
 - 🎓 复旦大学本科生
 
 ![Coding GIF](https://media.giphy.com/media/qgQUggAC3Pfv687qPC/giphy.gif)
