@@ -1,0 +1,288 @@
+---
+title: Note
+layout: page
+description: "课堂笔记、课程索引与学习记录"
+header-img: "img/note-bg.jpg"
+header-mask: 0.35
+---
+
+<style>
+  .note-course-page {
+    display: none;
+  }
+
+  .note-course-page.active {
+    display: block;
+  }
+
+  .note-course-group {
+    margin-bottom: 34px;
+  }
+
+  .note-course-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .note-course-title {
+    margin: 0 0 10px;
+    font-size: 32px;
+    line-height: 1.25;
+  }
+
+  .note-course-count {
+    color: #999;
+    font-size: 15px;
+    font-weight: 400;
+    margin-left: 8px;
+  }
+
+  .note-course-toggle {
+    border: 0;
+    background: transparent;
+    color: #666;
+    padding: 0 0 10px;
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .note-course-toggle:hover,
+  .note-course-toggle:focus {
+    color: #0085a1;
+    outline: none;
+  }
+
+  .note-course-toggle .fa {
+    margin-left: 4px;
+    transition: transform 0.2s ease;
+  }
+
+  .note-course-group.open .note-course-toggle .fa {
+    transform: rotate(180deg);
+  }
+
+  .note-latest {
+    margin-bottom: 0;
+  }
+
+  .note-latest > a > .post-title {
+    font-size: 24px;
+    line-height: 1.35;
+  }
+
+  .note-latest > a > .post-subtitle {
+    font-size: 17px;
+    line-height: 1.45;
+  }
+
+  .note-lesson-list {
+    display: none;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .note-course-group.open .note-lesson-list {
+    display: block;
+  }
+
+  .note-lesson-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .note-lesson-item a {
+    color: #404040;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .note-lesson-item a:hover,
+  .note-lesson-item a:focus {
+    color: #0085a1;
+    text-decoration: none;
+  }
+
+  .note-lesson-meta {
+    color: #999;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .note-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 22px 0 10px;
+  }
+
+  .note-page-button {
+    min-width: 34px;
+    height: 34px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    color: #666;
+    font-size: 14px;
+  }
+
+  .note-page-button.active,
+  .note-page-button:hover,
+  .note-page-button:focus {
+    border-color: #0085a1;
+    color: #0085a1;
+    outline: none;
+  }
+
+  .note-page-button[disabled] {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  @media only screen and (max-width: 767px) {
+    .note-course-head,
+    .note-lesson-item {
+      display: block;
+    }
+
+    .note-course-toggle {
+      padding-bottom: 12px;
+    }
+
+    .note-course-title {
+      font-size: 28px;
+    }
+
+    .note-latest > a > .post-title {
+      font-size: 22px;
+    }
+
+    .note-lesson-meta {
+      display: block;
+      margin-top: 5px;
+    }
+  }
+</style>
+
+{% assign notes = site.notes | sort: "date" | reverse %}
+{% assign courses = notes | group_by: "course" %}
+{% assign courses_per_page = 4 %}
+{% assign page_count_seed = courses.size | minus: 1 %}
+{% assign note_page_count = page_count_seed | divided_by: courses_per_page | plus: 1 %}
+
+{% for page_number in (1..note_page_count) %}
+<div class="note-course-page{% if forloop.first %} active{% endif %}" data-note-page="{{ page_number }}">
+  {% for course in courses %}
+  {% assign course_page = forloop.index0 | divided_by: courses_per_page | plus: 1 %}
+  {% if course_page == page_number %}
+
+  {% assign course_notes = course.items | sort: "date" | reverse %}
+  {% assign latest = course_notes | first %}
+  {% assign latest_title = latest.title | remove_first: course.name | remove_first: "：" | remove_first: ": " | remove_first: ":" %}
+  <section class="note-course-group" id="{{ course.name | slugify }}">
+    <div class="note-course-head">
+      <h2 class="note-course-title">
+        {{ course.name }}<span class="note-course-count">{{ course.items.size }} 篇</span>
+      </h2>
+      <button class="note-course-toggle" type="button" aria-expanded="false">
+        全部课次 <i class="fa fa-chevron-down"></i>
+      </button>
+    </div>
+
+    <div class="post-preview note-latest">
+      <a href="{{ latest.url | prepend: site.baseurl }}">
+        <h2 class="post-title">{{ latest_title }}</h2>
+        {% if latest.subtitle %}
+        <h3 class="post-subtitle">{{ latest.subtitle }}</h3>
+        {% endif %}
+        <div class="post-content-preview">
+          {{ latest.content | strip_html | truncate:200 }}
+        </div>
+      </a>
+      <p class="post-meta">
+        {{ latest.date | date: "%Y-%m-%d" }}
+      </p>
+    </div>
+
+    <ul class="note-lesson-list">
+      {% for note in course_notes %}
+      {% assign note_title = note.title | remove_first: course.name | remove_first: "：" | remove_first: ": " | remove_first: ":" %}
+      <li class="note-lesson-item">
+        <a href="{{ note.url | prepend: site.baseurl }}">{{ note_title }}</a>
+        <span class="note-lesson-meta">{{ note.date | date: "%Y-%m-%d" }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  {% endif %}
+  {% endfor %}
+</div>
+{% endfor %}
+
+{% if note_page_count > 1 %}
+<nav class="note-pagination" aria-label="Note course pagination">
+  <button class="note-page-button" type="button" data-note-prev disabled>&lt;</button>
+  {% for page_number in (1..note_page_count) %}
+  <button class="note-page-button{% if forloop.first %} active{% endif %}" type="button" data-note-target="{{ page_number }}">{{ page_number }}</button>
+  {% endfor %}
+  <button class="note-page-button" type="button" data-note-next>&gt;</button>
+</nav>
+{% endif %}
+
+<script>
+  (function () {
+    var pages = Array.prototype.slice.call(document.querySelectorAll('.note-course-page'));
+    var buttons = Array.prototype.slice.call(document.querySelectorAll('[data-note-target]'));
+    var prev = document.querySelector('[data-note-prev]');
+    var next = document.querySelector('[data-note-next]');
+    var current = 1;
+
+    function showPage(page) {
+      current = page;
+      pages.forEach(function (item) {
+        item.classList.toggle('active', item.getAttribute('data-note-page') === String(page));
+      });
+      buttons.forEach(function (button) {
+        button.classList.toggle('active', button.getAttribute('data-note-target') === String(page));
+      });
+      if (prev) prev.disabled = page === 1;
+      if (next) next.disabled = page === pages.length;
+    }
+
+    document.querySelectorAll('.note-course-toggle').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var group = button.closest('.note-course-group');
+        var open = group.classList.toggle('open');
+        button.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    });
+
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        showPage(Number(button.getAttribute('data-note-target')));
+      });
+    });
+
+    if (prev) {
+      prev.addEventListener('click', function () {
+        if (current > 1) showPage(current - 1);
+      });
+    }
+
+    if (next) {
+      next.addEventListener('click', function () {
+        if (current < pages.length) showPage(current + 1);
+      });
+    }
+  })();
+</script>

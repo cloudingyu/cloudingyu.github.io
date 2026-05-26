@@ -36,6 +36,24 @@ exclude:
     "README.zh.md",
   ]
 anchorjs: true # if you want to customize anchor. check out line:181 of `post.html`
+
+# Note collection
+collections:
+  notes:
+    output: true
+    permalink: /note/:path/
+
+defaults:
+  - scope:
+      path: ""
+      type: notes
+    values:
+      layout: post
+      author: "CloudingYu"
+      header-img: img/home-bg.jpg
+      header-mask: 0.35
+      mathjax: true
+      render_with_liquid: false
 # If you have timezone issue (e.g. #68) in China, uncomment to use this:
 #timezone: CN
 
