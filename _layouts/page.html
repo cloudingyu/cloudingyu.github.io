@@ -8,13 +8,18 @@ layout: default
 <!-- Main Content -->
 <div class="container">
   <div class="row">
-    {% if site.sidebar == false %}
+    {% assign use_sidebar = site.sidebar %}
+    {% if page.sidebar == false %}
+      {% assign use_sidebar = false %}
+    {% endif %}
+    {% if use_sidebar == false %}
     <!-- NO SIDEBAR -->
     <!-- PostList Container -->
     <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1
       postlist-container">
       {{ content }}
     </div>
+    {% unless page.sidebar == false %}
     <!-- Sidebar Container -->
     <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1
       sidebar-container">
@@ -24,6 +29,7 @@ layout: default
       <!-- Friends Blog -->
       {% include friends.html %}
     </div>
+    {% endunless %}
     {% else %}
 
     <!-- USE SIDEBAR -->

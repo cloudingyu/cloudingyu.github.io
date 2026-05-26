@@ -4,6 +4,7 @@ layout: page
 description: "课堂笔记、课程索引与学习记录"
 header-img: "img/note-bg.jpg"
 header-mask: 0.35
+sidebar: false
 ---
 
 <style>
@@ -21,7 +22,7 @@ header-mask: 0.35
 
   .note-course-head {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: 14px;
     margin-bottom: 12px;
@@ -29,6 +30,10 @@ header-mask: 0.35
   }
 
   .note-course-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
     margin: 0 0 10px;
     font-size: 32px;
     line-height: 1.25;
@@ -38,7 +43,7 @@ header-mask: 0.35
     color: #999;
     font-size: 15px;
     font-weight: 400;
-    margin-left: 8px;
+    line-height: 1.4;
   }
 
   .note-course-toggle {
@@ -71,11 +76,13 @@ header-mask: 0.35
   }
 
   .note-latest > a > .post-title {
+    margin-top: 0;
     font-size: 24px;
     line-height: 1.35;
   }
 
   .note-latest > a > .post-subtitle {
+    margin-top: 6px;
     font-size: 17px;
     line-height: 1.45;
   }
@@ -93,6 +100,7 @@ header-mask: 0.35
 
   .note-lesson-item {
     display: flex;
+    align-items: baseline;
     justify-content: space-between;
     gap: 16px;
     padding: 12px 0;
@@ -100,9 +108,12 @@ header-mask: 0.35
   }
 
   .note-lesson-item a {
+    flex: 1 1 auto;
+    min-width: 0;
     color: #404040;
     font-size: 14px;
     font-weight: 600;
+    line-height: 1.45;
   }
 
   .note-lesson-item a:hover,
@@ -114,6 +125,7 @@ header-mask: 0.35
   .note-lesson-meta {
     color: #999;
     font-size: 13px;
+    line-height: 1.45;
     white-space: nowrap;
   }
 
