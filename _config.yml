@@ -32,6 +32,7 @@ exclude:
     "node_modules",
     "Gruntfile.js",
     "package.json",
+    "prompt.md",
     "README.md",
     "README.zh.md",
   ]
