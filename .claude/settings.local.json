@@ -1,7 +1,27 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(command -v gh)",
+      "Bash(gh auth *)",
+      "Bash(curl -sL --max-time 25 https://raw.githubusercontent.com/anthropics/claude-plugins-official/main/.claude-plugin/marketplace.json)",
+      "Bash(curl -sL --max-time 30 https://raw.githubusercontent.com/anthropics/claude-plugins-official/main/.claude-plugin/marketplace.json -o /tmp/mp.json)",
+      "Read(//tmp/**)",
+      "Bash(python -c ' *)",
+      "Bash(echo *)",
+      "Bash(curl -sL --max-time 25 https://raw.githubusercontent.com/tasteskill/tasteskill/main/README.md)",
+      "Bash(git check-ignore *)",
+      "Bash(command -v claude)",
+      "Bash(claude plugin *)",
+      "Bash(npx --yes skills@latest --help)",
+      "Bash(curl -sL --max-time 30 -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\)\" \"https://www.uisdc.com/group/664534.html\" -o /tmp/uisdc.html)",
+      "Bash(python -)",
+      "Bash(bundle exec *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:4000)",
+      "Bash(netstat -ano)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:4001)",
+      "Bash(git add *)"
     ]
   }
 }
