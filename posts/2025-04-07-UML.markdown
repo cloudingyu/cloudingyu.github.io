@@ -1,0 +1,680 @@
+---
+layout:     post
+title:      "UML静态类图"
+subtitle:   "统一建模语言"
+date:       2025-04-07
+author:     "CloudingYu"
+header-style: picture
+mathjax: 
+tags:
+    - 面向对象
+    - 软件设计
+---
+
+## UML 静态类图简介
+
+UML（Unified Modeling Language，统一建模语言）是一种标准化的可视化建模语言，广泛应用于软件工程中。其中，静态类图是 UML 中最常用的图表之一，用于描述系统中的类及其之间的静态关系。
+
+## UML 静态类图结构组成和关系描述
+
+UML 静态类图文件通常以 `@startuml` 开始, 以 `@enduml` 结束. 
+
+### 一、类的表示
+
+#### 1. 基本结构
+
+一个类在 UML 中通常被表示为一个矩形，分为三个部分：
+- **顶部**：类名（必须）
+- **中部**：属性列表（可选）
+- **底部**：方法列表（可选）
+
+![](/img/posts/2025-04-07-UML/class.svg)
+
+```
+class ClassName{
+    attribute
+    method()
+}
+```
+
+
+
+#### 2. 访问修饰符
+
+属性和方法前的符号表示访问修饰符：
+- `+` 表示 public（公有）
+- `-` 表示 private（私有）
+- `#` 表示 protected（受保护）
+- `~` 表示 package/default（包/默认）
+
+![](/img/posts/2025-04-07-UML/accessModifier.svg)
+
+```
+class ClassName{
+    + attribute1
+    - attribute2
+    # method3()
+    ~ method4()
+}
+```
+
+#### 3. 属性表示
+
+属性的完整表示形式：
+```
+[可见性] 名称 [: 类型] [= 默认值] [{属性字符串}]
+```
+
+![](/img/posts/2025-04-07-UML/attribute.svg)
+
+```
+class Student {
+  + name: String = "default" {readOnly}
+  - age: int
+  # scores: int[]
+}
+```
+#### 4. 方法表示
+
+方法的完整表示形式：
+```
+[可见性] 名称([参数列表]) [: 返回类型] [{属性字符串}]
+```
+
+参数列表格式：
+```
+[方向] 参数名称: 类型 [= 默认值]
+```
+其中方向可以是：`in`、`out`、`inout`
+
+![](/img/posts/2025-04-07-UML/function.svg)
+
+```
+class School{
+    + calculateGrade(): double
+    - setName(in newName: String): void
+    # processData(inout data: DataType): boolean
+}
+```
+
+#### 5. 抽象类与接口
+
+![](/img/posts/2025-04-07-UML/abstract.svg)
+
+```
+abstract class AbstractAnimal {
+  # name: String
+  + {abstract} makeSound(): void
+  + eat(): void
+}
+
+interface Movable {
+  + move(): void
+  + getSpeed(): int
+}
+```
+
+#### 6. 简单构造型
+
+构造型可以应用于类、接口、关系等UML元素，用于表达特定领域的概念或设计模式。
+
+```
+<<stereotype>> className
+```
+```
+class className <<stereotype>>
+```
+
+### 二、类之间的关系
+
+#### 1. 关联（Association）
+
+表示类之间的一般性连接关系。
+
+- **基本关联**：使用实线连接两个类
+- **双向关联**：线两端都没有箭头
+- **单向关联**：线的一端有箭头，指向被访问的类
+- **多重性标记**：显示关联端点上的对象数量
+
+多重性表示：
+- `1` 表示精确一个
+- `*` 或 `0..*` 表示零个或多个
+- `0..1` 表示零个或一个
+- `1..*` 表示一个或多个
+- `m..n` 表示 m 到 n 个
+
+![](/img/posts/2025-04-07-UML/association.svg)
+
+```
+Teacher  -->  Textbook : uses >
+
+Student -- Course : enrolls in <
+Course -- Student : has enrolled <
+
+Department "1" -- "1..*" Employee : contains >
+```
+
+1. **单向关联**：教师使用教材，但教材不需要知道被哪些教师使用
+2. **双向关联**：学生和课程互相引用，形成双向关联
+3. **带多重性的关联**：部门包含多个员工，每个员工属于一个部门
+
+#### 2. 聚合（Aggregation）
+
+表示"整体-部分"关系，部分可以独立于整体存在。使用空心菱形箭头从整体指向部分。
+
+![](/img/posts/2025-04-07-UML/aggregation.svg)
+
+```
+University o-- Department : consists of > 
+Department o-- Professor : has faculty >
+```
+
+#### 3. 组合（Composition）
+
+表示更强的"整体-部分"关系，部分不能独立于整体存在。使用实心菱形箭头从整体指向部分。
+
+![](/img/posts/2025-04-07-UML/composition.svg)
+
+```
+Car *-- Engine : has > 
+Car *-- Wheel : has 4 > 
+```
+
+#### 4. 泛化/继承（Generalization）
+
+表示类之间的继承关系。使用空心三角形箭头从子类指向父类。
+
+![](/img/posts/2025-04-07-UML/generalization.svg)
+
+```
+Animal <|-- Dog : extends
+
+class Cat extends Animal{
+  ...
+}
+```
+
+#### 5. 实现（Realization）
+
+表示类实现接口的关系。使用空心三角形和虚线从实现类指向接口。
+
+![](/img/posts/2025-04-07-UML/realization.svg)
+
+```
+Flyable <|.. Bird : implements
+
+class Airplane implements Flyable{
+  ...
+}
+```
+
+#### 6. 依赖（Dependency）
+
+表示一个类使用另一个类的关系，通常是暂时性的。使用虚线箭头表示。
+
+![](/img/posts/2025-04-07-UML/dependency.svg)
+
+```
+Order ..> PaymentProcessor : uses >
+Invoice ..> Order : creates from >
+```
+
+### 三、高级特性
+
+#### 1. 模板/泛型类
+
+使用虚线框表示模板参数。
+
+![](/img/posts/2025-04-07-UML/generic.svg)
+
+```
+class "ArrayList<T>" as ArrayList {
+  - elementData: Object[]
+  - size: int
+  + add(T element): boolean
+  + get(index: int): T
+  + remove(index: int): T
+}
+```
+其中，T是类型参数，表示这个类可以处理任何类型的元素。
+
+#### 2. 枚举类型
+
+![](/img/posts/2025-04-07-UML/enumeration.svg)
+
+```
+enum Days {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+class Calendar {
+  + getCurrentDay(): Days
+  + isWeekend(day: Days): boolean
+}
+
+Calendar --> Days
+```
+
+#### 3. 静态成员
+
+静态属性和方法使用下划线表示。
+
+![](/img/posts/2025-04-07-UML/static.svg)
+
+```
+class MathUtils {
+  + _PI: double = 3.14159
+  + {static} E: double = 2.71828
+  + _abs(value: double): double
+  + {static} sqrt(value: double): double
+  - normalMethod(): void
+}
+```
+
+#### 4. 抽象方法
+
+抽象方法使用斜体字表示。
+
+![](/img/posts/2025-04-07-UML/abstractFunction.svg)
+
+```
+abstract class Shape {
+  # x: int
+  # y: int
+  + move(dx: int, dy: int): void
+  + {abstract} draw(): void
+  + {abstract} resize(factor: double): void
+}
+
+class Circle extends Shape {
+  - radius: double
+  + draw(): void
+  + resize(factor: double): void
+}
+
+class Rectangle extends Shape {
+  - width: double
+  - height: double
+  + draw(): void
+  + resize(factor: double): void
+}
+```
+
+### 四、添加注释
+
+可以使用注释来提供额外的信息或解释。
+
+![](/img/posts/2025-04-07-UML/notes.svg)
+
+```
+class User {
+  +username: String
+  +password: String
+}
+
+note left of User
+  用户账号信息
+  包含基本的认证数据
+end note
+
+note right of User::username
+  用户名必须唯一
+end note
+
+note "这是一个浮动注释" as N1
+User .. N1
+
+```
+
+### 五、包和命名空间
+
+使用包可以对类进行分组和分层管理。
+
+![](/img/posts/2025-04-07-UML/packages.svg)
+
+```
+package "外部API" {
+  class ExternalService
+}
+
+package "应用层" {
+  class Controller
+  class Service
+}
+
+package "数据层" {
+  class Repository
+  class Model
+}
+
+Controller --> Service
+Service --> Repository
+Service --> ExternalService
+Repository --> Model
+```
+
+### 六、布局调整
+
+#### 1. 方向设置
+
+可以使用命令改变图表的方向
+
+![](/img/posts/2025-04-07-UML/direction.svg)
+
+```
+' 默认方向是从上到下
+' top to bottom direction
+
+' 使用从左到右
+left to right direction
+
+class A
+class B
+class C
+class D
+
+A --> B
+C --> D
+```
+
+#### 2. 组织和排列元素
+
+![](/img/posts/2025-04-07-UML/layout.svg)
+
+```
+' 使用隐藏连接线调整布局
+class A
+class B
+class C
+class D
+
+' 使用不可见连接线调整布局
+A -[hidden]-> B
+B -[hidden]-> C
+B -[hidden]-> D
+
+' 可见的实际关系
+A --> C
+B --> D
+```
+
+
+### 七、样式自定义 (skinparam)
+
+通过 skinparam 命令，可以自定义 UML 图表的视觉样式，使其更美观、易读，或符合企业风格指南。
+
+#### 1. 基本使用方法
+
+skinparam 有两种使用语法：
+
+```
+' 单行语法
+skinparam 元素类型 属性值
+
+' 块语法
+skinparam 元素类型 {
+    属性1 值1
+    属性2 值2
+}
+```
+
+#### 2. 全局样式设置
+
+![](/img/posts/2025-04-07-UML/global-style.svg)
+
+```
+' 全局样式设置
+skinparam {
+    DefaultFontName "Microsoft YaHei"
+    DefaultFontSize 12
+    Shadowing false
+    BackgroundColor transparent
+    Monochrome false
+}
+```
+
+#### 3. 特定元素样式设置
+
+![](/img/posts/2025-04-07-UML/element-style.svg)
+
+```
+' 设置类样式
+skinparam class {
+    BackgroundColor LightBlue
+    BorderColor DarkBlue
+    FontColor Black
+    FontSize 14
+    BorderThickness 1
+    AttributeFontColor Navy
+    AttributeFontSize 12
+}
+
+' 设置接口样式
+skinparam interface {
+    BackgroundColor LightGreen
+    BorderColor ForestGreen
+}
+
+' 设置箭头样式
+skinparam arrow {
+    Color DarkSlateGray
+    Thickness 1.2
+}
+
+' 设置注释样式
+skinparam note {
+    BackgroundColor LemonChiffon
+    BorderColor Gold
+    FontSize 10
+}
+```
+
+#### 4. 条件样式设置
+
+可以根据特定的构造型（stereotype）设置不同样式，非常适合表示不同类型的组件。
+
+![](/img/posts/2025-04-07-UML/conditional-style.svg)
+
+```
+skinparam class {
+    BackgroundColor<<Service>> PaleGreen
+    BorderColor<<Service>> Green
+    
+    BackgroundColor<<Entity>> LightBlue
+    BorderColor<<Entity>> Blue
+    
+    BackgroundColor<<DTO>> Wheat
+    BorderColor<<DTO>> Tan
+}
+
+```
+
+#### 5. 使用主题
+
+PlantUML 提供了多种内置主题，可以快速应用一致的样式。
+
+![](/img/posts/2025-04-07-UML/themes.svg)
+
+```
+!theme cerulean
+
+class User {
+  -id: Long
+  +getName(): String
+}
+
+class Account {
+  -balance: Double
+  +withdraw(): Boolean
+}
+
+User -- Account
+
+note bottom of User
+  可以应用以下主题：
+  cerulean, materia, cyborg, 
+  spacelab, superhero 等
+end note
+
+@enduml
+```
+
+#### 6. 实用样式技巧
+
+##### 手绘风格
+
+![](/img/posts/2025-04-07-UML/handwritten.svg)
+
+```
+skinparam handwritten true
+
+class User {
+  -name: String
+  +login(): boolean
+}
+
+class Order {
+  -items: List
+  +checkout(): void
+}
+
+User --> Order : places >
+```
+
+##### 定制包样式
+
+![](/img/posts/2025-04-07-UML/package-style.svg)
+
+```
+skinparam packageStyle Rectangle
+
+' 自定义包样式
+skinparam package {
+    BackgroundColor LightGrey
+    BorderColor DimGrey
+    FontColor Black
+    FontSize 14
+    BorderThickness 1
+}
+```
+
+除了前面介绍的样式设置，以下是一些特别实用的 skinparam 参数：
+
+##### 包样式设置
+
+```
+skinparam packageStyle rectangle
+```
+
+packageStyle 可选值包括:
+- `rectangle`: 矩形样式（最常用）
+- `folder`: 文件夹样式
+- `node`: 节点样式
+- `frame`: 框架样式
+- `cloud`: 云样式
+- `database`: 数据库样式
+
+
+##### 线型设置
+
+```
+skinparam linetype ortho
+```
+
+控制连接线的绘制方式:
+- `ortho`: 正交线（直角转折）
+- `polyline`: 多段线（允许任意角度）
+- `splines`: 曲线
+
+
+##### 黑白模式
+
+```
+skinparam monochrome true
+```
+
+将所有颜色转换为黑白模式:
+- `true`: 使用黑白色调
+- `false`: 使用彩色模式（默认）
+
+通过灵活运用 skinparam，可以大幅提升 UML 图表的视觉效果和可读性，使其不仅功能强大，而且赏心悦目。
+
+## 生成 UML 静态类图（以 VSCode 为例）
+
+### 安装 PlantUML 插件
+
+1. 打开 VSCode
+2. 点击左侧活动栏中的扩展图标（或使用快捷键 Cmd+Shift+X）
+3. 在搜索框中输入 "PlantUML"
+4. 找到由 Jebbs 开发的 "PlantUML" 插件并点击安装
+5. 安装完成后可能需要重启 VSCode
+
+### 编写 PlantUML 文件
+
+1. 在 VSCode 中创建一个新文件，扩展名为 `.puml` 或 `.plantuml`（例如 `class-diagram.puml`）
+2. 编写 PlantUML 代码来描述您的类图
+3. 使用 PlantUML 的预览功能查看图形，通常使用快捷键为 `Alt+D` 或使用命令面板（`Ctrl+Shift+P` 或 `Cmd+Shift+P`），搜索并选择 `"Preview Current Diagram"`
+
+以下是一个简单的类图示例代码：
+
+```
+@startuml
+
+class Person {
+  -name: String
+  -age: int
+  +getName(): String
+  +setName(String): void
+  +getAge(): int
+  +setAge(int): void
+}
+
+class Student {
+  -studentId: String
+  -grades: Map
+  +enrollCourse(Course): void
+  +calculateGPA(): double
+}
+
+class Course {
+  -courseId: String
+  -courseName: String
+  +register(Student): void
+  +complete(): void
+}
+
+enum GenderType {
+  MALE
+  FEMALE
+  OTHER
+}
+
+Person <|-- Student
+Person o-- GenderType
+Course "1..*" *-- "0..*" Student
+Student ..> Course
+
+@enduml
+```
+
+### 导出和分享类图
+
+要导出图形，可以：
+
+1. 在预览窗口中右键点击，选择"导出图表为..."
+2. 或使用命令面板（`Ctrl+Shift+P` 或 `Cmd+Shift+P`），搜索并选择 `"PlantUML: Export Current Diagram"` 
+
+
+## 总结
+
+UML 静态类图是面向对象设计中描述系统结构的强大工具。通过正确使用类表示、关系符号和高级特性，可以清晰地表达系统中各个类的职责和它们之间的交互方式。掌握这些表示方法不仅有助于设计阶段的沟通，也能帮助开发人员更好地理解和实现系统架构。
+
+
+
+
