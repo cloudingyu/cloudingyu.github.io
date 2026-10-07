@@ -1,0 +1,119 @@
+---
+/**
+ * 标签。17 个标签里中英混排（题解 / 洛谷 / 面向对象 … 与 VSCode / Vim / IDE）。
+ * 中英字符的视觉重量差别很大：中文两三个字就占满一行宽度，拉丁字母则窄而矮。
+ * 所以这个组件不靠「等宽 pill」来对齐，而是：
+ *   · 中文用正文字体，拉丁字母用等宽体 —— 各自的字面宽度才自然
+ *   · 大写字母降一号字、抬高一点点字距，避免视觉上比中文更重
+ *   · 用「数量」作为可选的肩上标，靠 tabular-nums 对齐
+ */
+interface Props {
+  name: string;
+  count?: number;
+  href?: string;
+  /** 是否为主要标签（文章数 ≥ 2） */
+  featured?: boolean;
+  size?: 'sm' | 'md';
+}
+
+const { name, count, href, featured = false, size = 'sm' } = Astro.props;
+
+// 把标签拆成「中文段」与「拉丁段」，分别套字体：混排时正文体与等宽体各得其所
+const segments = name.match(/[一-鿿　-〿＀-￯]+|[^一-鿿　-〿＀-￯]+/g) ?? [name];
+
+const Tag = href ? 'a' : 'span';
+---
+
+<Tag
+  class:list={['tag', `tag--${size}`, { 'tag--featured': featured }]}
+  href={href}
+  data-tag={name}
+>
+  <span class="tag__label">
+    {
+      segments.map((seg) => {
+        const isCJK = /[一-鿿　-〿＀-￯]/.test(seg);
+        return <span class={isCJK ? 'tag__cjk' : 'tag__lat'}>{seg}</span>;
+      })
+    }
+  </span>
+  {count !== undefined && <span class="tag__count">{count}</span>}
+</Tag>
+
+<style>
+  /*
+    标签本身没有底色、没有圆角 —— 用一道细边框和等宽数字承担识别，
+    与整站的「线即结构」一致。中英混排的宽度差靠字体分工抹平。
+  */
+  .tag {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3em;
+    border: 1px solid var(--line);
+    border-radius: 1px;
+    color: var(--ink-muted);
+    background: var(--panel);
+    line-height: 1;
+    white-space: nowrap;
+    transition:
+      color 0.22s var(--ease),
+      border-color 0.22s var(--ease),
+      background-color 0.22s var(--ease);
+  }
+
+  .tag--sm {
+    padding: 0.28rem 0.42rem;
+    font-size: 0.72rem;
+  }
+  .tag--md {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  a.tag:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+
+  /* 主要标签：描线换成靛蓝，但不填满底色，保持安静 */
+  .tag--featured {
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+    color: var(--ink-soft);
+  }
+  a.tag--featured:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* 中文：正文字体，字面更紧凑 */
+  .tag__cjk {
+    font-family: var(--font-sans);
+    letter-spacing: 0.01em;
+  }
+
+  /* 拉丁前缀（VSCode / Vim / IDE）：等宽体 + 略小字号，视觉重量与中文齐平 */
+  .tag__lat {
+    font-family: var(--font-mono);
+    font-size: 0.94em;
+    letter-spacing: 0.015em;
+  }
+
+  /* 文章数：等宽数字，作为「肩上标」 */
+  .tag__count {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.86em;
+    color: var(--ink-faint);
+    padding-left: 0.28em;
+    border-left: 1px solid var(--line);
+  }
+
+  .tag--featured .tag__count {
+    color: var(--accent);
+    border-left-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tag { transition: none; }
+  }
+</style>

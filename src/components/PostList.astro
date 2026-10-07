@@ -1,0 +1,63 @@
+---
+/**
+ * 文章列表本体（首页与分页页共用），避免两处重复渲染逻辑。
+ */
+import PostCard from './PostCard.astro';
+import Pagination from './Pagination.astro';
+import { POSTS_PER_PAGE, SITE } from '../data/site';
+import type { Page } from '../lib/posts';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  page: Page<CollectionEntry<'posts'>>;
+  total: number;
+}
+
+const { page, total } = Astro.props;
+const isFirst = page.current === 1;
+---
+
+<section class="shell home">
+  <div class="home__lead">
+    <p class="home__count mono-meta">
+      共 {total} 篇 · 每页 {POSTS_PER_PAGE} 篇
+    </p>
+    <p class="home__note">算法题解、面向对象设计、工具与随笔。</p>
+  </div>
+
+  <div class="home__list">
+    {page.items.map((post, i) => <PostCard post={post} index={i} />)}
+  </div>
+
+  <Pagination page={page} />
+</section>
+
+<style>
+  .home {
+    padding-top: var(--s6);
+  }
+
+  .home__lead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--s3) var(--s5);
+    padding-bottom: var(--s3);
+  }
+
+  .home__count { color: var(--ink-faint); }
+
+  .home__note {
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: 0.9rem;
+  }
+
+  .home__list { margin-top: var(--s2); }
+
+  /* 最后一条也补上下边界线，列表才收得住 */
+  .home__list > :last-child {
+    border-bottom: 1px solid var(--line);
+  }
+</style>

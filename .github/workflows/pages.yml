@@ -1,0 +1,73 @@
+# 构建 Astro 站点并发布到 GitHub Pages。
+#
+# 与旧的 Jekyll 工作流的关系：master 上的 .github/workflows/pages.yml 用的是
+# Ruby + Jekyll。重做后站点改由 Astro 构建，那份工作流在本分支不适用 ——
+# 这里替换成 Node 版本，其余（权限、并发组、Pages 环境）沿用同一套写法，
+# 免得仓库设置里的 Pages Source 还要重新指一遍。
+name: Deploy Astro site to Pages
+
+on:
+  push:
+    branches:
+      - design-rebuild
+      - master
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Pages 同一时刻只能有一个发布在跑；排队而不是互相打断，避免线上出现半份产物
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # npm ci 而不是 install：锁文件是唯一的依赖事实，构建要可复现
+      - name: Install dependencies
+        run: npm ci
+
+      # build 脚本里串了三步：同步内容包 → 复制 KaTeX 字体 → astro build。
+      # 所以这里不需要额外手工步骤。
+      - name: Build with Astro
+        run: npm run build
+
+      # 发布前先过一遍校验清单。内容层的约束（50 张图、15 篇永久链接、
+      # 公式渲染、无死链…）如果被改坏，宁可这一步失败，也不要把坏页面推上线。
+      - name: Verify content integrity
+        run: npm run verify
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

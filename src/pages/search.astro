@@ -1,0 +1,423 @@
+---
+/**
+ * 站内搜索：/search/?q=...
+ *
+ * 纯前端过滤，索引来自构建期产物 /search-index.json（见 search-index.json.ts）。
+ * 用 ?q= 同步查询词，所以刷新、收藏、把链接发给别人，结果都能复现 ——
+ * 这一点对静态站尤其重要，否则搜索页是个不可分享的空壳。
+ *
+ * 匹配策略是「字段加权 + 子串」而不是模糊打分：语料只有 15 篇，
+ * 读者输入的多半是标题词、标签或代码标识符，精确子串的命中率比编辑距离高得多，
+ * 也不会出现拼错一个字就搜不到中文标题的情况。
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { allPosts } from '../lib/posts';
+
+const posts = await allPosts();
+---
+
+<BaseLayout
+  page="archive"
+  hero="compact"
+  title="搜索"
+  description={`在 ${posts.length} 篇文章中搜索标题、标签与正文。`}
+>
+  <section class="shell search">
+    <form class="search__form" role="search" id="search-form">
+      <label class="mono-meta search__label" for="search-input">关键词</label>
+      <div class="search__field">
+        <svg class="search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </svg>
+        <input
+          id="search-input"
+          class="search__input"
+          type="search"
+          name="q"
+          placeholder="标题、标签，或正文里的任意词"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          aria-describedby="search-status"
+        />
+        <button class="search__clear" type="button" id="search-clear" hidden aria-label="清空">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <p class="mono-meta search__status" id="search-status" role="status" aria-live="polite"></p>
+    </form>
+
+    <div class="rule" />
+
+    <div class="search__results" id="search-results"></div>
+
+    <!-- 无 JS 与首屏未执行时的兜底：把全部文章列出来，搜索框失效也仍可阅读 -->
+    <noscript>
+      <p class="mono-meta search__fallback-note">
+        当前浏览器未启用 JavaScript，下面是全部文章 —— 也可以直接前往
+        <a href="/archive/">归档</a> 按年份与标签浏览。
+      </p>
+    </noscript>
+  </section>
+</BaseLayout>
+
+<style>
+  .search {
+    padding-top: var(--s7);
+    padding-bottom: var(--s8);
+  }
+
+  .search__form { margin-bottom: var(--s5); }
+
+  .search__label {
+    display: block;
+    margin-bottom: var(--s3);
+    color: var(--ink-faint);
+  }
+
+  /* 输入框做成一条下划线的书写行，而不是带圆角的盒子 */
+  .search__field {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--line-strong);
+    transition: border-color 0.26s var(--ease);
+  }
+  .search__field:focus-within { border-color: var(--accent); }
+
+  .search__icon {
+    flex: none;
+    width: 1.15rem;
+    height: 1.15rem;
+    color: var(--ink-faint);
+    transition: color 0.26s var(--ease);
+  }
+  .search__field:focus-within .search__icon { color: var(--accent); }
+
+  .search__input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: none;
+    outline: none;
+    font-family: var(--font-serif);
+    font-size: clamp(1.15rem, 1rem + 0.7vw, 1.5rem);
+    line-height: 1.5;
+    color: var(--ink);
+    padding: 0;
+  }
+  .search__input::placeholder {
+    color: var(--ink-faint);
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+  }
+  /* 去掉 Safari / Chrome 自带的搜索清除按钮，用自己那颗 */
+  .search__input::-webkit-search-cancel-button { display: none; }
+
+  .search__clear {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    color: var(--ink-faint);
+    transition: color 0.2s var(--ease);
+  }
+  .search__clear svg { width: 0.9rem; height: 0.9rem; }
+  .search__clear:hover { color: var(--ink); }
+
+  .search__status {
+    margin: var(--s3) 0 0;
+    color: var(--ink-faint);
+  }
+
+  .search__fallback-note { color: var(--ink-muted); }
+
+  /* --- 结果 --- */
+
+  .search__results { padding-top: var(--s5); }
+
+  .result {
+    display: block;
+    padding: var(--s5) 0;
+    border-bottom: 1px solid var(--line);
+    transition: color 0.22s var(--ease);
+  }
+
+  .result__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.85rem;
+    margin-bottom: 0.5rem;
+    color: var(--ink-faint);
+  }
+
+  .result__title {
+    font-family: var(--font-serif);
+    font-size: 1.2rem;
+    font-weight: 620;
+    line-height: 1.4;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+    transition: color 0.22s var(--ease);
+  }
+  .result:hover .result__title { color: var(--accent); }
+
+  .result__snippet {
+    margin: 0.5rem 0 0;
+    font-size: 0.92rem;
+    line-height: 1.78;
+    color: var(--ink-muted);
+    max-width: 62ch;
+  }
+
+  .result__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.7rem;
+    list-style: none;
+    padding: 0;
+  }
+  .result__tags li {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+  }
+
+  /* 命中词：用氧化红的浅底标出，与正文里的 marks 同一套语言 */
+  mark {
+    background: var(--mark-wash);
+    color: var(--mark);
+    padding: 0.05em 0.2em;
+    border-radius: 1px;
+  }
+  :global([data-theme='dark']) mark {
+    background: color-mix(in srgb, var(--mark) 28%, transparent);
+    color: var(--ink);
+  }
+
+  .search__empty {
+    padding: var(--s6) 0;
+    color: var(--ink-muted);
+  }
+  .search__empty strong { color: var(--ink); font-weight: 600; }
+  .search__empty ul {
+    margin: var(--s4) 0 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+  }
+  .search__empty a { color: var(--ink-muted); }
+  .search__empty a:hover { color: var(--accent); }
+</style>
+
+<script>
+  /**
+   * 客户端过滤。三段式：读索引 → 打分 → 渲染。
+   * 索引文件不大（≈100KB 量级），一次取回缓存在内存里，后续输入不再走网络。
+   */
+  type Item = {
+    title: string;
+    subtitle: string;
+    date: string;
+    tags: string[];
+    url: string;
+    author: string;
+    body: string;
+  };
+
+  const form = document.getElementById('search-form') as HTMLFormElement | null;
+  const input = document.getElementById('search-input') as HTMLInputElement | null;
+  const clearBtn = document.getElementById('search-clear') as HTMLButtonElement | null;
+  const status = document.getElementById('search-status');
+  const results = document.getElementById('search-results');
+
+  if (form && input && status && results) {
+    let items: Item[] | null = null;
+    let loading: Promise<Item[]> | null = null;
+
+    const load = (): Promise<Item[]> => {
+      if (!items) {
+        loading ??= fetch('/search-index.json', { credentials: 'same-origin' })
+          .then((r) => {
+            if (!r.ok) throw new Error(String(r.status));
+            return r.json() as Promise<Item[]>;
+          })
+          .then((data) => {
+            items = data;
+            return data;
+          });
+        return loading;
+      }
+      return Promise.resolve(items);
+    };
+
+    const escapeHtml = (s: string) =>
+      s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
+    /** 把命中的子串包进 <mark>，输入已经转义过、大小写不敏感。 */
+    const highlight = (text: string, term: string) => {
+      const safe = escapeHtml(text);
+      if (!term) return safe;
+      const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return safe.replace(new RegExp(escaped, 'gi'), (m) => `<mark>${m}</mark>`);
+    };
+
+    /** 取命中词周围的一段上下文，让读者知道「为什么这篇被搜到」。 */
+    const snippet = (body: string, term: string) => {
+      if (!term) return body.slice(0, 130) + (body.length > 130 ? '…' : '');
+      const at = body.toLowerCase().indexOf(term.toLowerCase());
+      if (at < 0) return body.slice(0, 130) + (body.length > 130 ? '…' : '');
+      const start = Math.max(0, at - 45);
+      const end = Math.min(body.length, at + term.length + 85);
+      return (start > 0 ? '…' : '') + body.slice(start, end) + (end < body.length ? '…' : '');
+    };
+
+    const score = (item: Item, term: string) => {
+      const t = term.toLowerCase();
+      const title = item.title.toLowerCase();
+      const subtitle = item.subtitle.toLowerCase();
+      const tags = item.tags.join(' ').toLowerCase();
+      const body = item.body.toLowerCase();
+
+      let s = 0;
+      if (title === t) s += 120;                       // 完全等于标题
+      else if (title.startsWith(t)) s += 70;
+      else if (title.includes(t)) s += 50;
+      if (subtitle.includes(t)) s += 18;
+      if (tags.includes(t)) s += 26;
+      const inBody = body.indexOf(t);
+      if (inBody >= 0) {
+        s += 8;
+        // 出现次数给一点权重，但取对数，长文不会因为篇幅长就稳居第一
+        const n = body.split(t).length - 1;
+        s += Math.min(12, Math.log2(n + 1) * 3);
+      }
+      return s;
+    };
+
+    const render = (list: Item[], term: string) => {
+      if (!list.length) {
+        const tags = Array.from(new Set((items ?? []).flatMap((i) => i.tags))).slice(0, 8);
+        results.innerHTML =
+          `<div class="search__empty">
+             <p>没有匹配 <strong>${escapeHtml(term)}</strong> 的文章。换一个词试试，
+             或者从这些标签进去看看：</p>
+             <ul>${tags.map((t) => `<li><a href="/tags/${encodeURIComponent(t)}/">${escapeHtml(t)}</a></li>`).join('')}</ul>
+           </div>`;
+        return;
+      }
+
+      results.innerHTML = list
+        .map(
+          (item) => `
+          <a class="result" href="${item.url}">
+            <div class="result__meta mono-meta">
+              <span>${escapeHtml(item.date)}</span>
+              <span>${escapeHtml(item.author)}</span>
+            </div>
+            <div class="result__title">${highlight(item.title, term)}</div>
+            <p class="result__snippet">${highlight(snippet(item.body, term), term)}</p>
+            ${
+              item.tags.length
+                ? `<ul class="result__tags">${item.tags.map((t) => `<li>${escapeHtml(t)}</li>`).join('')}</ul>`
+                : ''
+            }
+          </a>`
+        )
+        .join('');
+    };
+
+    const run = async (raw: string) => {
+      const term = raw.trim();
+      clearBtn!.hidden = term.length === 0;
+
+      // 空查询：把全部文章按时间列出，页面不至于是空白
+      const data = await load();
+      if (!term) {
+        status.textContent = `共 ${data.length} 篇文章 · 输入关键词开始筛选`;
+        render(data, '');
+        return;
+      }
+
+      // 多个词用空格分开时，要求全部命中（AND），符合「越写越窄」的直觉
+      const terms = term.split(/\s+/).filter(Boolean);
+      const scored = data
+        .map((item) => ({
+          item,
+          s: terms.reduce((acc, t) => {
+            const one = score(item, t);
+            return one > 0 ? acc + one : -Infinity;
+          }, 0),
+        }))
+        .filter((r) => r.s > -Infinity)
+        .sort((a, b) => b.s - a.s || b.item.date.localeCompare(a.item.date));
+
+      const found = scored.map((r) => r.item);
+      status.textContent = found.length
+        ? `找到 ${found.length} 篇匹配「${term}」的文章`
+        : `没有找到匹配「${term}」的文章`;
+      render(found, terms[0]!);
+    };
+
+    // --- 事件 ---
+    let timer: number | undefined;
+    input.addEventListener('input', () => {
+      window.clearTimeout(timer);
+      // 轻微防抖：索引已在内存，这里只是为了不在每次按键都重排 DOM
+      timer = window.setTimeout(() => {
+        const v = input.value;
+        const url = new URL(location.href);
+        if (v.trim()) url.searchParams.set('q', v);
+        else url.searchParams.delete('q');
+        history.replaceState(null, '', url);
+        void run(v);
+      }, 90);
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      void run(input.value);
+      input.focus();
+    });
+
+    clearBtn?.addEventListener('click', () => {
+      input.value = '';
+      const url = new URL(location.href);
+      url.searchParams.delete('q');
+      history.replaceState(null, '', url);
+      void run('');
+      input.focus();
+    });
+
+    // 斜杠键聚焦搜索框 —— 技术读者习惯的快捷键
+    document.addEventListener('keydown', (e) => {
+      const el = document.activeElement;
+      const typing = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement;
+      if (e.key === '/' && !typing) {
+        e.preventDefault();
+        input.focus();
+      }
+    });
+
+    // 首屏：读 URL 里的 q，让链接可分享
+    const initial = new URL(location.href).searchParams.get('q') ?? '';
+    input.value = initial;
+    void run(initial);
+  }
+</script>

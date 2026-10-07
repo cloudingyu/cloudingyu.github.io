@@ -1,0 +1,25 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+.astro/
+.vercel/
+.netlify/
+
+# 由 scripts/vendor-katex.mjs 在构建前生成，不入库
+public/vendor/
+
+# 由 scripts/sync-content.mjs 从仓库根目录的内容包生成，不入库。
+# 内容的事实来源是 posts/*.markdown 与 images/ —— 这两处才是需要提交的，
+# 下面这两份是每次构建前重新算出来的产物，提交它们会让同一份正文出现两个版本。
+public/images/
+src/content/posts/
+
+# 编辑器 / 系统
+.DS_Store
+Thumbs.db
+*.log
+.vscode/*
+!.vscode/extensions.json
+.idea/
