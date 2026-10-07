@@ -1,0 +1,369 @@
+---
+/**
+ * 文章详情页。
+ *
+ * 路由刻意沿用旧站 Jekyll 的永久链接格式 /YYYY/MM/DD/<slug>/
+ * （README「关键实施细节」#3）：外面已有的引用、搜索引擎收录都指向这个形状，
+ * 换掉会凭空制造 404 与排名损失。实现方式是 getStaticPaths 直接产出三段参数。
+ *
+ * 渲染正文用 render(entry) —— Astro 7 的 Content Layer 写法，
+ * KaTeX 与 Shiki 的结果都由 astro.config.mjs 里那条 unified 处理器产出。
+ */
+import { render } from 'astro:content';
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import Tag from '../../../../components/Tag.astro';
+import { allPosts, neighbors, formatDate, permalink, slugOf, coverUrl, assetUrl } from '../../../../lib/posts';
+import { AUTHOR } from '../../../../data/site';
+
+export async function getStaticPaths() {
+  const posts = await allPosts();
+  return posts.map((post) => {
+    const d = post.data.date;
+    return {
+      params: {
+        year: String(d.getUTCFullYear()),
+        month: String(d.getUTCMonth() + 1).padStart(2, '0'),
+        day: String(d.getUTCDate()).padStart(2, '0'),
+        slug: slugOf(post),
+      },
+      props: { post },
+    };
+  });
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+const { title, subtitle, date, author, tags } = post.data;
+const cover = coverUrl(post);
+const posts = await allPosts();
+const { prev, next } = neighbors(posts, post);
+
+// 目录只取 h2/h3，且至少有 2 条才值得显示
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const showToc = toc.length >= 2;
+---
+
+<BaseLayout
+  page="home"
+  hero="bare"
+  type="article"
+  {title}
+  published={date}
+  tags={tags}
+  image={cover || undefined}
+  description={subtitle || `${title} —— ${AUTHOR.name} 的技术笔记`}
+>
+  <article class="post" data-article>
+    <header class="shell post__head">
+      <div class="post__crumbs mono-meta">
+        <a href="/">首页</a>
+        <span aria-hidden="true">/</span>
+        <a href="/archive/">归档</a>
+        <span aria-hidden="true">/</span>
+        <span>{date.getUTCFullYear()}</span>
+      </div>
+
+      <h1 class="post__title">{title}</h1>
+
+      {subtitle && <p class="post__subtitle">{subtitle}</p>}
+
+      <div class="post__byline">
+        <span class="post__avatar" aria-hidden="true">
+          <img src={assetUrl(AUTHOR.avatar)} alt="" width="36" height="36" loading="lazy" />
+        </span>
+        <span class="post__byline-text">
+          <span class="post__author">{author}</span>
+          <time class="mono-meta" datetime={date.toISOString()}>
+            {formatDate(date, 'cjk')}
+          </time>
+        </span>
+        <ul class="post__tags">
+          {tags.map((t) => <li><Tag name={t} href={`/tags/${encodeURIComponent(t)}/`} size="md" /></li>)}
+        </ul>
+      </div>
+    </header>
+
+    {
+      cover && (
+        <figure class="shell post__cover">
+          <img
+            src={cover}
+            alt={post.data.coverAlt ?? title}
+            loading="eager"
+            decoding="async"
+            data-raw
+          />
+        </figure>
+      )
+    }
+
+    <div class="rule" />
+
+    <div class="shell post__body">
+      <div class:list={['post__grid', showToc && 'post__grid--with-toc']}>
+        {
+          showToc && (
+            <aside class="post__toc" aria-label="本文目录">
+              <p class="mono-meta post__toc-head">目录</p>
+              <nav>
+                <ul>
+                  {toc.map((h) => (
+                    <li class:list={[`depth-${h.depth}`]}>
+                      <a href={`#${h.slug}`}>
+                        <span class="post__toc-rule" aria-hidden="true" />
+                        <span>{h.text}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </aside>
+          )
+        }
+
+        <div class="prose post__prose">
+          <Content />
+        </div>
+      </div>
+    </div>
+
+    <footer class="shell post__foot">
+      <div class="rule" />
+      <nav class="post__nav" aria-label="上下篇">
+        {
+          prev ? (
+            <a class="post__nav-item post__nav-item--prev" href={permalink(prev)} rel="prev">
+              <span class="mono-meta">上一篇</span>
+              <span class="post__nav-title">{prev.data.title}</span>
+            </a>
+          ) : (
+            <span class="post__nav-item is-empty" aria-hidden="true" />
+          )
+        }
+        {
+          next ? (
+            <a class="post__nav-item post__nav-item--next" href={permalink(next)} rel="next">
+              <span class="mono-meta">下一篇</span>
+              <span class="post__nav-title">{next.data.title}</span>
+            </a>
+          ) : (
+            <span class="post__nav-item is-empty" aria-hidden="true" />
+          )
+        }
+      </nav>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .post__head {
+    padding-top: var(--s7);
+    padding-bottom: var(--s5);
+  }
+
+  .post__crumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--ink-faint);
+    margin-bottom: var(--s5);
+  }
+  .post__crumbs a {
+    color: var(--ink-muted);
+    transition: color 0.22s var(--ease);
+  }
+  .post__crumbs a:hover { color: var(--accent); }
+
+  .post__title {
+    font-size: clamp(1.85rem, 1.2rem + 2.4vw, 2.85rem);
+    font-weight: 650;
+    letter-spacing: -0.024em;
+    line-height: 1.18;
+    max-width: 24ch;
+    /* 入场：标题稍后出现，让视线先落在面包屑与标题上 */
+    animation: stage-in 0.6s var(--ease) both;
+  }
+
+  .post__subtitle {
+    margin: var(--s4) 0 0;
+    font-family: var(--font-serif);
+    font-size: clamp(1rem, 0.95rem + 0.4vw, 1.2rem);
+    line-height: 1.7;
+    color: var(--ink-muted);
+    max-width: 40ch;
+  }
+
+  .post__byline {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--s3) var(--s4);
+    margin-top: var(--s6);
+    padding-top: var(--s5);
+    border-top: 1px solid var(--line);
+  }
+
+  .post__avatar img {
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    filter: grayscale(0.25);
+  }
+
+  .post__byline-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-right: auto;
+  }
+
+  .post__author {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .post__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /*
+     figure 同时挂着 .shell（版心 + 两侧 gutter 内边距），
+     边框若画在 figure 上会把 gutter 也框进去，图两边各多出一条空白。
+     所以 figure 只负责定位，边框画在图片本身。
+  */
+  .post__cover {
+    margin: 0 auto var(--s6);
+  }
+  .post__cover img {
+    display: block;
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+  }
+
+  .post__body {
+    padding-top: var(--s6);
+  }
+
+  /* 有目录时正文右侧让出一列；窄屏塌成单栏，目录移到正文之前 */
+  .post__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s6);
+  }
+  @media (min-width: 68rem) {
+    .post__grid--with-toc {
+      grid-template-columns: minmax(0, 1fr) 13.5rem;
+      gap: var(--s7);
+    }
+  }
+
+  .post__toc {
+    grid-row: 1;
+    align-self: start;
+  }
+  @media (min-width: 68rem) {
+    .post__grid--with-toc .post__toc {
+      grid-column: 2;
+      position: sticky;
+      top: 5.5rem;
+      max-height: calc(100vh - 7rem);
+      overflow-y: auto;
+    }
+  }
+
+  .post__toc-head {
+    margin: 0 0 var(--s3);
+    padding-bottom: var(--s2);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-faint);
+  }
+
+  .post__toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .post__toc li { margin: 0; }
+
+  .post__toc a {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--ink-muted);
+    transition: color 0.22s var(--ease);
+  }
+  .post__toc a:hover { color: var(--ink); }
+
+  /* 一道会随悬停延展的短横线 —— 图纸上被标注的条目 */
+  .post__toc-rule {
+    flex: none;
+    width: 0.7rem;
+    height: 1px;
+    background: var(--line-strong);
+    transform: translateY(-0.28em);
+    transition: width 0.3s var(--ease), background-color 0.3s var(--ease);
+  }
+  .post__toc a:hover .post__toc-rule {
+    width: 1.1rem;
+    background: var(--accent);
+  }
+
+  .post__toc li.depth-3 a { padding-left: 0.5rem; font-size: 0.8rem; }
+
+  .post__prose { min-width: 0; }
+
+  .post__foot {
+    margin-top: var(--s8);
+  }
+
+  .post__nav {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s4);
+    padding-top: var(--s5);
+  }
+  @media (min-width: 40rem) {
+    .post__nav { grid-template-columns: 1fr 1fr; }
+  }
+
+  .post__nav-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: var(--s4) 0;
+    transition: color 0.24s var(--ease);
+  }
+  .post__nav-item--next { text-align: right; }
+  .post__nav-item.is-empty { visibility: hidden; }
+
+  a.post__nav-item:hover { color: var(--accent); }
+
+  .post__nav-title {
+    font-family: var(--font-serif);
+    font-size: 1.02rem;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--ink);
+    max-width: 30ch;
+    transition: color 0.24s var(--ease);
+  }
+  .post__nav-item--next .post__nav-title { margin-left: auto; }
+  a.post__nav-item:hover .post__nav-title { color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .post__title { animation: none; }
+    .post__toc-rule, .post__nav-item, .post__nav-title { transition: none; }
+  }
+</style>

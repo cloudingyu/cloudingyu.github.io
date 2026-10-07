@@ -1,0 +1,289 @@
+/* ==========================================================================
+   CloudingYu 博客 — 设计系统
+   --------------------------------------------------------------------------
+   气质定位：中文技术博客，读者是程序员与计算机专业学生。
+
+   视觉概念取自这批内容自身的语汇，而不是通用博客模板：
+     · 洛谷题解里满篇的样例输入输出、数学推导 —— 像一份**排印良好的题面**
+     · UML / 设计模式文章里的类框、多重性标记、手绘箭头 —— 像**工程图纸**
+     · 数学公式（KaTeX）本身就有清晰的基线、斜体变量、上下标
+
+   于是整体定为「蓝图 / 手稿」：
+     冷调纸面 + 极淡的方格纹（图纸底纹），正文用衬线体承载长文阅读，
+     结构线与全部元数据交给等宽体 + 发丝线，强调色取自图纸描线的靛蓝。
+     不用卡片、不用阴影、不用圆角 —— 结构由线承担，而不是盒子。
+
+   唯一的鲜明色（--accent）留给链接、锚点与当前状态；
+   正文里的手绘感氧化红（--mark）只在引用与高亮出现。
+   ========================================================================== */
+
+/* --- 1. Tokens ---------------------------------------------------------- */
+
+:root {
+  color-scheme: light;
+
+  /* 图纸纸面 */
+  --paper:      #F6F7F5;
+  --panel:      #FCFCFB;
+  --panel-sunk: #EFF1EE;
+  --ink:        #171C1A;
+  --ink-soft:   #39433F;
+  --ink-muted:  #667069;
+  --ink-faint:  #98A19B;
+
+  /* 描线 */
+  --line:       #DFE3DD;
+  --line-strong:#C4CBC3;
+
+  /* 图纸描线靛蓝 —— 唯一的结构强调色 */
+  --accent:      #1B4B7F;
+  --accent-soft: #4C7BAE;
+  /* 手绘标注的氧化红，用于引用与高亮 */
+  --mark:        #A33B22;
+  --mark-wash:   #F0E2DC;
+
+  /* 代码 */
+  --code-bg:    #F1F3F0;
+  --code-line:  #E4E7E2;
+
+  /* 方格纹（图纸底纹）—— 极淡，只在页头与分隔带出现 */
+  --grid: color-mix(in srgb, var(--ink) 7%, transparent);
+
+  /* 字族 */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+               "Noto Sans SC", "PingFang SC", "Hiragino Sans GB",
+               "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+  --font-serif: "Source Serif 4", "Iowan Old Style", "Palatino Linotype",
+                Palatino, Georgia, "Noto Serif SC", "Source Han Serif SC",
+                "Songti SC", "SimSun", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono",
+               Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* 版心 */
+  --measure: 66ch;      /* 正文行宽 */
+  --page-max: 1120px;   /* 外层容器 */
+  --rail: 8.5rem;       /* 左侧元数据栏宽度 */
+  --gutter: clamp(1.15rem, 4vw, 3.25rem);
+
+  /* 节奏 */
+  --s1: 0.25rem;  --s2: 0.5rem;   --s3: 0.75rem;
+  --s4: 1rem;     --s5: 1.5rem;   --s6: 2rem;
+  --s7: 3rem;     --s8: 4.5rem;   --s9: 7rem;
+
+  --ease: cubic-bezier(0.22, 0.68, 0.35, 1);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* 深底仍然保留冷调，像夜里的描图纸 */
+  --paper:      #0D1113;
+  --panel:      #131819;
+  --panel-sunk: #191F20;
+  --ink:        #E6EAE7;
+  --ink-soft:   #BAC3BD;
+  --ink-muted:  #838E88;
+  --ink-faint:  #5A6560;
+
+  --line:       #222A29;
+  --line-strong:#303A38;
+
+  --accent:      #7FB2E0;
+  --accent-soft: #5A8FC0;
+  --mark:        #E08A6E;
+  --mark-wash:   #2A1D18;
+
+  --code-bg:    #111617;
+  --code-line:  #1B2223;
+}
+
+/* --- 2. Reset ----------------------------------------------------------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.7;
+  font-feature-settings: "kern" 1, "liga" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+img, svg, video { max-width: 100%; height: auto; display: block; }
+
+a { color: inherit; text-decoration: none; }
+
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+::selection { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+
+/* --- 3. Typography ------------------------------------------------------ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.24;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+  margin: 0;
+}
+
+p { margin: 0 0 var(--s4); }
+
+strong { font-weight: 650; }
+
+/* 中英混排：全角标点收一点侧边空白，避免行首行尾出现空洞 */
+:where(p, li, h1, h2, h3, h4, blockquote, td, dd) {
+  text-spacing-trim: trim-start;
+}
+
+/* 等宽元数据：日期、标签、章节号、行号 —— 承载「技术记录」的信号 */
+.mono-meta {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+/* 图纸方格底纹 —— 用 repeating-linear-gradient，不引外部图片 */
+.grid-field {
+  background-image:
+    repeating-linear-gradient(to right, var(--grid) 0 1px, transparent 1px 2rem),
+    repeating-linear-gradient(to bottom, var(--grid) 0 1px, transparent 1px 2rem);
+  background-position: center;
+}
+
+/* --- 4. Layout ---------------------------------------------------------- */
+
+.shell {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--s4);
+  top: -100px;
+  z-index: 100;
+  padding: var(--s2) var(--s4);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.85rem;
+  transition: top 0.2s var(--ease);
+}
+.skip-link:focus { top: var(--s4); }
+
+/* 左侧元数据栏 + 正文的双栏骨架（窄屏塌成单栏） */
+.rail-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s4);
+}
+@media (min-width: 62rem) {
+  .rail-layout {
+    grid-template-columns: var(--rail) minmax(0, 1fr);
+    gap: var(--s7);
+  }
+}
+
+/* --- 5. Hairline rules -------------------------------------------------- */
+
+.rule {
+  height: 1px;
+  background: var(--line);
+  border: 0;
+  margin: 0;
+}
+
+/* --- 6. Motion ----------------------------------------------------------
+   克制：不做「每张卡片各自淡入上浮」那套通用效果。
+   只有一次编排好的入场（页头），以及随交互发生的过渡。            */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* 页头入场：一条动画里依次推出 —— 线先画出，再上文案 */
+  .stage-rule {
+    transform-origin: left center;
+    animation: rule-draw 0.62s var(--ease) both;
+  }
+  .stage-text {
+    animation: stage-in 0.68s var(--ease) both;
+    animation-delay: calc(90ms + var(--stage-i, 0) * 70ms);
+  }
+  /* 列表项：整体一次性错峰浮现，不随滚动反复触发 */
+  .stage-row {
+    animation: stage-in 0.6s var(--ease) both;
+    animation-delay: calc(120ms + var(--stage-i, 0) * 55ms);
+  }
+}
+
+@keyframes rule-draw {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@keyframes stage-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 滚动进入视口才揭示（由 IntersectionObserver 添加 class） */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.62s var(--ease), transform 0.62s var(--ease);
+  }
+  .reveal.is-in {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- 7. Theme toggle ---------------------------------------------------- */
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--line);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease);
+}
+.theme-toggle:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+.theme-toggle svg { width: 0.95rem; height: 0.95rem; }

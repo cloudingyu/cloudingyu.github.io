@@ -1,0 +1,19 @@
+---
+/** 首页（第 1 页）。分页后续页在 src/pages/page/[page].astro。 */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostList from '../components/PostList.astro';
+import { allPosts, paginate } from '../lib/posts';
+import { SITE, POSTS_PER_PAGE } from '../data/site';
+
+const posts = await allPosts();
+const [first] = paginate(posts, POSTS_PER_PAGE);
+---
+
+<BaseLayout
+  page="home"
+  hero="tall"
+  showQuote
+  description={`${SITE.seoTitle} —— ${SITE.tagline}`}
+>
+  <PostList page={first} total={posts.length} />
+</BaseLayout>

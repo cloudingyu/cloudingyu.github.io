@@ -1,0 +1,250 @@
+---
+/**
+ * 列表里的一条文章。
+ *
+ * 设计要点：15 篇里只有 1 篇带封面图（2025-01-26-vim-VScode 的 bg.png），
+ * 其余 14 篇都没有。所以不能按「卡片 + 缩略图」的套路做 —— 那会让 14 条变成
+ * 空洞的占位块。这里改成**图纸目录**的形式：
+ *
+ *   · 左侧一条窄栏放日期（等宽、tabular-nums），形成可扫读的时间轴
+ *   · 标题、副标题承担全部识别度，靠字重与字号拉开层次
+ *   · 标签在底部一行，用组件处理中英混排
+ *   · 唯一有封面图的那篇，封面以横幅形式横跨整条，而不是缩略图
+ *
+ * 于是「有没有图」不再是一个待填的缺口，而是一条记录自身的属性差异。
+ */
+import Tag from './Tag.astro';
+import { formatDate, permalink, excerpt, coverUrl, assetUrl, type Post } from '../lib/posts';
+
+interface Props {
+  post: Post;
+  /** 列表内的序号，用于错峰入场动画 */
+  index?: number;
+  /** 是否显示摘要 */
+  showExcerpt?: boolean;
+  /** 标题层级：列表页用 h2，它处可降级 */
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { post, index = 0, showExcerpt = true, headingLevel = 'h2' } = Astro.props;
+const { title, subtitle, date, tags, author } = post.data;
+const cover = coverUrl(post);
+const url = permalink(post);
+const summary = excerpt(post.body ?? '', 96);
+const Heading = headingLevel;
+---
+
+<article class:list={['entry', { 'entry--has-cover': !!cover }]} style={`--stage-i:${Math.min(index, 8)}`}>
+  {
+    cover && (
+      <a class="entry__cover" href={url} tabindex="-1" aria-hidden="true">
+        <img src={cover} alt={post.data.coverAlt ?? ''} loading="lazy" decoding="async" />
+      </a>
+    )
+  }
+
+  <div class="entry__body">
+    <div class="entry__meta">
+      <time class="mono-meta entry__date" datetime={date.toISOString()}>
+        {formatDate(date, 'slash')}
+      </time>
+      <span class="entry__author mono-meta">{author}</span>
+    </div>
+
+    <Heading class="entry__title">
+      <a class="entry__link" href={url}>{title}</a>
+    </Heading>
+
+    {subtitle && <p class="entry__subtitle">{subtitle}</p>}
+
+    {
+      showExcerpt && !subtitle && summary && (
+        <p class="entry__excerpt">{summary}</p>
+      )
+    }
+
+    <div class="entry__foot">
+      <a class="entry__more mono-meta" href={url} aria-label={`阅读《${title}》`}>
+        <span>阅读全文</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+          <path d="M5 12h13M12 5.5 18.5 12 12 18.5" />
+        </svg>
+      </a>
+      {
+        tags.length > 0 && (
+          <ul class="entry__tags">
+            {tags.map((t) => (
+              <li>
+                <Tag name={t} href={`/tags/${encodeURIComponent(t)}/`} />
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+  </div>
+</article>
+
+<style>
+  /*
+    每条记录之间只用一道发丝线分隔，不用卡片边框 —— 与图纸目录的观感一致。
+    悬停时左侧出现一条靛蓝描边（像被标注的行），标题随之下沉到墨色。
+  */
+  .entry {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s4);
+    padding: var(--s6) 0;
+    border-top: 1px solid var(--line);
+  }
+
+  /* 悬停标注线：从左侧画出 */
+  .entry::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -1px;
+    width: 0;
+    height: calc(100% + 1px);
+    border-top: 1px solid var(--accent);
+    transition: width 0.4s var(--ease);
+    pointer-events: none;
+  }
+  .entry:hover::before { width: 100%; }
+  @media (prefers-reduced-motion: reduce) {
+    .entry::before { transition: none; }
+  }
+
+  .entry--has-cover {
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 52rem) {
+    .entry--has-cover {
+      grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+      gap: var(--s6);
+      align-items: start;
+    }
+  }
+
+  /* 唯一的封面：横幅，不裁成缩略方块 */
+  .entry__cover {
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--panel-sunk);
+    align-self: stretch;
+  }
+  .entry__cover img {
+    width: 100%;
+    height: 100%;
+    min-height: 8.5rem;
+    object-fit: cover;
+    transition: transform 0.6s var(--ease), filter 0.4s var(--ease);
+    filter: grayscale(0.2);
+  }
+  .entry:hover .entry__cover img {
+    transform: scale(1.03);
+    filter: grayscale(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .entry__cover img { transition: none; }
+  }
+
+  .entry__body { min-width: 0; }
+
+  .entry__meta {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s4);
+    margin-bottom: var(--s3);
+  }
+
+  .entry__date {
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+  }
+
+  .entry__author {
+    color: var(--ink-faint);
+    font-size: 0.68rem;
+  }
+
+  .entry__title {
+    font-size: clamp(1.22rem, 1.05rem + 0.7vw, 1.5rem);
+    font-weight: 620;
+    letter-spacing: -0.016em;
+    color: var(--ink);
+    margin: 0 0 var(--s3);
+    line-height: 1.34;
+  }
+
+  /*
+    标题链接用「下划线从左展开」的方式做悬停反馈，
+    比变色更能提示「这是一条可点的记录」。
+  */
+  .entry__link {
+    display: inline;
+    background-image: linear-gradient(var(--accent), var(--accent));
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 1px;
+    transition: background-size 0.38s var(--ease);
+    text-decoration: none;
+  }
+  .entry:hover .entry__link { background-size: 100% 1px; }
+  @media (prefers-reduced-motion: reduce) {
+    .entry__link { transition: none; }
+  }
+
+  .entry__subtitle {
+    margin: 0 0 var(--s3);
+    color: var(--ink);
+    font-family: var(--font-serif);
+    font-size: 0.98rem;
+    opacity: 0.86;
+  }
+
+  .entry__excerpt {
+    margin: 0 0 var(--s3);
+    color: var(--ink-muted);
+    font-size: 0.9rem;
+    line-height: 1.72;
+    max-width: 58ch;
+  }
+
+  .entry__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--s3) var(--s5);
+    margin-top: var(--s4);
+  }
+
+  .entry__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--ink-faint);
+    transition: color 0.25s var(--ease), gap 0.25s var(--ease);
+  }
+  .entry__more svg { width: 0.85rem; height: 0.85rem; }
+  .entry:hover .entry__more {
+    color: var(--accent);
+    gap: 0.55rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .entry__more { transition: none; }
+  }
+
+  .entry__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+</style>

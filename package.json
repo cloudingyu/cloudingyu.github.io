@@ -1,25 +1,26 @@
 {
-    "name": "cloudingyu-blog",
-    "title": "CloudingYu Blog",
-    "author": "CY <cloudingyu@gmail.com>",
-    "version": "1.8.2",
-    "homepage": "http://cloudingyu.github.io",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/cloudingyu/cloudingyu.github.io"
-    },
-    "bugs": "https://github.com/cloudingyu/cloudingyu.github.io/issues",
-    "devDependencies": {
-        "grunt": ">=1.3.0",
-        "grunt-banner": "~0.2.3",
-        "grunt-contrib-less": "^2.0.0",
-        "grunt-contrib-uglify": "^4.0.1",
-        "grunt-contrib-watch": "^1.1.0"
-    },
-    "scripts": {
-        "start": "bundle exec jekyll serve",
-        "dev": "grunt watch & npm run start",
-        "boil": "git push boilerplate boilerplate:master",
-        "push": "git push origin master --tag"
-    }
+  "name": "cloudingyu-blog",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "sync": "node scripts/sync-content.mjs",
+    "vendor": "node scripts/vendor-katex.mjs",
+    "prepare-content": "npm run sync && npm run vendor",
+    "dev": "npm run prepare-content && astro dev",
+    "start": "npm run prepare-content && astro dev",
+    "build": "npm run prepare-content && astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "verify": "node scripts/verify.mjs"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.2",
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.3.6",
+    "katex": "^0.16.22",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
+    "unist-util-visit": "^5.0.0"
+  }
 }

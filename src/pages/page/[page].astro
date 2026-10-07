@@ -1,0 +1,38 @@
+---
+/**
+ * 分页页 /page/2/、/page/3/（首页 / 由 index.astro 负责）。
+ * 用 getStaticPaths 静态生成，部署到 GitHub Pages 无需任何服务端逻辑。
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostList from '../../components/PostList.astro';
+import { allPosts, paginate } from '../../lib/posts';
+import { POSTS_PER_PAGE } from '../../data/site';
+import type { CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await allPosts();
+  return paginate(posts, POSTS_PER_PAGE)
+    .filter((page) => page.current > 1)
+    .map((page) => ({
+      params: { page: String(page.current) },
+      props: { page, total: posts.length },
+    }));
+}
+
+interface Props {
+  page: ReturnType<typeof paginate<CollectionEntry<'posts'>>>[number];
+  total: number;
+}
+
+const { page, total } = Astro.props;
+---
+
+<BaseLayout
+  page="home"
+  hero="compact"
+  showQuote
+  title={`第 ${page.current} 页`}
+  description={`全部 ${total} 篇文章，第 ${page.current} 页（每页 ${POSTS_PER_PAGE} 篇）。`}
+>
+  <PostList {page} {total} />
+</BaseLayout>

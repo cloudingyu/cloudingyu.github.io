@@ -1,0 +1,263 @@
+---
+/**
+ * 归档页：按年份分组的完整时间线 + 标签云。
+ *
+ * 标签云不做成随机字号的大小游戏 —— 那既难看懂也不稳定。
+ * 这里用两道信息：文章数（等宽数字）决定视觉权重，
+ * 以及一行筛选项（全部 / 主要标签 / 单标签），通过链接落到 /tags/<标签>/ 上，
+ * 静态站也能真正「筛」，不依赖 JS。
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Tag from '../components/Tag.astro';
+import { allPosts, groupByYear, tagCounts, formatDate, permalink } from '../lib/posts';
+
+const posts = await allPosts();
+const years = groupByYear(posts);
+const tags = tagCounts(posts);
+const featured = tags.filter((t) => t.featured);
+
+// 年份跨度：给页头一句准确的概述
+const yearSpan = years.length
+  ? `${years[years.length - 1]!.year}–${years[0]!.year}`
+  : '';
+---
+
+<BaseLayout
+  page="archive"
+  hero="compact"
+  title="归档"
+  description={`全部 ${posts.length} 篇文章的完整归档，按年份排列，共 ${tags.length} 个标签。`}
+>
+  <div class="shell archive">
+    <!-- 概览：一眼看清这个博客的体量 -->
+    <dl class="archive__stats">
+      <div>
+        <dt class="mono-meta">文章</dt>
+        <dd>{posts.length}</dd>
+      </div>
+      <div>
+        <dt class="mono-meta">标签</dt>
+        <dd>{tags.length}</dd>
+      </div>
+      <div>
+        <dt class="mono-meta">年份</dt>
+        <dd class="archive__span">{yearSpan}</dd>
+      </div>
+    </dl>
+
+    <!-- 标签云 -->
+    <section class="archive__section" aria-labelledby="tags-head">
+      <h2 class="archive__head" id="tags-head">
+        标签
+        <span class="mono-meta archive__head-note">按文章数排列</span>
+      </h2>
+      <ul class="archive__tags">
+        {
+          tags.map((t) => (
+            <li>
+              <Tag
+                name={t.tag}
+                count={t.count}
+                href={`/tags/${encodeURIComponent(t.tag)}/`}
+                featured={t.featured}
+                size="md"
+              />
+            </li>
+          ))
+        }
+      </ul>
+      {
+        featured.length > 0 && (
+          <p class="archive__hint mono-meta">
+            描线为靛蓝的是多篇文章共用的标签（{featured.map((t) => t.tag).join(' / ')}）
+          </p>
+        )
+      }
+    </section>
+
+    <!-- 时间线 -->
+    <section class="archive__section" aria-labelledby="years-head">
+      <h2 class="archive__head" id="years-head">
+        全部文章
+        <span class="mono-meta archive__head-note">按时间倒序</span>
+      </h2>
+
+      {
+        years.map(({ year, posts: items }) => (
+          <div class="year">
+            <h3 class="year__head">
+              <span class="year__num">{year}</span>
+              <span class="mono-meta year__count">{items.length} 篇</span>
+              <span class="year__line" aria-hidden="true" />
+            </h3>
+
+            <ol class="year__list">
+              {items.map((p) => (
+                <li class="item">
+                  <time class="mono-meta item__date" datetime={p.data.date.toISOString()}>
+                    {formatDate(p.data.date, 'dash')}
+                  </time>
+                  <a class="item__title" href={permalink(p)}>
+                    {p.data.title}
+                  </a>
+                  <ul class="item__tags">
+                    {p.data.tags.map((t) => (
+                      <li>{t}</li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))
+      }
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .archive {
+    padding-top: var(--s7);
+  }
+
+  /* --- 概览 --- */
+
+  .archive__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s6) var(--s8);
+    margin: 0 0 var(--s8);
+  }
+  .archive__stats dt {
+    margin-bottom: 0.3rem;
+    color: var(--ink-faint);
+  }
+  .archive__stats dd {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    font-weight: 620;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .archive__stats .archive__span { font-size: 1.5rem; }
+
+  /* --- 区块标题 --- */
+
+  .archive__section { margin-bottom: var(--s8); }
+
+  .archive__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s4);
+    font-size: 1.12rem;
+    font-weight: 620;
+    padding-bottom: var(--s3);
+    margin-bottom: var(--s5);
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .archive__head-note {
+    font-weight: 400;
+    color: var(--ink-faint);
+    font-size: 0.7rem;
+  }
+
+  /* --- 标签云 --- */
+
+  .archive__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .archive__hint {
+    margin: var(--s5) 0 0;
+    color: var(--ink-faint);
+    font-size: 0.7rem;
+  }
+
+  /* --- 年份分组 --- */
+
+  .year + .year { margin-top: var(--s7); }
+
+  .year__head {
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    margin-bottom: var(--s4);
+    font-weight: 600;
+  }
+
+  /* 年份用等宽数字，像坐标轴刻度 */
+  .year__num {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year__count { color: var(--ink-faint); }
+
+  /* 年份右侧延伸出去的描线，把「这一年」的范围划出来 */
+  .year__line {
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .year__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 每一条：日期 + 标题（+ 标签），三列对齐，便于纵向扫读 */
+  .item {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+    padding: 0.7rem 0;
+    border-top: 1px solid var(--line);
+  }
+  @media (min-width: 48rem) {
+    .item {
+      grid-template-columns: 7.5rem minmax(0, 1fr) auto;
+      align-items: baseline;
+      gap: var(--s5);
+    }
+  }
+  .item:last-child { border-bottom: 1px solid var(--line); }
+
+  .item__date { color: var(--ink-faint); }
+
+  .item__title {
+    font-family: var(--font-serif);
+    font-size: 1.02rem;
+    color: var(--ink);
+    transition: color 0.22s var(--ease);
+  }
+  .item:hover .item__title { color: var(--accent); }
+
+  .item__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+  }
+  @media (max-width: 48rem) {
+    .item__tags { padding-top: 0.15rem; }
+  }
+</style>

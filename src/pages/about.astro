@@ -1,0 +1,143 @@
+---
+/**
+ * About 页。
+ *
+ * 正文逐字取自 SITE_DATA.md 第 6 节（含 emoji 小标题、GitHub 风格的
+ * ~~删除线~~、一句 raw HTML 的居中斜体引文，以及 shields.io / giphy 外链图片）。
+ * 因为里面有 raw HTML 与 GFM 删除线，这里不走内容集合，而是用一条就地配置的
+ * markdown 处理器渲染：gfm 打开、允许 raw HTML。
+ *
+ * 外链图片（Badge 与 GIF）保留原始直链 —— SITE_DATA.md 明确说明它们不在资源包内。
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../data/site';
+
+const markdown = `
+# 你好, 我是 CloudingYu 👋
+
+## 🚀 关于我
+
+- 💡 喜欢用优雅的代码简化复杂问题并解决实际问题
+- 🎮 业余游戏 ~~开发者~~ 玩家
+- 📚 终身学习者，始终保持好奇心
+- 🎓 复旦大学本科生
+
+![Coding GIF](https://media.giphy.com/media/qgQUggAC3Pfv687qPC/giphy.gif)
+
+<div align="center"><em>"Curiosity is the spark that lights the flame of our journey, but it is not enough to illuminate the entire path"</em></div>
+
+## 💻 技术栈
+
+![Python](https://img.shields.io/badge/-Python-3776AB?style=flat-square&logo=python&logoColor=white) ![C++](https://img.shields.io/badge/-C++-00599C?style=flat-square&logo=cplusplus&logoColor=white) ![Java](https://img.shields.io/badge/-Java-007396?style=flat-square&logo=java&logoColor=white) ![JavaScript](https://img.shields.io/badge/-JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black) ![Vue](https://img.shields.io/badge/-Vue.js-4FC08D?style=flat-square&logo=vue.js&logoColor=white)
+
+## 📊 我的 GitHub 统计
+
+![CodeTime Badge](https://img.shields.io/endpoint?style=flat-square&color=41B883&url=https%3A%2F%2Fapi.codetime.dev%2Fshield%3Fid%3D31966%26project%3D%26in=0) [![GitHub followers](https://img.shields.io/github/followers/cloudingyu?label=Followers&style=social)](https://github.com/cloudingyu?tab=followers) [![GitHub stars](https://img.shields.io/github/stars/cloudingyu?style=social)](https://github.com/cloudingyu?tab=stars) ![Last Commit](https://img.shields.io/github/last-commit/cloudingyu/cloudingyu)
+`;
+
+const { createMarkdownProcessor } = await import('@astrojs/markdown-remark');
+const processor = await createMarkdownProcessor({
+  gfm: true,
+  smartypants: false,
+  syntaxHighlight: false,
+});
+const { code: aboutHtml } = await processor.render(markdown);
+---
+
+<BaseLayout
+  page="about"
+  hero="compact"
+  title="关于"
+  description={`关于 ${SITE.title} 的作者与这个站点。`}
+>
+  <div class="shell about">
+    <div class="rule" />
+    <div class="prose about__prose" set:html={aboutHtml} />
+  </div>
+</BaseLayout>
+
+<style>
+  .about {
+    padding-top: var(--s6);
+  }
+
+  .about__prose {
+    padding-top: var(--s7);
+  }
+
+  /* 首个标题是页面自我介绍的重复，页头已经交代过「关于」，这里收小一点 */
+  .about__prose :global(h1) {
+    font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.3rem);
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    margin: 0 0 var(--s6);
+  }
+
+  /* emoji 小标题：不再重复加线，靠字号与留白分层 */
+  .about__prose :global(h2) {
+    font-size: 1.2rem;
+    margin-top: var(--s7);
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  /* 要点列表：换成靛蓝短横线，与全站的描线语言一致 */
+  .about__prose :global(ul) {
+    list-style: none;
+    padding-left: 0;
+  }
+  .about__prose :global(ul > li) {
+    position: relative;
+    padding-left: 1.4rem;
+    margin-bottom: 0.55rem;
+  }
+  .about__prose :global(ul > li)::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.85em;
+    width: 0.7rem;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  /* Giphy 动图：作为正文中的一段视觉停顿 */
+  .about__prose :global(img[alt='Coding GIF']) {
+    width: min(100%, 26rem);
+    margin: var(--s6) 0;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+  }
+
+  /* 居中斜体引文（raw HTML 产出） */
+  .about__prose :global(div[align='center']) {
+    text-align: center;
+    margin: var(--s6) 0;
+    padding: 0 var(--s4);
+    font-family: var(--font-serif);
+    font-style: italic;
+    color: var(--ink-muted);
+    line-height: 1.9;
+    max-width: 42ch;
+    margin-inline: auto;
+  }
+
+  /* 技术栈与 GitHub 徽章：成行排列，间距收紧 */
+  .about__prose :global(p:has(> a > img[src*='shields.io'])) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .about__prose :global(img[src*='shields.io']) {
+    display: inline-block;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    /* 徽章本身是彩色的，深色模式下不要被整站的图片反色规则影响 */
+    filter: none;
+  }
+  [data-theme='dark'] .about__prose :global(img[src*='shields.io']) {
+    filter: none;
+  }
+</style>

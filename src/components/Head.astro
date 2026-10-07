@@ -1,0 +1,107 @@
+---
+/**
+ * <head> 的单一出处：SEO、字体、主题防闪烁、KaTeX 样式。
+ * theme 的初始化内联在 head 里、且早于 body 渲染，避免深色模式下的白闪。
+ */
+import { SITE, AUTHOR } from '../data/site';
+import { assetUrl } from '../lib/posts';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** 页面类型：首页用 website，文章页用 article */
+  type?: 'website' | 'article';
+  /** 文章页的发布日期与标签，用于 JSON-LD */
+  published?: Date;
+  tags?: string[];
+  /** og:image 绝对地址（文章封面），没有就退回头像 */
+  image?: string;
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = SITE.tagline,
+  type = 'website',
+  published,
+  tags = [],
+  image,
+  noindex = false,
+} = Astro.props;
+
+// 首页用 SEO 标题（SITE_DATA.md 指定的精确写法），其余页面用「标题 | 站点名」
+const pageTitle = title ? `${title} | ${SITE.title}` : SITE.seoTitle;
+const canonical = new URL(Astro.url.pathname, SITE.url).href;
+const ogImage = new URL(image || assetUrl(AUTHOR.avatar), SITE.url).href;
+
+const jsonLd =
+  type === 'article'
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: title,
+        datePublished: published?.toISOString(),
+        keywords: tags.join(','),
+        author: { '@type': 'Person', name: AUTHOR.name },
+        publisher: { '@type': 'Person', name: AUTHOR.name },
+        mainEntityOfPage: canonical,
+      }
+    : {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: SITE.title,
+        alternateName: SITE.seoTitle,
+        description: SITE.tagline,
+        url: SITE.url,
+        author: { '@type': 'Person', name: AUTHOR.name },
+      };
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{pageTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex" />}
+
+<!-- 站点作者与语言 -->
+<meta name="author" content={AUTHOR.name} />
+<meta name="theme-color" content="#F6F7F5" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0D1113" media="(prefers-color-scheme: dark)" />
+
+<!-- Open Graph / Twitter -->
+<meta property="og:type" content={type} />
+<meta property="og:site_name" content={SITE.title} />
+<meta property="og:title" content={pageTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:locale" content="zh_CN" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={pageTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+<!-- favicon（SITE_DATA.md 指定的 images/site/favicon.ico） -->
+<link rel="icon" href={assetUrl('images/site/favicon.ico')} sizes="any" />
+<link rel="apple-touch-icon" href={assetUrl(AUTHOR.avatar)} />
+
+<!-- KaTeX 样式（由 scripts/vendor-katex.mjs 复制到 public/vendor/） -->
+<link rel="stylesheet" href="/vendor/katex/katex.min.css" />
+
+<!-- RSS / sitemap -->
+<link rel="sitemap" href="/sitemap-index.xml" />
+
+<!-- 主题初始化：必须内联且尽早执行 -->
+<script is:inline>
+  (() => {
+    const key = 'cy-theme';
+    let saved = null;
+    try { saved = localStorage.getItem(key); } catch (e) { /* 隐私模式 */ }
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = saved === 'light' || saved === 'dark' ? saved : (prefersDark ? 'dark' : 'light');
+    document.documentElement.dataset.theme = theme;
+  })();
+</script>
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

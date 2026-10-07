@@ -1,0 +1,139 @@
+---
+/**
+ * 404。
+ *
+ * Astro 会把 src/pages/404.astro 产出成站点根目录的 404.html，
+ * GitHub Pages 会自动用它接管未命中的路径 —— 无需额外配置。
+ *
+ * 文案沿用 SITE_DATA.md 里这一页原来的背景图与引语（荒原）。
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { allPosts, formatDate, permalink } from '../lib/posts';
+
+// 荒原上给几条路标：最近的三篇，比一个孤零零的「返回首页」有用
+const recent = (await allPosts()).slice(0, 3);
+---
+
+<BaseLayout page="notFound" hero="tall" title="404">
+  <div class="shell notfound">
+    <p class="notfound__num mono-meta">404 · Not Found</p>
+
+    <div class="rule" />
+
+    <nav class="notfound__paths" aria-label="可能的去处">
+      <a class="notfound__path" href="/">
+        <span class="notfound__path-name">首页</span>
+        <span class="mono-meta notfound__path-note">最新的文章</span>
+      </a>
+      <a class="notfound__path" href="/archive/">
+        <span class="notfound__path-name">归档</span>
+        <span class="mono-meta notfound__path-note">全部 15 篇，按年份</span>
+      </a>
+      <a class="notfound__path" href="/about/">
+        <span class="notfound__path-name">关于</span>
+        <span class="mono-meta notfound__path-note">这个博客与作者</span>
+      </a>
+    </nav>
+
+    <div class="rule" />
+
+    <section class="notfound__recent" aria-labelledby="nf-recent">
+      <h2 class="mono-meta notfound__recent-head" id="nf-recent">或者从这里开始</h2>
+      <ul>
+        {
+          recent.map((p) => (
+            <li>
+              <time class="mono-meta" datetime={p.data.date.toISOString()}>
+                {formatDate(p.data.date, 'dash')}
+              </time>
+              <a href={permalink(p)}>{p.data.title}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .notfound {
+    padding-top: var(--s7);
+    padding-bottom: var(--s8);
+  }
+
+  /* 页头已经承担了「荒原」的引语，这里只补一个冷静的编号 */
+  .notfound__num {
+    margin: 0 0 var(--s5);
+    color: var(--mark);
+    letter-spacing: 0.08em;
+  }
+
+  .notfound__paths {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: var(--s5) 0;
+  }
+  @media (min-width: 40rem) {
+    .notfound__paths { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  .notfound__path {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: var(--s4) 0;
+    border-bottom: 1px solid var(--line);
+    transition: color 0.24s var(--ease);
+  }
+  @media (min-width: 40rem) {
+    .notfound__path {
+      padding: var(--s4) var(--s5) var(--s4) 0;
+      border-bottom: 0;
+      border-right: 1px solid var(--line);
+    }
+    .notfound__path:last-child { border-right: 0; padding-right: 0; }
+  }
+
+  .notfound__path-name {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--ink);
+    transition: color 0.24s var(--ease);
+  }
+  .notfound__path:hover .notfound__path-name { color: var(--accent); }
+  .notfound__path-note { color: var(--ink-faint); }
+
+  .notfound__recent {
+    padding-top: var(--s6);
+  }
+
+  .notfound__recent-head {
+    margin: 0 0 var(--s4);
+    color: var(--ink-faint);
+  }
+
+  .notfound__recent ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .notfound__recent li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s4);
+    padding: 0.55rem 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .notfound__recent time { color: var(--ink-faint); flex: none; }
+
+  .notfound__recent a {
+    font-family: var(--font-serif);
+    color: var(--ink-muted);
+    transition: color 0.22s var(--ease);
+  }
+  .notfound__recent a:hover { color: var(--accent); }
+</style>

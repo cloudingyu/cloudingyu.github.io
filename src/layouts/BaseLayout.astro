@@ -1,0 +1,263 @@
+---
+/**
+ * 全站骨架：页头（品牌 + 导航 + 主题切换）、页脚、以及阅读进度条。
+ * 页面背景图与引言通过 props 传入 —— 四个页面各自有背景素材（SITE_DATA.md 第 7 节），
+ * 这些是内容素材，不是设计装饰，所以原图直接用，不替换成渐变。
+ */
+import Head from '../components/Head.astro';
+import { SITE, AUTHOR, SOCIALS, FRIENDS, NAV, PAGES, type PageKey } from '../data/site';
+import { assetUrl } from '../lib/posts';
+import '../styles/global.css';
+import '../styles/layout.css';
+import '../styles/prose.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  type?: 'website' | 'article';
+  published?: Date;
+  tags?: string[];
+  image?: string;
+  noindex?: boolean;
+  /** 使用哪个页面的背景与引言 */
+  page?: PageKey;
+  /** 页头高度：紧凑 = 列表/归档，高 = 首页 */
+  hero?: 'tall' | 'compact' | 'bare';
+  /** 页头是否显示该页的引言；默认跟随 hero（bare 的页面不显示） */
+  showQuote?: boolean;
+}
+
+const {
+  title,
+  description,
+  type = 'website',
+  published,
+  tags,
+  image,
+  noindex,
+  page = 'home',
+  hero = 'compact',
+  // 四个页面在 SITE_DATA.md 第 7 节里各有一句专属文案，那是内容、不是装饰，
+  // 所以默认就显示；只有 hero="bare" 的页面（文章页，标题本身就是开场）才关掉，
+  // 调用方仍可显式覆盖。
+  showQuote = hero !== 'bare',
+} = Astro.props;
+
+const bg = PAGES[page];
+const current = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === '/' ? current === '/' || current.startsWith('/page/') : current.startsWith(href);
+---
+
+<!doctype html>
+<html lang={SITE.lang}>
+  <head>
+    <Head {title} {description} {type} {published} {tags} {image} {noindex} />
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到正文</a>
+
+    <!-- 阅读进度：文章页才有意义，用纯 CSS + 极小脚本 -->
+    <div class="progress" aria-hidden="true"><i id="progress-bar"></i></div>
+
+    <header class="masthead">
+      <div class="shell masthead__inner">
+        <a class="brand" href="/" aria-label={`${SITE.title} 首页`}>
+          <img
+            class="brand__mark"
+            src={assetUrl(AUTHOR.avatar)}
+            alt=""
+            width="36"
+            height="36"
+            loading="eager"
+          />
+          <span class="brand__text">
+            <span class="brand__name">{SITE.title}</span>
+            <span class="brand__tag mono-meta">{SITE.tagline}</span>
+          </span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          {
+            NAV.map((item) => (
+              <a
+                class:list={['nav__link', { 'is-active': isActive(item.href) }]}
+                href={item.href}
+                aria-current={isActive(item.href) ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+            ))
+          }
+          <a class="nav__link nav__search" href="/search/" aria-label="搜索文章">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <span class="nav__search-label">搜索</span>
+          </a>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-live="polite">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <path class="tt-sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m0-11.32L4.93 4.93m14.14 14.14-1.41-1.41" />
+              <circle cx="12" cy="12" r="4.2" />
+            </svg>
+            <span id="theme-label">主题</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    {
+      hero !== 'bare' && (
+        <section
+          class:list={['hero', `hero--${hero}`, bg.bg && 'hero--has-bg']}
+          style={bg.bg ? `--hero-bg: url('${assetUrl(bg.bg)}')` : undefined}
+        >
+          <div class="hero__veil" aria-hidden="true" />
+          <div class="shell hero__inner">
+            {title && <p class="hero__eyebrow mono-meta stage-text" style="--stage-i:0">{SITE.url.replace(/^https?:\/\//, '')}</p>}
+            <h1 class="hero__title stage-text" style="--stage-i:1">
+              {title || SITE.title}
+            </h1>
+            {showQuote && (
+              <blockquote class="hero__quote stage-text" style="--stage-i:2">
+                {bg.quote}
+              </blockquote>
+            )}
+          </div>
+          <div class="hero__rule rule stage-rule" />
+        </section>
+      )
+    }
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="foot">
+      <div class="shell">
+        <div class="foot__grid">
+          <div class="foot__brand">
+            <p class="foot__name">{AUTHOR.name}</p>
+            <p class="foot__bio">{AUTHOR.bio}</p>
+            <a class="foot__mail mono-meta" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+          </div>
+
+          <div class="foot__col">
+            <p class="foot__head mono-meta">找到我</p>
+            <ul class="foot__list">
+              {
+                SOCIALS.map((s) => (
+                  <li>
+                    <a href={s.url} rel="me noopener noreferrer" target="_blank">
+                      {s.name}
+                    </a>
+                  </li>
+                ))
+              }
+              <li>
+                <a href="/search/">站内搜索</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="foot__col">
+            <p class="foot__head mono-meta">朋友们</p>
+            <ul class="foot__list">
+              {
+                FRIENDS.map((f) => (
+                  <li>
+                    <a href={f.url} rel="noopener noreferrer" target="_blank">
+                      {f.name}
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+
+          <div class="foot__col">
+            <p class="foot__head mono-meta">栏目</p>
+            <ul class="foot__list">
+              {NAV.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+            </ul>
+          </div>
+        </div>
+
+        <div class="foot__base">
+          <span class="mono-meta">
+            © {new Date().getFullYear()} {AUTHOR.name} · 保留所有权利
+          </span>
+          <span class="mono-meta foot__built">
+            由 Astro 构建 · 部署于 GitHub Pages
+          </span>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // ---- 主题切换 --------------------------------------------------------
+      const root = document.documentElement;
+      const toggle = document.getElementById('theme-toggle');
+      const label = document.getElementById('theme-label');
+      const KEY = 'cy-theme';
+
+      const syncLabel = () => {
+        const isDark = root.dataset.theme === 'dark';
+        if (label) label.textContent = isDark ? '日间' : '夜间';
+        toggle?.setAttribute('aria-label', isDark ? '切换到日间模式' : '切换到夜间模式');
+      };
+      syncLabel();
+
+      toggle?.addEventListener('click', () => {
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        try { localStorage.setItem(KEY, next); } catch (e) { /* 隐私模式 */ }
+        syncLabel();
+      });
+
+      // ---- 阅读进度 --------------------------------------------------------
+      const bar = document.getElementById('progress-bar');
+      const article = document.querySelector('[data-article]');
+      if (bar && article) {
+        let raf = 0;
+        const update = () => {
+          raf = 0;
+          const rect = article.getBoundingClientRect();
+          const total = rect.height - window.innerHeight;
+          const passed = Math.min(Math.max(-rect.top, 0), Math.max(total, 1));
+          bar.style.transform = `scaleX(${total > 0 ? passed / total : 0})`;
+        };
+        const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+        update();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll, { passive: true });
+      } else if (bar) {
+        bar.parentElement?.setAttribute('hidden', '');
+      }
+
+      // ---- 滚动揭示：只做一次，进入视口后取消观察 --------------------------
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const targets = document.querySelectorAll('.reveal');
+      if (reduced || !('IntersectionObserver' in window)) {
+        targets.forEach((el) => el.classList.add('is-in'));
+      } else {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-in');
+                io.unobserve(entry.target);
+              }
+            }
+          },
+          { rootMargin: '0px 0px -12% 0px', threshold: 0.05 },
+        );
+        targets.forEach((el) => io.observe(el));
+      }
+    </script>
+
+    <slot name="scripts" />
+  </body>
+</html>
