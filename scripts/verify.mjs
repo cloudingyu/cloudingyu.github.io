@@ -49,17 +49,22 @@ const EXPECTED_TAGS = [
   '人工智能', '机器学习', '概率论与数理统计',
 ];
 
-const PAGE_BG = {
-  home: 'images/site/home-bg.jpg',
-  about: 'images/site/about-bg.jpg',
-  archive: 'images/site/archive-bg.jpg',
-  notFound: 'images/site/404-bg.jpg',
-};
-
 const SOCIAL_HOSTS = ['github.com', 'zhihu.com', 'weibo.com'];
 const FRIEND_NAMES = ['顺其自然2319', 'trs62'];
 
-const IMAGE_TOTAL = 50;
+/**
+ * 图片总数：44 张文章配图 + 头像 + favicon = 46。
+ * 原先的 50 张里有 4 张是页面背景照片（home / about / archive / 404），
+ * 已按用户要求撤掉 —— 页头改由 WebGL 几何场景承担。
+ */
+const IMAGE_TOTAL = 46;
+/** 不允许再出现在产物里的图片（背景照片 + 站外 GIF/徽章） */
+const RETIRED_IMAGES = [
+  'images/site/home-bg.jpg',
+  'images/site/about-bg.jpg',
+  'images/site/archive-bg.jpg',
+  'images/site/404-bg.jpg',
+];
 const EXPECTED_TOTAL_POSTS = 15;
 const EXPECTED_TAGS_COUNT = 17;
 
@@ -238,7 +243,7 @@ await check(`5. ${IMAGE_TOTAL} 张图片全部就位且可访问（无 404）`, 
   const files = (await walk(imgDir)).filter((f) => !f.endsWith('.DS_Store'));
   assert(
     files.length === IMAGE_TOTAL,
-    `dist/images 下 ${files.length} 个文件，期望 ${IMAGE_TOTAL}（6 站点图 + 44 文章图）`
+    `dist/images 下 ${files.length} 个文件，期望 ${IMAGE_TOTAL}（44 文章图 + 头像 + favicon）`
   );
 
   // 遍历所有 HTML，确认每一条本地图片引用都能落到真实文件
@@ -367,23 +372,35 @@ await check('10. 小写署名 cloudingyu 与一句话文章都按原样保留', 
   return 'cloudingyu 小写署名保留；一句话正文保留';
 });
 
-/* 11. 四个页面的背景图与引语 */
-await check('11. 首页 / 关于 / 归档 / 404 的背景图与引语都在', async () => {
+/* 11. 四个页面的几何场景与引语 */
+await check('11. 首页 / 关于 / 归档 / 404 各有几何场景与引语，背景照片已撤底', async () => {
   const pages = {
-    home: 'index.html',
-    about: 'about/index.html',
-    archive: 'archive/index.html',
-    notFound: '404.html',
+    home: ['index.html', 'tree'],
+    about: ['about/index.html', 'kepler'],
+    archive: ['archive/index.html', 'helix'],
+    notFound: ['404.html', 'wasteland'],
   };
   const missing = [];
-  for (const [key, file] of Object.entries(pages)) {
+  for (const [key, [file, scene]] of Object.entries(pages)) {
     assert(existsSync(distFile(file)), `缺 ${file}`);
     const html = await read(distFile(file));
-    if (!html.includes(PAGE_BG[key])) missing.push(`${key} 缺背景 ${PAGE_BG[key]}`);
+    if (!html.includes(`data-scene="${scene}"`)) missing.push(`${key} 缺几何场景 ${scene}`);
     if (!/class="[^"]*hero__quote/.test(html)) missing.push(`${key} 缺引语区块`);
+    for (const retired of RETIRED_IMAGES) {
+      if (html.includes(retired)) missing.push(`${key} 仍在引用旧背景图 ${retired}`);
+    }
   }
   assert(missing.length === 0, missing.join('；'));
-  return '4 张背景图 + 4 处引语';
+  // 全站不得再出现任何站外图片（Giphy / shields.io）
+  const offsite = [];
+  for (const f of htmlFiles) {
+    const html = await read(f);
+    for (const m of html.matchAll(/<img\b[^>]*src="(https?:\/\/[^"]+)"/gi)) {
+      offsite.push(`${rel(f)} → ${m[1].slice(0, 60)}`);
+    }
+  }
+  assert(offsite.length === 0, `仍有站外图片：\n     ${offsite.slice(0, 5).join('\n     ')}`);
+  return '4 场几何场景 + 4 处引语，无背景照片、无站外图片';
 });
 
 /* 12. 社交与友链 */
@@ -407,7 +424,8 @@ await check('13. 页面 title、favicon、avatar、sitemap、404 均正确', asy
   assert(/<title>[^<]*CY&#39;s Blog[^<]*<\/title>|<title>[^<]*CY's Blog[^<]*<\/title>/.test(home), '首页 title 不是 SITE_DATA 里的 seoTitle');
   assert(home.includes('images/site/favicon.ico'), '缺 favicon');
   assert(home.includes('images/site/profile_pic.jpg'), '缺头像');
-  assert(home.includes('images/site/home-bg.jpg'), '首页背景图没被引用');
+  // 首页页头现在是几何场景容器，不再是背景照片
+  assert(home.includes('data-scene="tree"'), '首页没有页头几何场景');
 
   const post = await read(distFile('2025/05/09', 'SOLID', 'index.html'));
   // 文章页 title 取的是文章自己的 title 字段（该文标题是「面向对象程序设计基本原则（SOLID）」），
@@ -501,6 +519,50 @@ await check('18. 永久链接大小写与旧站逐一相符（Linux 上路径敏
   }
   assert(wrong.length === 0, `大小写不符：\n     ${wrong.join('\n     ')}`);
   return `${mixed.length} 篇带大小写的 slug 全部原样保留（luogu-P1007 / vim-VScode / UML / MLInit …）`;
+});
+
+/* 19. WebGL 几何层 */
+await check('19. three.js 场景被打包且按需加载（不在首屏关键路径上）', async () => {
+  const js = allFiles.filter((f) => f.endsWith('.js'));
+  let hasThree = false;
+  for (const f of js) {
+    const src = await read(f);
+    // three 的标志性符号
+    if (/WebGLRenderer/.test(src) && /PerspectiveCamera/.test(src)) hasThree = true;
+  }
+  assert(hasThree, '产物里没有 three.js 的渲染器代码');
+
+  // 首屏 HTML 里不应直接 <script src> 同步加载 three —— 必须是动态 import
+  const home = await read(distFile('index.html'));
+  assert(!/three/i.test(home.match(/<script[^>]*src="[^"]*"[^>]*>/g)?.join(' ') ?? ''), 'three.js 被同步加载了');
+
+  // 场景容器与种子都在
+  assert(home.includes('data-scene="tree"'), '首页没有树场景容器');
+  assert(/data-scene="tags"/.test(home), '首页没有标签球容器');
+
+  // 尊重 reduced-motion 的静态帧路径
+  let css = '';
+  for (const n of (await readdir(distFile('_astro'))).filter((x) => x.endsWith('.css'))) {
+    css += await read(path.join(distFile('_astro'), n));
+  }
+  assert(/prefers-reduced-motion/.test(css), 'CSS 里没有 prefers-reduced-motion 处理');
+  return `${js.length} 个 JS 产物，three 位于按需 chunk`;
+});
+
+/* 20. 代码块复制 */
+await check('20. 代码块有语言栏与复制按钮，且行号仍由 CSS 计数器提供', async () => {
+  const files = ['2025/05/09/SOLID/index.html', '2025/04/11/Iterator/index.html'];
+  for (const f of files) {
+    const html = await read(distFile(f));
+    if (!/class="astro-code/.test(html)) continue; // 该文没有代码块
+    assert(/class="code"/.test(html), `${f} 的代码块没有被包进 .code 框`);
+    assert(/class="code__copy"[^>]*data-copy/.test(html), `${f} 缺复制按钮`);
+    assert(/class="code__lang"/.test(html), `${f} 缺语言标签节点`);
+  }
+  // 复制按钮必须是真 button（伪元素里的文字选不中、也进不了无障碍树）
+  const any = await read(distFile('2025/05/09/SOLID/index.html'));
+  assert(/<button[^>]*data-copy/.test(any), '复制控件不是 <button>');
+  return '语言栏 + 复制按钮为真 DOM，行号仍为 CSS 计数器';
 });
 
 /* ------------------------------ 输出 ------------------------------ */

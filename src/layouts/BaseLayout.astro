@@ -1,14 +1,20 @@
 ---
 /**
- * 全站骨架：页头（品牌 + 导航 + 主题切换）、页脚、以及阅读进度条。
- * 页面背景图与引言通过 props 传入 —— 四个页面各自有背景素材（SITE_DATA.md 第 7 节），
- * 这些是内容素材，不是设计装饰，所以原图直接用，不替换成渐变。
+ * 全站骨架：页头（品牌 + 导航 + 主题切换）、页头几何场景、页脚、阅读进度条。
+ *
+ * 页头视觉：WebGL 线框几何（src/scripts/geo/），每页一场，随主题取色。
+ * 四张背景照片已经撤掉 —— 页头的空间感交给真的 3D，而不是一张静态图。
+ * 各页的引言（SITE_DATA.md 第 7 节）是内容，原样保留。
  */
 import Head from '../components/Head.astro';
-import { SITE, AUTHOR, SOCIALS, FRIENDS, NAV, PAGES, type PageKey } from '../data/site';
+import { SITE, AUTHOR, SOCIALS, FRIENDS, NAV, PAGES } from '../data/site';
+// 类型单独一行导入：Astro 7.3.6 的编译器对句内 `type` 修饰符的解析不稳，
+// 混写时会报 Expected } but found : 这类指向别处的错。
+import type { PageKey, SceneKind } from '../data/site';
 import { assetUrl } from '../lib/posts';
 import '../styles/global.css';
 import '../styles/layout.css';
+import '../styles/scene.css';
 import '../styles/prose.css';
 
 interface Props {
@@ -19,12 +25,18 @@ interface Props {
   tags?: string[];
   image?: string;
   noindex?: boolean;
-  /** 使用哪个页面的背景与引言 */
+  /** 使用哪个页面的引言与场景 */
   page?: PageKey;
+  /** 覆盖该页默认的几何场景 */
+  scene?: SceneKind;
   /** 页头高度：紧凑 = 列表/归档，高 = 首页 */
   hero?: 'tall' | 'compact' | 'bare';
   /** 页头是否显示该页的引言；默认跟随 hero（bare 的页面不显示） */
   showQuote?: boolean;
+  /** 场景种子的附加串（文章页传 slug，让每篇的印记不同） */
+  seed?: string;
+  /** 在正文顶部放一枚印章（文章页用） */
+  seal?: boolean;
 }
 
 const {
@@ -36,14 +48,19 @@ const {
   image,
   noindex,
   page = 'home',
+  scene: sceneOverride,
   hero = 'compact',
   // 四个页面在 SITE_DATA.md 第 7 节里各有一句专属文案，那是内容、不是装饰，
   // 所以默认就显示；只有 hero="bare" 的页面（文章页，标题本身就是开场）才关掉，
   // 调用方仍可显式覆盖。
   showQuote = hero !== 'bare',
+  seed = '',
+  seal = false,
 } = Astro.props;
 
 const bg = PAGES[page];
+const sceneKind: SceneKind = sceneOverride ?? bg.scene;
+const sceneSeed = `${page}-${seed || title || ''}`.trim();
 const current = Astro.url.pathname;
 const isActive = (href: string) =>
   href === '/' ? current === '/' || current.startsWith('/page/') : current.startsWith(href);
@@ -58,12 +75,12 @@ const isActive = (href: string) =>
   <body>
     <a class="skip-link" href="#main">跳到正文</a>
 
-    <!-- 阅读进度：文章页才有意义，用纯 CSS + 极小脚本 -->
+    <!-- 阅读进度：文章页才有意义，由 motion.js 与目录高亮共用同一帧更新 -->
     <div class="progress" aria-hidden="true"><i id="progress-bar"></i></div>
 
     <header class="masthead">
       <div class="shell masthead__inner">
-        <a class="brand" href="/" aria-label={`${SITE.title} 首页`}>
+        <a class="brand" href="/" aria-label={`${SITE.title} 首页`} data-magnetic="0.12">
           <img
             class="brand__mark"
             src={assetUrl(AUTHOR.avatar)}
@@ -85,19 +102,20 @@ const isActive = (href: string) =>
                 class:list={['nav__link', { 'is-active': isActive(item.href) }]}
                 href={item.href}
                 aria-current={isActive(item.href) ? 'page' : undefined}
+                data-magnetic="0.18"
               >
                 {item.label}
               </a>
             ))
           }
-          <a class="nav__link nav__search" href="/search/" aria-label="搜索文章">
+          <a class="nav__link nav__search" href="/search/" aria-label="搜索文章" data-magnetic="0.18">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
               <circle cx="11" cy="11" r="7" />
               <path d="m20 20-3.5-3.5" />
             </svg>
             <span class="nav__search-label">搜索</span>
           </a>
-          <button class="theme-toggle" id="theme-toggle" type="button" aria-live="polite">
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-live="polite" data-magnetic="0.18">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
               <path class="tt-sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m0-11.32L4.93 4.93m14.14 14.14-1.41-1.41" />
               <circle cx="12" cy="12" r="4.2" />
@@ -110,14 +128,22 @@ const isActive = (href: string) =>
 
     {
       hero !== 'bare' && (
-        <section
-          class:list={['hero', `hero--${hero}`, bg.bg && 'hero--has-bg']}
-          style={bg.bg ? `--hero-bg: url('${assetUrl(bg.bg)}')` : undefined}
-        >
+        <section class:list={['hero', `hero--${hero}`, 'hero--scene']}>
+          <div
+            class="scene"
+            data-scene={sceneKind}
+            data-seed={sceneSeed}
+            data-scene-scroll={hero === 'tall' ? 'on' : 'on'}
+            aria-hidden="true"
+          />
           <div class="hero__veil" aria-hidden="true" />
           <div class="shell hero__inner">
-            {title && <p class="hero__eyebrow mono-meta stage-text" style="--stage-i:0">{SITE.url.replace(/^https?:\/\//, '')}</p>}
-            <h1 class="hero__title stage-text" style="--stage-i:1">
+            {title && (
+              <p class="hero__eyebrow mono-meta stage-text" style="--stage-i:0">
+                {SITE.url.replace(/^https?:\/\//, '')}
+              </p>
+            )}
+            <h1 class="hero__title stage-text depth" style="--stage-i:1">
               {title || SITE.title}
             </h1>
             {showQuote && (
@@ -141,7 +167,7 @@ const isActive = (href: string) =>
           <div class="foot__brand">
             <p class="foot__name">{AUTHOR.name}</p>
             <p class="foot__bio">{AUTHOR.bio}</p>
-            <a class="foot__mail mono-meta" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+            <a class="foot__mail mono-meta" href={`mailto:${SITE.email}`} data-magnetic="0.2">{SITE.email}</a>
           </div>
 
           <div class="foot__col">
@@ -150,14 +176,14 @@ const isActive = (href: string) =>
               {
                 SOCIALS.map((s) => (
                   <li>
-                    <a href={s.url} rel="me noopener noreferrer" target="_blank">
+                    <a href={s.url} rel="me noopener noreferrer" target="_blank" data-magnetic="0.16">
                       {s.name}
                     </a>
                   </li>
                 ))
               }
               <li>
-                <a href="/search/">站内搜索</a>
+                <a href="/search/" data-magnetic="0.16">站内搜索</a>
               </li>
             </ul>
           </div>
@@ -168,7 +194,7 @@ const isActive = (href: string) =>
               {
                 FRIENDS.map((f) => (
                   <li>
-                    <a href={f.url} rel="noopener noreferrer" target="_blank">
+                    <a href={f.url} rel="noopener noreferrer" target="_blank" data-magnetic="0.16">
                       {f.name}
                     </a>
                   </li>
@@ -180,7 +206,11 @@ const isActive = (href: string) =>
           <div class="foot__col">
             <p class="foot__head mono-meta">栏目</p>
             <ul class="foot__list">
-              {NAV.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+              {NAV.map((n) => (
+                <li>
+                  <a href={n.href} data-magnetic="0.16">{n.label}</a>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
@@ -190,10 +220,19 @@ const isActive = (href: string) =>
             © {new Date().getFullYear()} {AUTHOR.name} · 保留所有权利
           </span>
           <span class="mono-meta foot__built">
-            由 Astro 构建 · 部署于 GitHub Pages
+            Astro + three.js 构建 · 部署于 GitHub Pages
           </span>
         </div>
       </div>
+
+      <!-- 页脚上方的几何带：把「本站的体量」画成一张网 -->
+      {
+        seal === false && (
+          <div class="foot__band">
+            <div class="scene scene--band" data-scene="seal" data-seed={`foot-${page}`} aria-hidden="true" />
+          </div>
+        )
+      }
     </footer>
 
     <script>
@@ -216,46 +255,12 @@ const isActive = (href: string) =>
         try { localStorage.setItem(KEY, next); } catch (e) { /* 隐私模式 */ }
         syncLabel();
       });
+    </script>
 
-      // ---- 阅读进度 --------------------------------------------------------
-      const bar = document.getElementById('progress-bar');
-      const article = document.querySelector('[data-article]');
-      if (bar && article) {
-        let raf = 0;
-        const update = () => {
-          raf = 0;
-          const rect = article.getBoundingClientRect();
-          const total = rect.height - window.innerHeight;
-          const passed = Math.min(Math.max(-rect.top, 0), Math.max(total, 1));
-          bar.style.transform = `scaleX(${total > 0 ? passed / total : 0})`;
-        };
-        const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
-        update();
-        window.addEventListener('scroll', onScroll, { passive: true });
-        window.addEventListener('resize', onScroll, { passive: true });
-      } else if (bar) {
-        bar.parentElement?.setAttribute('hidden', '');
-      }
-
-      // ---- 滚动揭示：只做一次，进入视口后取消观察 --------------------------
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const targets = document.querySelectorAll('.reveal');
-      if (reduced || !('IntersectionObserver' in window)) {
-        targets.forEach((el) => el.classList.add('is-in'));
-      } else {
-        const io = new IntersectionObserver(
-          (entries) => {
-            for (const entry of entries) {
-              if (entry.isIntersecting) {
-                entry.target.classList.add('is-in');
-                io.unobserve(entry.target);
-              }
-            }
-          },
-          { rootMargin: '0px 0px -12% 0px', threshold: 0.05 },
-        );
-        targets.forEach((el) => io.observe(el));
-      }
+    <script>
+      // 动效总控：WebGL 场景 + 磁力光标 + 复制 + 揭示 + 目录高亮。
+      // 走一个入口是为了让 ClientRouter 换页后能整体重绑（见 motion.js 的 bind）。
+      import '../scripts/motion.js';
     </script>
 
     <slot name="scripts" />

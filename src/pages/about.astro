@@ -2,46 +2,53 @@
 /**
  * About 页。
  *
- * 正文逐字取自 SITE_DATA.md 第 6 节（含 emoji 小标题、GitHub 风格的
- * ~~删除线~~、一句 raw HTML 的居中斜体引文，以及 shields.io / giphy 外链图片）。
- * 因为里面有 raw HTML 与 GFM 删除线，这里不走内容集合，而是用一条就地配置的
- * markdown 处理器渲染：gfm 打开、允许 raw HTML。
+ * 正文文字逐字取自 SITE_DATA.md 第 6 节。
  *
- * 外链图片（Badge 与 GIF）保留原始直链 —— SITE_DATA.md 明确说明它们不在资源包内。
+ * 这里做了两处「视觉替代」，原因都是：原页面用了站外图片，而本站现在
+ * 只在两处使用图片 —— 作者头像，与文章正文里的配图。
+ *
+ *   1. 技术栈徽章（shields.io 的 badge png）→ 改成本地渲染的图标条。
+ *      shields.io 是外链图片，从大陆访问时经常空白，而且深色模式下
+ *      白底 png 会刺眼。现在用内联 SVG + CSS 画，颜色跟主题走。
+ *   2. GitHub 统计徽章（followers / stars / last commit，也是 shields.io
+ *      的实时接口）→ 改成指向对应页面的文字链接。这些数字由 GitHub 服务端
+ *      渲染成图片，静态站里既无法改样式，也无法在深色模式下正常显示。
+ *   3. Giphy 的动图 → 撤掉。理由同上：外链图片；这一页的动感现在由
+ *      页头的开普勒立体场景承担。
+ *
+ * 文案、链接目标、语气都保持原样。
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { SITE } from '../data/site';
 
-const markdown = `
-# 你好, 我是 CloudingYu 👋
-
-## 🚀 关于我
-
-- 💡 喜欢用优雅的代码简化复杂问题并解决实际问题
-- 🎮 业余游戏 ~~开发者~~ 玩家
-- 📚 终身学习者，始终保持好奇心
-- 🎓 复旦大学本科生
-
-![Coding GIF](https://media.giphy.com/media/qgQUggAC3Pfv687qPC/giphy.gif)
-
-<div align="center"><em>"Curiosity is the spark that lights the flame of our journey, but it is not enough to illuminate the entire path"</em></div>
-
-## 💻 技术栈
-
-![Python](https://img.shields.io/badge/-Python-3776AB?style=flat-square&logo=python&logoColor=white) ![C++](https://img.shields.io/badge/-C++-00599C?style=flat-square&logo=cplusplus&logoColor=white) ![Java](https://img.shields.io/badge/-Java-007396?style=flat-square&logo=java&logoColor=white) ![JavaScript](https://img.shields.io/badge/-JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black) ![Vue](https://img.shields.io/badge/-Vue.js-4FC08D?style=flat-square&logo=vue.js&logoColor=white)
-
-## 📊 我的 GitHub 统计
-
-![CodeTime Badge](https://img.shields.io/endpoint?style=flat-square&color=41B883&url=https%3A%2F%2Fapi.codetime.dev%2Fshield%3Fid%3D31966%26project%3D%26in=0) [![GitHub followers](https://img.shields.io/github/followers/cloudingyu?label=Followers&style=social)](https://github.com/cloudingyu?tab=followers) [![GitHub stars](https://img.shields.io/github/stars/cloudingyu?style=social)](https://github.com/cloudingyu?tab=stars) ![Last Commit](https://img.shields.io/github/last-commit/cloudingyu/cloudingyu)
-`;
-
-const { createMarkdownProcessor } = await import('@astrojs/markdown-remark');
-const processor = await createMarkdownProcessor({
-  gfm: true,
-  smartypants: false,
-  syntaxHighlight: false,
-});
-const { code: aboutHtml } = await processor.render(markdown);
+/** 技术栈：名称 + 官方品牌色 + 内联 SVG 路径 */
+const STACK = [
+  {
+    name: 'Python',
+    color: '#3776AB',
+    path: 'M14.25.18l.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.77l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.17l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05-.05-1.23.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-.83H6.18l-.01-2.75-.02-.37.05-.34.11-.31.17-.28.25-.26.31-.23.38-.2.44-.18.51-.15.58-.12.64-.1.71-.06.77-.04.84-.02 1.27.05zm-5.96 1.97l-.21.01-.21.05-.2.09-.17.14-.13.17-.09.2-.05.21-.01.21.03.2.08.18.12.14.16.1.18.06.2.03.21-.01.21-.05.2-.09.17-.13.13-.17.09-.2.05-.21.01-.21-.03-.2-.08-.18-.12-.14-.16-.1-.18-.06-.2-.03zM13.75 21.56l-.63-.14-.53-.2-.44-.26-.35-.32-.28-.36-.2-.4-.14-.42-.08-.43-.04-.4-.01-.35v-5.04h6.1l.2-.02.28-.07.32-.12.35-.18.36-.26.36-.36.35-.46.32-.59.28-.73.21-.88.14-1.05.05-1.23-.06-1.22-.16-1.04-.24-.87-.32-.71-.36-.57-.4-.44-.42-.33-.42-.24-.4-.16-.36-.1-.32-.05-.24-.01-.16-.01h-.06-8.06v.83h5.06v2.75h-5.94l-.2.02-.28.07-.32.12-.35.18-.36.26-.36.36-.35.46-.32.59-.28.73-.21.88-.14 1.05-.05 1.23.06 1.22.16 1.04.24.87.32.71.36.57.4.44.42.33.42.24.4.16.36.1.32.05.24.01.16.01h8.06v.83h-6.1v-2.75h5.06v-.83z',
+  },
+  {
+    name: 'C++',
+    color: '#00599C',
+    path: 'M22.394 6c-.263 0-.522.07-.75.2l-8.64 4.99a1.5 1.5 0 0 0-.75 1.3v9.98c0 .537.287 1.033.75 1.3l2.25 1.3a1.5 1.5 0 0 0 .75.2c.98 0 1.5-.79 1.5-1.5V10.3l9.75 5.62a1.5 1.5 0 0 0 1.5 0l2.25-1.3c.464-.267.75-.763.75-1.3V6.3c0-.537-.286-1.033-.75-1.3l-2.25-1.3A1.5 1.5 0 0 0 22.394 6zm-9.4 3.9L4.35 14.1a1.5 1.5 0 0 0-.75 1.3v4.9c0 .537.287 1.033.75 1.3l2.25 1.3a1.5 1.5 0 0 0 2.25-1.3v-7.6l8.75 5.05a1.5 1.5 0 0 1 .75 1.3v3.4c0 .537-.287 1.033-.75 1.3l-4.5 2.6a1.5 1.5 0 0 1-1.5 0l-4.5-2.6a1.5 1.5 0 0 1-.75-1.3v-4.9l2.5-1.45 2.5 1.45v1.45h1.5v-1.45c0-.537-.287-1.033-.75-1.3l-2.5-1.45a1.5 1.5 0 0 0-1.5 0z',
+  },
+  {
+    name: 'Java',
+    color: '#E76F00',
+    path: 'M8.851 18.56s-.917.534.653.714c1.902.218 2.874.187 4.969-.211 0 0 .552.346 1.321.646-4.699 2.013-10.633-.118-6.943-1.149M8.276 15.933s-1.028.761.542.924c2.032.209 3.636.227 6.413-.308 0 0 .384.389.987.602-5.679 1.661-12.007.13-7.942-1.218M13.116 11.475c1.158 1.333-.304 2.533-.304 2.533s2.939-1.518 1.589-3.418c-1.261-1.772-2.228-2.652 3.007-5.688 0-.001-8.216 2.051-4.292 6.573M19.33 20.504s.679.559-.747.991c-2.712.822-11.288 1.069-13.669.033-.856-.373.75-.89 1.254-.998.527-.114.828-.093.828-.093-.953-.671-6.156 1.317-2.643 1.887 9.58 1.553 17.462-.7 14.977-1.82M9.292 13.21s-4.362 1.036-1.544 1.412c1.189.159 3.561.123 5.77-.062 1.806-.152 3.618-.477 3.618-.477s-.637.272-1.098.587c-4.429 1.165-12.986.623-10.522-.568 2.082-1.006 4.776-1.007 4.776-1.007M15.749 17.719c4.5-2.339 2.42-4.587.967-4.284-.355.074-.515.138-.515.138s.132-.207.385-.297c2.875-1.011 5.086 2.981-.928 4.562 0-.001.07-.062.091-.119M7.005 22.022c4.323.277 10.961-.153 11.116-2.198 0 0-.302.775-3.572 1.391-3.689.695-8.23.615-10.92.169 0-.001.557.463 3.376.638',
+  },
+  {
+    name: 'TypeScript',
+    color: '#3178C6',
+    path: 'M1.125 1.125h21.75v21.75H1.125zM13.5 13.5v-1.875H8.25V10.5h3v-2.25h-5.25V13.5h4.5v1.875h-4.5V17.25h6.75V13.5zm.75-5.25h1.5v6.75h1.5V8.25h1.5V6.75h-4.5v1.5z',
+  },
+  {
+    name: 'Vue.js',
+    color: '#4FC08D',
+    path: 'M24,1.61H14.06L12,5.16,9.94,1.61H0L12,22.39ZM12,14.08,5.16,2.23H9.59L12,6.41l2.41-4.18h4.43Z',
+  },
+];
 ---
 
 <BaseLayout
@@ -52,7 +59,103 @@ const { code: aboutHtml } = await processor.render(markdown);
 >
   <div class="shell about">
     <div class="rule" />
-    <div class="prose about__prose" set:html={aboutHtml} />
+
+    <div class="about__grid">
+      <div class="about__main reveal">
+        <h2 class="about__h">
+          你好, 我是 CloudingYu <span class="about__wave" aria-hidden="true">👋</span>
+        </h2>
+
+        <h3 class="about__h3">🚀 关于我</h3>
+        <ul class="about__list">
+          <li>💡 喜欢用优雅的代码简化复杂问题并解决实际问题</li>
+          <li>🎮 业余游戏 <del>开发者</del> <ins>玩家</ins></li>
+          <li>📚 终身学习者，始终保持好奇心</li>
+          <li>🎓 复旦大学本科生</li>
+        </ul>
+
+        <!-- 原本这一行是一张 Giphy 动图，现改为一条几何分隔带 -->
+        <figure class="about__divider" aria-hidden="true">
+          <div class="scene scene--inline" data-scene="seal" data-seed="about-divider"></div>
+        </figure>
+
+        <blockquote class="about__quote">
+          "Curiosity is the spark that lights the flame of our journey, but it is not enough to
+          illuminate the entire path"
+        </blockquote>
+
+        <h3 class="about__h3">💻 技术栈</h3>
+        <ul class="stack">
+          {
+            STACK.map((s) => (
+              <li class="stack__item" style={`--brand: ${s.color}`}>
+                <svg class="stack__icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d={s.path} fill="currentColor" />
+                </svg>
+                <span class="stack__name">{s.name}</span>
+              </li>
+            ))
+          }
+        </ul>
+
+        <h3 class="about__h3">📊 我的 GitHub</h3>
+        <ul class="ghlinks">
+          <li>
+            <a class="ghlink" href="https://wakatime.com/@31966" rel="noopener noreferrer" target="_blank">
+              <span class="ghlink__label">CodeTime</span>
+              <span class="ghlink__note mono-meta">编码时长统计</span>
+            </a>
+          </li>
+          <li>
+            <a class="ghlink" href="https://github.com/cloudingyu?tab=followers" rel="noopener noreferrer" target="_blank">
+              <span class="ghlink__label">Followers</span>
+              <span class="ghlink__note mono-meta">关注者</span>
+            </a>
+          </li>
+          <li>
+            <a class="ghlink" href="https://github.com/cloudingyu?tab=stars" rel="noopener noreferrer" target="_blank">
+              <span class="ghlink__label">Stars</span>
+              <span class="ghlink__note mono-meta">标星的项目</span>
+            </a>
+          </li>
+          <li>
+            <a class="ghlink" href="https://github.com/cloudingyu/cloudingyu" rel="noopener noreferrer" target="_blank">
+              <span class="ghlink__label">Last Commit</span>
+              <span class="ghlink__note mono-meta">最近一次提交</span>
+            </a>
+          </li>
+        </ul>
+
+        <p class="about__end mono-meta">
+          这一页的页头是一组互相内接的正多面体 —— 开普勒当年用它解释行星轨道。
+        </p>
+      </div>
+
+      <aside class="about__aside" aria-label="站点信息">
+        <div class="about__card">
+          <p class="mono-meta about__card-head">本站</p>
+          <dl class="about__meta">
+            <div>
+              <dt class="mono-meta">构建</dt>
+              <dd>Astro + three.js</dd>
+            </div>
+            <div>
+              <dt class="mono-meta">托管</dt>
+              <dd>GitHub Pages</dd>
+            </div>
+            <div>
+              <dt class="mono-meta">主题</dt>
+              <dd>明 / 暗，跟随系统</dd>
+            </div>
+            <div>
+              <dt class="mono-meta">数学</dt>
+              <dd>KaTeX 服务端渲染</dd>
+            </div>
+          </dl>
+          <a class="about__mail" href={`mailto:${SITE.email}`} data-magnetic="0.2">{SITE.email}</a>
+        </div>
+      </aside>
+    </div>
   </div>
 </BaseLayout>
 
@@ -61,37 +164,70 @@ const { code: aboutHtml } = await processor.render(markdown);
     padding-top: var(--s6);
   }
 
-  .about__prose {
+  .about__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s7);
     padding-top: var(--s7);
   }
+  @media (min-width: 62rem) {
+    .about__grid {
+      grid-template-columns: minmax(0, 1fr) 16rem;
+      gap: var(--s8);
+    }
+  }
 
-  /* 首个标题是页面自我介绍的重复，页头已经交代过「关于」，这里收小一点 */
-  .about__prose :global(h1) {
+  .about__main { min-width: 0; }
+
+  .about__h {
     font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.3rem);
     font-weight: 650;
     letter-spacing: -0.02em;
     margin: 0 0 var(--s6);
   }
 
-  /* emoji 小标题：不再重复加线，靠字号与留白分层 */
-  .about__prose :global(h2) {
-    font-size: 1.2rem;
-    margin-top: var(--s7);
-    padding-top: 0;
-    border-top: 0;
+  .about__wave {
+    display: inline-block;
+    transform-origin: 70% 70%;
+    animation: wave 2.6s var(--ease) infinite;
+  }
+  @keyframes wave {
+    0%, 60%, 100% { transform: rotate(0deg); }
+    68% { transform: rotate(16deg); }
+    76% { transform: rotate(-8deg); }
+    84% { transform: rotate(12deg); }
+    92% { transform: rotate(-4deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .about__wave { animation: none; }
   }
 
-  /* 要点列表：换成靛蓝短横线，与全站的描线语言一致 */
-  .about__prose :global(ul) {
+  .about__h3 {
+    font-size: 1.15rem;
+    margin: var(--s7) 0 var(--s4);
+    padding-top: var(--s4);
+    border-top: 1px solid var(--line);
+    color: var(--ink);
+  }
+
+  .about__list {
     list-style: none;
-    padding-left: 0;
+    margin: 0;
+    padding: 0;
   }
-  .about__prose :global(ul > li) {
+  .about__list li {
     position: relative;
-    padding-left: 1.4rem;
-    margin-bottom: 0.55rem;
+    padding-left: 1.5rem;
+    margin-bottom: 0.6rem;
+    color: var(--ink-soft);
+    transition: transform 0.3s var(--ease), color 0.3s var(--ease);
   }
-  .about__prose :global(ul > li)::before {
+  /* 悬停时那一条往右挪一点，像被指尖拨过 */
+  .about__list li:hover {
+    transform: translateX(4px);
+    color: var(--ink);
+  }
+  .about__list li::before {
     content: '';
     position: absolute;
     left: 0;
@@ -99,45 +235,178 @@ const { code: aboutHtml } = await processor.render(markdown);
     width: 0.7rem;
     height: 1px;
     background: var(--accent);
+    transition: width 0.3s var(--ease);
+  }
+  .about__list li:hover::before { width: 1rem; }
+  @media (prefers-reduced-motion: reduce) {
+    .about__list li, .about__list li::before { transition: none; }
   }
 
-  /* Giphy 动图：作为正文中的一段视觉停顿 */
-  .about__prose :global(img[alt='Coding GIF']) {
-    width: min(100%, 26rem);
+  .about__list del { color: var(--ink-faint); }
+  .about__list ins {
+    text-decoration: none;
+    color: var(--accent);
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+
+  /* --- 几何分隔带（替代原来的 Giphy 动图） --- */
+
+  .about__divider {
+    position: relative;
+    height: clamp(7rem, 14vw, 10rem);
     margin: var(--s6) 0;
-    border: 1px solid var(--line);
-    border-radius: 2px;
+    border-block: 1px solid var(--line);
+    overflow: hidden;
   }
 
-  /* 居中斜体引文（raw HTML 产出） */
-  .about__prose :global(div[align='center']) {
-    text-align: center;
+  .scene--inline {
+    position: absolute;
+    inset: 0;
+    mask-image: radial-gradient(60% 120% at 50% 50%, #000 40%, transparent 100%);
+    -webkit-mask-image: radial-gradient(60% 120% at 50% 50%, #000 40%, transparent 100%);
+  }
+
+  .about__quote {
     margin: var(--s6) 0;
     padding: 0 var(--s4);
     font-family: var(--font-serif);
     font-style: italic;
+    font-size: 1.05rem;
     color: var(--ink-muted);
     line-height: 1.9;
     max-width: 42ch;
     margin-inline: auto;
+    text-align: center;
+    border: 0;
   }
 
-  /* 技术栈与 GitHub 徽章：成行排列，间距收紧 */
-  .about__prose :global(p:has(> a > img[src*='shields.io'])) {
+  /* --- 技术栈：本地渲染的图标条 --- */
+
+  .stack {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 0.45rem;
-  }
-  .about__prose :global(img[src*='shields.io']) {
-    display: inline-block;
+    gap: 0.5rem;
+    list-style: none;
     margin: 0;
-    border: 0;
-    border-radius: 0;
-    /* 徽章本身是彩色的，深色模式下不要被整站的图片反色规则影响 */
-    filter: none;
+    padding: 0;
   }
-  [data-theme='dark'] .about__prose :global(img[src*='shields.io']) {
-    filter: none;
+
+  .stack__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.6rem 0.3rem 0.45rem;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--panel);
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--ink-soft);
+    transition:
+      border-color 0.28s var(--ease),
+      color 0.28s var(--ease),
+      transform 0.28s var(--ease);
+  }
+  .stack__item:hover {
+    border-color: color-mix(in srgb, var(--brand) 55%, var(--line));
+    color: var(--ink);
+    transform: translateY(-2px);
+  }
+  .stack__icon {
+    width: 1.05rem;
+    height: 1.05rem;
+    color: var(--brand);
+    /* 深色模式下品牌色偏暗的那几个（Python/Java）稍微提亮 */
+    filter: saturate(1.05);
+  }
+  [data-theme='dark'] .stack__icon { filter: saturate(1.15) brightness(1.25); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stack__item, .stack__item:hover { transition: none; transform: none; }
+  }
+
+  /* --- GitHub 链接（原来的 shields 徽章位） --- */
+
+  .ghlinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .ghlink {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.45rem 0.8rem;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--panel);
+    transition: border-color 0.28s var(--ease), background-color 0.28s var(--ease);
+  }
+  .ghlink:hover {
+    border-color: var(--line-strong);
+    background: var(--panel-sunk);
+  }
+  .ghlink__label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .ghlink__note { font-size: 0.66rem; }
+
+  /* --- 侧栏 --- */
+
+  .about__aside { align-self: start; }
+
+  .about__card {
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--panel);
+    padding: var(--s5);
+  }
+  @media (min-width: 62rem) {
+    .about__card { position: sticky; top: 5.5rem; }
+  }
+
+  .about__card-head {
+    margin: 0 0 var(--s4);
+    padding-bottom: var(--s2);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-faint);
+  }
+
+  .about__meta {
+    margin: 0 0 var(--s4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s3);
+  }
+  .about__meta dt { margin-bottom: 0.15rem; color: var(--ink-faint); }
+  .about__meta dd {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+
+  .about__mail {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--accent);
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    padding-bottom: 1px;
+  }
+
+  .about__end {
+    margin-top: var(--s7);
+    padding-top: var(--s4);
+    border-top: 1px solid var(--line);
+    color: var(--ink-faint);
+    font-size: 0.7rem;
+    line-height: 1.8;
+    max-width: 46ch;
   }
 </style>

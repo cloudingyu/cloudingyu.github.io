@@ -21,6 +21,7 @@
     "katex": "^0.16.22",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
+    "three": "^0.186.1",
     "unist-util-visit": "^5.0.0"
   }
 }

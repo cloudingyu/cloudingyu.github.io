@@ -36,28 +36,43 @@ export const FRIENDS = [
 ] as const;
 
 /**
- * 各页面的背景图与引言文案（SITE_DATA.md 第 7 节）。
- * 背景图属于内容素材，不是设计资产 —— 保留原图，不改用渐变替代。
+ * 各页面的引言文案（SITE_DATA.md 第 7 节）。
+ *
+ * 这里曾经还挂着四张背景照片（home-bg / about-bg / archive-bg / 404-bg）。
+ * 现在页头的视觉由 WebGL 几何场景承担（见 src/scripts/geo/scenes.js），
+ * 照片不再参与 —— 但引语是内容，一字不改。
  */
 export type PageKey = 'home' | 'about' | 'archive' | 'notFound';
 
-export const PAGES: Record<PageKey, { bg: string; quote: string }> = {
+export const PAGES: Record<PageKey, { quote: string; scene: SceneKind }> = {
   home: {
-    bg: 'images/site/home-bg.jpg',
     quote: '「好奇心仅是引领我们启程的火种。它点燃了我们对未知的渴望，却不足以照亮整个旅程。」',
+    scene: 'tree',
   },
   about: {
-    bg: 'images/site/about-bg.jpg',
     quote: '「节制与癫狂，秩序与诗意，能相提并论乎？」',
+    scene: 'kepler',
   },
   archive: {
-    bg: 'images/site/archive-bg.jpg',
     quote: '「未经反思的生活不值得过」',
+    scene: 'tags',
   },
   notFound: {
-    bg: 'images/site/404-bg.jpg',
     quote: '你来到了没有知识的荒原',
+    scene: 'wasteland',
   },
+};
+
+/** 页头几何场景的种类（与 scenes.js 的导出名一一对应） */
+export type SceneKind = 'tree' | 'helix' | 'kepler' | 'wasteland' | 'seal' | 'tags';
+
+/**
+ * 标签页的引言与场景：标签页复用归档的纸面设定，
+ * 但几何体换成标签球（与「标签」这一语义直接对应）。
+ */
+export const TAGS_PAGE = {
+  quote: PAGES.archive.quote,
+  scene: 'tags' as SceneKind,
 };
 
 export const NAV = [

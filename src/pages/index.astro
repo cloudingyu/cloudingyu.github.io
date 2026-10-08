@@ -1,12 +1,41 @@
 ---
-/** 首页（第 1 页）。分页后续页在 src/pages/page/[page].astro。 */
+/**
+ * 首页：文章列表 + 三条几何带。
+ *
+ * 三条带各说一件事，都不是装饰：
+ *   一、年份分布 —— 15 篇按年份的占比（首页只列最近 6 篇，这条给出全局）
+ *   二、标签球 —— 17 个标签的立体网络（比一排胶囊更能看出标签之间的关系）
+ *   三、时间螺旋 —— 从最新一篇往回走的「时间线」
+ *
+ * 页面里的 3D 由 src/scripts/geo/ 提供，容器只是带 data-scene 的 div。
+ */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostList from '../components/PostList.astro';
-import { allPosts, paginate } from '../lib/posts';
+import { allPosts, paginate, groupByYear, tagCounts } from '../lib/posts';
 import { SITE, POSTS_PER_PAGE } from '../data/site';
 
 const posts = await allPosts();
 const [first] = paginate(posts, POSTS_PER_PAGE);
+const years = groupByYear(posts);
+const tags = tagCounts(posts);
+
+// 年份分布：宽度按篇数占比算
+const total = posts.length;
+
+/*
+  刻意写成「块体箭头 + 显式 return」，而不是箭头直接返回括号对象。
+  后者会让编译器在解析 .astro 的 frontmatter 时报
+  Expected } but found :，且错误位置指向别处，换成块体即正常。
+*/
+const yearBars = years.map((y) => {
+  return {
+    year: y.year,
+    count: y.posts.length,
+    pct: Math.round((y.posts.length / total) * 100),
+  };
+});
+
+const featured = tags.filter((t) => t.featured);
 ---
 
 <BaseLayout
@@ -16,4 +45,275 @@ const [first] = paginate(posts, POSTS_PER_PAGE);
   description={`${SITE.seoTitle} —— ${SITE.tagline}`}
 >
   <PostList page={first} total={posts.length} />
+
+  <!-- ① 年份分布：一根可点开的条 -->
+  <section class="shell dist" aria-labelledby="dist-head">
+    <div class="dist__head">
+      <h2 class="dist__title" id="dist-head">这些文章分布在哪里</h2>
+      <a class="dist__more mono-meta" href="/archive/" data-magnetic="0.2">看完整归档 →</a>
+    </div>
+
+    <div class="dist__bar" role="img" aria-label={yearBars.map((y) => `${y.year} 年 ${y.count} 篇`).join('，')}>
+      {
+        yearBars.map((y, i) => (
+          <a
+            class="dist__seg"
+            href="/archive/"
+            style={`--w:${y.pct}%;--i:${i};--span:${years.length}`}
+            aria-label={`${y.year} 年，${y.count} 篇`}
+          >
+            <span class="dist__seg-fill" />
+            <span class="dist__seg-label mono-meta">{y.year}</span>
+            <span class="dist__seg-count">{y.count}</span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ② 标签球：几何体本体 -->
+  <section class="shell net" aria-labelledby="net-head">
+    <div class="net__grid">
+      <div class="net__text">
+        <h2 class="net__title" id="net-head">{tags.length} 个标签，一张网</h2>
+        <p class="net__note">
+          球面上的每个点是一个标签，连线表示它们出现在同一批文章里。
+          文章数 ≥ 2 的标签——{featured.map((t) => t.tag).join('、')}——是这张网里最先被牵引的部分。
+        </p>
+        <a class="net__link mono-meta" href="/archive/#tags-head" data-magnetic="0.2">按标签浏览 →</a>
+      </div>
+      <div class="net__stage">
+        <div class="scene scene--stage" data-scene="tags" data-seed="home-net" aria-hidden="true" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 时间螺旋：从最新到最早 -->
+  <section class="shell spiral" aria-labelledby="spiral-head">
+    <h2 class="spiral__title" id="spiral-head">2022 → 2026</h2>
+    <div class="spiral__stage">
+      <div class="scene scene--stage" data-scene="helix" data-seed="home-spiral" aria-hidden="true" />
+    </div>
+    <p class="spiral__note mono-meta">
+      从最近的一篇倒着往回走，一共 {total} 篇
+    </p>
+  </section>
 </BaseLayout>
+
+<style>
+  /* --- ① 年份分布 --- */
+
+  .dist {
+    margin-top: var(--s8);
+  }
+
+  .dist__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--s3) var(--s5);
+    padding-bottom: var(--s3);
+    border-bottom: 1px solid var(--line-strong);
+    margin-bottom: var(--s6);
+  }
+
+  .dist__title {
+    font-size: 1.12rem;
+    font-weight: 620;
+  }
+
+  .dist__more {
+    color: var(--ink-faint);
+    transition: color 0.24s var(--ease);
+  }
+  .dist__more:hover { color: var(--accent); }
+
+  .dist__bar {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    height: 9.5rem;
+  }
+
+  /*
+    每一段是一根柱子：宽度按篇数占比，高度做错峰。
+    悬停时从左长出的填充线变亮 —— 数据条不比色，比的是「被指到的那一根」。
+  */
+  /*
+    每一段是一栏：等宽的年份标签在左上，篇数在正中，底部一条强调线。
+    之前把数字挤在左下角、年份贴在同一条基线上，两栏一窄就叠在一起。
+  */
+  .dist__seg {
+    position: relative;
+    flex: 0 0 var(--w);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: 0.5rem 0.75rem 0.6rem;
+    border-inline: 1px solid var(--line);
+    overflow: hidden;
+    transition: border-color 0.3s var(--ease);
+  }
+  .dist__seg:first-child { border-left: 0; }
+  .dist__seg:last-child { border-right: 0; }
+  .dist__seg:hover { border-color: var(--line-strong); }
+
+  .dist__seg-fill {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+    transform: scaleY(0.04);
+    transform-origin: bottom;
+    transition: transform 0.7s var(--ease), background-color 0.3s var(--ease);
+  }
+  /* 底部一条会随悬停加粗的强调线 */
+  .dist__seg::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.55;
+    transform: scaleX(0.12);
+    transform-origin: left;
+    transition: transform 0.6s var(--ease), opacity 0.3s var(--ease);
+  }
+  .dist__seg.is-in::after { transform: scaleX(1); }
+  .dist__seg:hover::after { opacity: 1; }
+  .dist__seg.is-in .dist__seg-fill { transform: scaleY(1); }
+  .dist__seg:hover .dist__seg-fill {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+
+  .dist__seg-label {
+    position: relative;
+    color: var(--ink-faint);
+    justify-self: start;
+  }
+  .dist__seg-count {
+    position: relative;
+    grid-row: 2;
+    align-self: center;
+    justify-self: center;
+    font-family: var(--font-serif);
+    /* 数字大小跟着栏宽走：窄栏用小字号，避免撑破 */
+    font-size: clamp(1.3rem, 0.7rem + 2.6vw, 2.6rem);
+    font-weight: 620;
+    line-height: 1;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dist__seg-fill { transition: none; transform: scaleY(1); }
+  }
+
+  /* --- ② 标签球 --- */
+
+  .net {
+    margin-top: var(--s9);
+  }
+
+  .net__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s6);
+    border-top: 1px solid var(--line-strong);
+    padding-top: var(--s7);
+  }
+  @media (min-width: 56rem) {
+    .net__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      gap: var(--s8);
+      align-items: center;
+    }
+  }
+
+  .net__title {
+    font-size: clamp(1.35rem, 1.1rem + 1vw, 1.9rem);
+    margin-bottom: var(--s4);
+  }
+
+  .net__note {
+    color: var(--ink-muted);
+    font-size: 0.92rem;
+    line-height: 1.85;
+    max-width: 44ch;
+  }
+
+  .net__link {
+    display: inline-block;
+    margin-top: var(--s4);
+    color: var(--accent);
+  }
+
+  .net__stage {
+    position: relative;
+    height: clamp(15rem, 34vw, 22rem);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--panel);
+    overflow: hidden;
+  }
+
+  /* --- ③ 时间螺旋 --- */
+
+  .spiral {
+    margin-top: var(--s9);
+  }
+
+  .spiral__title {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    text-align: center;
+    margin-bottom: var(--s4);
+  }
+
+  .spiral__stage {
+    position: relative;
+    height: clamp(16rem, 40vw, 26rem);
+    overflow: hidden;
+    mask-image: radial-gradient(78% 92% at 50% 50%, #000 55%, transparent 100%);
+    -webkit-mask-image: radial-gradient(78% 92% at 50% 50%, #000 55%, transparent 100%);
+  }
+
+  .spiral__note {
+    text-align: center;
+    color: var(--ink-faint);
+    margin-top: var(--s3);
+  }
+
+  /* --- 通用：正文里的场景舞台 --- */
+
+  .scene--stage {
+    position: absolute;
+    inset: 0;
+  }
+</style>
+
+<script>
+  // 年份分布条的入场：进入视口后依次长出来（一次性，不反复）
+  const bars = document.querySelectorAll('.dist__seg');
+  if (bars.length) {
+    if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      bars.forEach((b) => b.classList.add('is-in'));
+    } else {
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            bars.forEach((b, i) => setTimeout(() => b.classList.add('is-in'), i * 110));
+            io.disconnect();
+          }
+        },
+        { threshold: 0.25 },
+      );
+      io.observe(bars[0]);
+    }
+  }
+</script>

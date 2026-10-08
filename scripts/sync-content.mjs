@@ -146,6 +146,21 @@ async function syncPosts() {
   return written;
 }
 
+/**
+ * 不再参与页面的图片（原先是四个页面的背景照片）。
+ *
+ * 页头的视觉现在由 WebGL 几何场景承担，这四张照片没有引用方了。
+ * 它们是内容包的一部分（images/ 里原样保留、不删除），只是不再复制到
+ * public/ —— 少 4 张 3840x2160 的照片，产物小一圈，构建也快一点。
+ * 若哪天想换回照片版页头，把这里的名字去掉即可。
+ */
+const RETIRED_IMAGES = new Set([
+  path.join('site', 'home-bg.jpg'),
+  path.join('site', 'about-bg.jpg'),
+  path.join('site', 'archive-bg.jpg'),
+  path.join('site', '404-bg.jpg'),
+]);
+
 async function syncImages() {
   let entries;
   try {
@@ -157,18 +172,37 @@ async function syncImages() {
 
   await rm(OUT_IMAGES, { recursive: true, force: true });
   await mkdir(path.dirname(OUT_IMAGES), { recursive: true });
-  // 整目录原样搬运，不重编码、不缩放 —— 50 张素材必须字节一致
-  await cp(SRC_IMAGES, OUT_IMAGES, { recursive: true });
 
-  // 数一遍，数量对不上就炸，别让半份素材悄悄上线
+  // 逐文件复制，不重编码、不缩放 —— 素材必须字节一致
   let count = 0;
-  const walk = async (dir) => {
+  let skipped = 0;
+  const walk = async (dir, rel = '') => {
     for (const e of await readdir(dir, { withFileTypes: true })) {
-      if (e.isDirectory()) await walk(path.join(dir, e.name));
-      else count++;
+      const from = path.join(dir, e.name);
+      const relPath = path.join(rel, e.name);
+      if (e.isDirectory()) {
+        await walk(from, relPath);
+        continue;
+      }
+      if (RETIRED_IMAGES.has(relPath)) {
+        skipped++;
+        continue;
+      }
+      const to = path.join(OUT_IMAGES, relPath);
+      await mkdir(path.dirname(to), { recursive: true });
+      await cp(from, to);
+      count++;
     }
   };
-  await walk(OUT_IMAGES);
+  await walk(SRC_IMAGES);
+
+  if (count === 0) throw new Error('复制完一张图都没有，路径规则可能失效了');
+  if (skipped !== RETIRED_IMAGES.size) {
+    throw new Error(
+      `应有 ${RETIRED_IMAGES.size} 张退役图被跳过，实际 ${skipped} 张 —— ` +
+        '内容包里的文件名可能变了，检查 RETIRED_IMAGES',
+    );
+  }
   return count;
 }
 
@@ -177,4 +211,4 @@ const images = await syncImages();
 
 const dropped = [...DROP_KEYS].join(' / ');
 console.log(`[sync-content] 文章 ${posts.length} 篇（丢弃 ${dropped}，header-img → cover）`);
-console.log(`[sync-content] 图片 ${images} 个文件已原样复制到 public/images/`);
+console.log(`[sync-content] 图片 ${images} 个文件已原样复制到 public/images/（跳过 4 张已退役的页面背景图）`);

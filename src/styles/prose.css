@@ -135,13 +135,107 @@
   word-break: break-word;
 }
 
-/* --- 代码块：带行号，对齐旧站的 rouge 行号 ------------------------------ */
+/* --- 代码块：语言栏 + 复制按钮 + 行号 ----------------------------------- */
 
-.prose pre {
+/*
+   结构来自 src/lib/rehype-code-frame.mjs：
+     figure.code
+       ├ figcaption.code__bar   ← 语言名 + 复制按钮
+       └ pre.astro-code
+   语言名与按钮是真 DOM（不再是伪元素），所以文字可选、按钮可点、
+   屏幕阅读器读得到。
+*/
+.code {
   margin: var(--s5) 0;
-  background: var(--code-bg);
   border: 1px solid var(--line);
   border-radius: 3px;
+  background: var(--code-bg);
+  overflow: hidden;
+}
+
+.code__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: 0.35rem 0.5rem 0.35rem 0.85rem;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
+}
+
+.code__lang {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+}
+
+.code__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition:
+    color 0.22s var(--ease),
+    border-color 0.22s var(--ease),
+    background-color 0.22s var(--ease);
+}
+.code__copy:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+  background: var(--panel);
+}
+.code__copy svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+/* 图标由 CSS 提供（伪元素里画 SVG 不如直接遮罩一张图省事，但这里是纯 CSS 图形） */
+.code__copy-icon {
+  width: 0.8rem;
+  height: 0.8rem;
+  background: currentColor;
+  -webkit-mask: var(--copy-mask) center / contain no-repeat;
+  mask: var(--copy-mask) center / contain no-repeat;
+  --copy-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7'%3E%3Crect x='9' y='9' width='11' height='11' rx='1.5'/%3E%3Cpath d='M15 5.5A1.5 1.5 0 0 0 13.5 4H5.5A1.5 1.5 0 0 0 4 5.5v8A1.5 1.5 0 0 0 5.5 15'/%3E%3C/svg%3E");
+}
+
+.code__copy.is-done {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.code__copy.is-done .code__copy-icon {
+  --copy-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2'%3E%3Cpath d='m4.5 12.5 5 5 10-11'/%3E%3C/svg%3E");
+  animation: copy-pop 0.42s var(--ease);
+}
+.code__copy.is-fail {
+  color: var(--mark);
+  border-color: color-mix(in srgb, var(--mark) 40%, transparent);
+}
+
+@keyframes copy-pop {
+  0% { transform: scale(0.6); }
+  55% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .code__copy.is-done .code__copy-icon { animation: none; }
+}
+
+.prose pre,
+.code pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--code-bg);
   overflow: auto;
   font-size: 0.875rem;
   line-height: 1.7;
@@ -155,7 +249,8 @@
    再撑出一个空行盒 —— 结果全站代码块都是隔行显示。grid 容器里纯空白的
    文本段不参与渲染，换行符自然消失，行距回到 line-height 本身。
 */
-.prose pre > code {
+.prose pre > code,
+.code pre > code {
   display: grid;
   font-family: var(--font-mono);
   padding: var(--s3) 0;
@@ -166,7 +261,8 @@
 }
 
 /* Shiki 输出的每一行都是 .line，统一挂上行号 */
-.prose pre code .line {
+.prose pre code .line,
+.code pre code .line {
   display: block;
   padding-inline: 0.85rem 1rem;
   /* 左侧留出行号槽 */
@@ -175,7 +271,8 @@
   min-height: 1.7em;
 }
 
-.prose pre code .line::before {
+.prose pre code .line::before,
+.code pre code .line::before {
   counter-increment: codeline;
   content: counter(codeline);
   position: absolute;
@@ -192,41 +289,14 @@
 }
 
 /* 高亮行（Shiki 的 highlight transformer 会加 .highlighted） */
-.prose pre code .line.highlighted {
+.prose pre code .line.highlighted,
+.code pre code .line.highlighted {
   background: color-mix(in srgb, var(--accent) 9%, transparent);
 }
-.prose pre code .line.highlighted::before {
+.prose pre code .line.highlighted::before,
+.code pre code .line.highlighted::before {
   color: var(--accent);
   font-weight: 600;
-}
-
-/*
-   语言标签：贴在代码块右上角的一条细栏。
-   pre 本身是横向滚动容器，绝对定位的标签会跟着代码一起滚走，
-   所以用块级 + sticky left:0 —— 块宽等于 pre 的可视宽度，右对齐后
-   始终停在可视区右上角，横向滚动长代码时也不会跑掉。
-   plaintext / text 没有信息量（原文没写语言），不显示。
-*/
-.prose pre[data-language]::before {
-  content: attr(data-language);
-  display: block;
-  position: sticky;
-  left: 0;
-  padding: 0.45rem 0.85rem 0;
-  margin-bottom: calc(-1 * var(--s3) + 0.2rem);
-  text-align: right;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  line-height: 1;
-  letter-spacing: 0.04em;
-  color: var(--ink-faint);
-  user-select: none;
-  pointer-events: none;
-}
-.prose pre[data-language='plaintext']::before,
-.prose pre[data-language='text']::before,
-.prose pre[data-language='txt']::before {
-  content: none;
 }
 
 /* 中文注释在等宽字体里容易挤，放宽一点字距 */

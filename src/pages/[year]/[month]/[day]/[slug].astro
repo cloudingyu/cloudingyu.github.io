@@ -46,6 +46,8 @@ const showToc = toc.length >= 2;
 <BaseLayout
   page="home"
   hero="bare"
+  seal
+  seed={slugOf(post)}
   type="article"
   {title}
   published={date}
@@ -55,6 +57,10 @@ const showToc = toc.length >= 2;
 >
   <article class="post" data-article>
     <header class="shell post__head">
+      <div class="post__seal" data-seal aria-hidden="true">
+        <div class="scene" data-scene="seal" data-seed={slugOf(post)} />
+      </div>
+
       <div class="post__crumbs mono-meta">
         <a href="/">首页</a>
         <span aria-hidden="true">/</span>
@@ -63,7 +69,7 @@ const showToc = toc.length >= 2;
         <span>{date.getUTCFullYear()}</span>
       </div>
 
-      <h1 class="post__title">{title}</h1>
+      <h1 class="post__title depth">{title}</h1>
 
       {subtitle && <p class="post__subtitle">{subtitle}</p>}
 
@@ -157,8 +163,26 @@ const showToc = toc.length >= 2;
 
 <style>
   .post__head {
+    position: relative;
     padding-top: var(--s7);
     padding-bottom: var(--s5);
+  }
+
+  /* 右上角的印章：几何体由 WebGL 画，这里只负责占位与淡出 */
+  .post__seal {
+    position: absolute;
+    top: var(--s7);
+    right: var(--gutter);
+    width: clamp(5.5rem, 11vw, 8.5rem);
+    aspect-ratio: 1;
+    pointer-events: none;
+    opacity: 0.9;
+    mask-image: radial-gradient(58% 58% at 50% 50%, #000 60%, transparent 100%);
+    -webkit-mask-image: radial-gradient(58% 58% at 50% 50%, #000 60%, transparent 100%);
+  }
+  /* 窄屏没有余地，撤掉 */
+  @media (max-width: 52rem) {
+    .post__seal { display: none; }
   }
 
   .post__crumbs {
