@@ -199,6 +199,166 @@ function initCopy() {
 }
 
 /* ------------------------------------------------------------------ */
+/* 滚动驱动：把「页面滚到哪」变成一个所有元素都能读的量                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 一个共享的滚动状态，挂在 documentElement 上：
+ *   --sp   本页滚动进度 0→1
+ *   --dir  滚动方向 1 / -1
+ *   --vel  滚动速度（归一化）
+ *
+ * 为什么用 CSS 变量而不是每个元素各自写监听：一处 rAF 更新，所有
+ * 依赖滚动的样式（分布条、年份刻度、进度条）同时变化，不会各跑各的帧。
+ */
+let scrollDriver = null;
+
+function initScrollDrive() {
+  clearScrollDrive();
+  if (prefersReducedMotion()) return;
+
+  const root = document.documentElement;
+  const els = [...document.querySelectorAll('[data-scroll-target]')];
+  let last = window.scrollY;
+  let raf = 0;
+  let vel = 0;
+  let dir = 1;
+
+  const frame = () => {
+    raf = 0;
+    const y = window.scrollY;
+    const max = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+    const vh = window.innerHeight;
+    dir = y >= last ? 1 : -1;
+    vel = Math.min(1, Math.abs(y - last) / 60);
+    last = y;
+
+    root.style.setProperty('--sp', (y / max).toFixed(4));
+    root.style.setProperty('--dir', String(dir));
+    root.style.setProperty('--vel', vel.toFixed(3));
+
+    // 每个声明了 data-scroll-target 的元素，算出「它在视口里的推进度」
+    for (const el of els) {
+      const r = el.getBoundingClientRect();
+      const p = Math.min(Math.max(1 - (r.top + r.height) / (vh + r.height), 0), 1);
+      el.style.setProperty('--in', p.toFixed(4));
+    }
+  };
+
+  const onScroll = () => {
+    if (!raf) raf = requestAnimationFrame(frame);
+  };
+  frame();
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+  scrollDriver = () => {
+    window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('resize', onScroll);
+    if (raf) cancelAnimationFrame(raf);
+  };
+}
+
+function clearScrollDrive() {
+  scrollDriver?.();
+  scrollDriver = null;
+}
+
+/* ------------------------------------------------------------------ */
+/* 分布条：柱子随滚动长出来，数字跟着滚动走                            */
+/* ------------------------------------------------------------------ */
+
+function initDistBars() {
+  const segs = [...document.querySelectorAll('.dist__seg')];
+  if (segs.length === 0) return;
+  if (prefersReducedMotion()) {
+    segs.forEach((s) => s.classList.add('is-in'));
+    return;
+  }
+  // 柱子跟着「这一栏滚到哪」依次点亮，而不是进入视口就一起出现
+  for (const seg of segs) {
+    seg.style.setProperty('--fill', 'calc(var(--in) * 1)');
+  }
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) e.target.classList.add('is-in');
+      }
+    },
+    { threshold: 0.2 },
+  );
+  segs.forEach((s) => io.observe(s));
+}
+
+/* ------------------------------------------------------------------ */
+/* 归档条目：滚动时逐条滑入，指针划过时标题亮起                        */
+/* ------------------------------------------------------------------ */
+
+function initArchiveRows() {
+  const rows = [...document.querySelectorAll('.year__list .item:not([data-row-ready])')];
+  if (rows.length === 0) return;
+  rows.forEach((r) => r.setAttribute('data-row-ready', '1'));
+  if (prefersReducedMotion()) {
+    rows.forEach((r) => r.classList.add('is-in'));
+    return;
+  }
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        e.target.classList.add('is-in');
+        io.unobserve(e.target);
+      }
+    },
+    { rootMargin: '0px 0px -8% 0px', threshold: 0.1 },
+  );
+  rows.forEach((r) => io.observe(r));
+}
+
+/* ------------------------------------------------------------------ */
+/* 打开文章：一次明确的「进入」动作                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 点开一篇文章时，把被点的那条记录「推」进页面：
+ * 在点击位置放一个圆形涟漪，同时给光标所在的那条记录一个短暂的压下反馈。
+ * 站内跳转本身由跨文档视图过渡接手（标题会连续变形），
+ * 这里补的是「我点了它」这一下即时反馈 —— 静态站在跳转前往往是真空的。
+ */
+function initOpenPost() {
+  if (document.documentElement.dataset.openReady === '1') return;
+  document.documentElement.dataset.openReady = '1';
+
+  document.addEventListener(
+    'click',
+    (e) => {
+      const link = e.target.closest?.('a[href]');
+      if (!link) return;
+      const href = link.getAttribute('href');
+      // 只看站内跳转，并且排除锚点、文件、外链
+      if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto:')) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      if (prefersReducedMotion()) return;
+
+      // 涟漪：从点击处扩散，颜色取自当前强调色
+      const ripple = document.createElement('span');
+      ripple.className = 'open-ripple';
+      ripple.style.left = `${e.clientX}px`;
+      ripple.style.top = `${e.clientY}px`;
+      document.body.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 620);
+
+      // 被点的条目（如果在列表里）短暂压下
+      const row = link.closest('.entry, .item, .ghlink, .notfound__path');
+      if (row) {
+        row.classList.add('is-launching');
+        setTimeout(() => row.classList.remove('is-launching'), 320);
+      }
+    },
+    { capture: true },
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* 滚动揭示 / 目录高亮 / 页头收起 / 主题圆形揭示                       */
 /* ------------------------------------------------------------------ */
 
@@ -222,7 +382,9 @@ function initReveal() {
         revealObserver.unobserve(entry.target);
       }
     },
-    { rootMargin: '0px 0px -10% 0px', threshold: 0.04 },
+    // rootMargin 收到 -18%：元素要真正进入视口下方三分之一才揭示，
+    // 滚动与动效的因果关系才看得出来（早了就像「本来就在那儿」）
+    { rootMargin: '0px 0px -18% 0px', threshold: 0.04 },
   );
   targets.forEach((el) => revealObserver.observe(el));
 }
@@ -424,10 +586,13 @@ function tagViewTransitionNames() {
 
 function bind() {
   tagViewTransitionNames();
+  initScrollDrive();
   initReveal();
   initTocSpy();
   initMasthead();
   initDepthText();
+  initDistBars();
+  initArchiveRows();
   mountScenes();
 }
 
@@ -435,6 +600,7 @@ function bind() {
 document.addEventListener('astro:page-load', bind);
 document.addEventListener('astro:before-swap', () => {
   unmountScenes();
+  clearScrollDrive();
   revealObserver?.disconnect();
   // 旧的标题节点会被替换，指针监听要跟着解绑
   if (depthState) {
@@ -443,10 +609,12 @@ document.addEventListener('astro:before-swap', () => {
   }
 });
 
-// 只绑一次的两类监听：磁力光标、代码复制（用事件委托，换页后依然有效）
+// 只绑一次的监听：磁力光标、代码复制、打开文章的反馈（都是事件委托，
+// 换页后依然有效，所以不放在 bind 里）
 initMagnetic();
 initCopy();
 initThemeReveal();
+initOpenPost();
 
 // 首次加载
 if (document.readyState === 'loading') {

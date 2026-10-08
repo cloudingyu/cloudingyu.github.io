@@ -237,6 +237,26 @@ const yearSpan = years.length
   }
   .item:last-child { border-bottom: 1px solid var(--line); }
 
+  /*
+    逐条滑入：滚动到哪儿，哪一条从左侧进来。
+    位移只有 14px —— 归档页一屏十几条，幅度大了像是在抖。
+  */
+  @media (prefers-reduced-motion: no-preference) {
+    .item {
+      opacity: 0;
+      transform: translateX(-14px);
+      transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+    }
+    .item.is-in {
+      opacity: 1;
+      transform: none;
+    }
+    /* 悬停时整条往右挪一点，日期栏同时变亮 —— 视线跟着走到标题 */
+    .item:hover .item__title { color: var(--accent); }
+    .item:hover .item__date { color: var(--accent); }
+    .item__date { transition: color 0.24s var(--ease); }
+  }
+
   .item__date { color: var(--ink-faint); }
 
   .item__title {

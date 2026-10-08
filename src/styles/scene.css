@@ -218,3 +218,77 @@ html[data-theme-transition]::view-transition-new(root) {
 @media (min-width: 68rem) {
   .hero--scene.hero--compact .hero__inner { padding-right: 46%; }
 }
+
+
+/* ==========================================================================
+   滚动驱动 & 打开文章
+   --------------------------------------------------------------------------
+   这一节把「页面滚到哪」变成样式可读的量，并给站内跳转一个明确的动作反馈。
+   原则：动效必须由交互触发 —— 滚动、指针、点击。没有输入时页面是静止的，
+   而不是各元素各自循环播放。
+   ========================================================================== */
+
+/* --- 打开文章：点击处的涟漪 --------------------------------------------- */
+
+.open-ripple {
+  position: fixed;
+  z-index: 90;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  pointer-events: none;
+  animation: open-ripple 0.6s var(--ease) forwards;
+}
+
+@keyframes open-ripple {
+  from {
+    transform: scale(0.4);
+    opacity: 0.85;
+  }
+  to {
+    transform: scale(9);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .open-ripple { display: none; }
+}
+
+/* 被点开的条目：短暂压下，像被按了一下 */
+.entry.is-launching,
+.item.is-launching,
+.notfound__path.is-launching {
+  transform: translateY(2px) scale(0.995);
+  transition: transform 0.18s var(--ease);
+}
+
+/* --- 年份刻度：读 --sp（本页滚动进度）---------------------------------- */
+
+/*
+   年份分组左侧那道短竖线会随页面滚动「填充」——
+   滚到哪一年，那一年的刻度就实了。这是整页唯一一个连续的滚动反馈，
+   放在时间线上最自然。
+*/
+.year__head::before {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-right: 0.6rem;
+  vertical-align: -0.12em;
+  background: linear-gradient(
+    to bottom,
+    var(--accent) calc(var(--sp, 0) * 100%),
+    var(--line) calc(var(--sp, 0) * 100%)
+  );
+}
+
+/* --- 分布条：柱子随各自进入视口的程度生长 ------------------------------- */
+
+.dist__seg-fill {
+  transform: scaleY(calc(0.04 + var(--in, 0) * 0.96));
+}

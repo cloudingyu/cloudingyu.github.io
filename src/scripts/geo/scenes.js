@@ -1,42 +1,53 @@
 /**
- * 五场几何戏。
+ * 六场几何戏。
  *
- * 设计前提：站点的视觉语汇是「图纸 / 手稿」—— 发丝描线、等宽元数据、
- * 靛蓝强调色。所以 3D 不能是塑料质感的卡通模型，只能是**线框几何**：
- * 棱边、网格、节点、轨迹。颜色全部来自 CSS 变量，随主题切换。
+ * 设计前提 1：站点的视觉语汇是「图纸 / 手稿」—— 发丝描线、等宽元数据、
+ * 靛蓝强调色。所以 3D 只能是**线框几何**：棱边、网格、节点、轨迹。
  *
- * 每场戏都对应它所在页面的**内容**，不是随便放个立方体：
+ * 设计前提 2（这一版的核心）：几何体由**人的动作**驱动，不是自己匀速转。
+ * 每场戏都从 input 里取量：
+ *   input.scroll   0→1，容器在视口里的推进度 —— 主时间轴
+ *   input.travel   随滚动累积的世界位移，滚动多少走多少
+ *   input.px/py    指针位置，用于牵引与视差
+ *   input.pvx/pvy  指针速度，用于「甩动」类的惯性
+ *   input.impulse  点击冲量，按下立刻置位后衰减
+ *   input.activity 活跃度：有人在操作时升到 1，静置后回落到 0；
+ *                  几何体的「自主呼吸」幅度乘以它，所以静止时几乎不动，
+ *                  一旦开始滚动/移动指针，整场戏就醒过来。
+ *
+ * 每场戏对应的内容：
  *   home    → 红黑树    这批文章里算法/数据结构占大头（含一篇红黑树）
- *   archive → 时间线螺旋 15 篇按年份绕成一条上升的螺旋，一年一个环
- *   about   → 开普勒立体 作者是数学/CS 背景，用正多面体嵌套这张「数学名片」
+ *   archive → 时间线螺旋 15 篇按年份绕成一条上升的螺旋
+ *   about   → 开普勒立体 正多面体嵌套，这张「数学名片」
  *   notFound→ 荒原线框   原文案就是「你来到了没有知识的荒原」
- *   post    → 印记       由 slug 定种子的线框印章，与正文形成层次
+ *   post    → 印记       由 slug 定种子的线框印章
+ *   tags    → 标签球     17 个标签的共现网络
  */
-// 几何构件（依赖 three）来自 engine.js；纯工具来自 util.js
 import { wire, dust, gridPlane } from './engine.js';
-import { seeded, easeOut, damp, clamp01 } from './util.js';
+import { seeded, easeOut, easeInOut, damp, clamp01 } from './util.js';
 
+/* 阻尼跟随：交互量的平滑收敛，避免几何体跟着事件一跳一跳 */
+const follow = (cur, target, lambda, dt) => damp(cur, target, lambda, dt);
 
 /* ============================================================
    1. 首页：红黑树
-   一棵能在 3D 里生长的二叉搜索树。节点按深度依次「安装」，
-   根节点与一条路径用氧化红标注 —— 正好呼应红黑树这个主题。
+   滚动即生长：往下滚，树从根节点逐层「安装」出来；往前滚，它缩回去。
+   指针牵引整棵树的倾角，点击给一次贯穿全树的自检脉冲。
    ============================================================ */
 
-export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, host }) {
+export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, host, input }) {
   const root = new THREE.Group();
   scene.add(root);
 
   const rnd = seeded(seed);
   const NODE_GEO = new THREE.OctahedronGeometry(0.46, 0);
 
-  /** 树的构造：随机插入，长出一棵不完全平衡的树 —— 平衡的树反而看不出结构。 */
-  const nodes = [];
+  /** 随机插入长出一棵不完全平衡的树 —— 完全平衡的树反而看不出结构。 */
+  const defs = [];
   const build = () => {
-    const list = [];
     const insert = (depth, x, z, spread) => {
       if (depth > 3) return;
-      list.push({ depth, x, y: 7.4 - depth * 2.9, z, spread });
+      defs.push({ depth, x, y: 7.4 - depth * 2.9, z, spread });
       const next = spread * 0.6;
       if (depth < 3) {
         if (rnd() > 0.18) insert(depth + 1, x - next, z + (rnd() - 0.5) * next * 0.5, next);
@@ -44,33 +55,26 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
       }
     };
     insert(0, 0, 0, 5.0);
-    return list;
   };
-  const defs = build();
+  build();
 
-  const edgePositions = [];
+  const edges = [];
+  const nodes = [];
   const nodeMats = [];
-  const nodeGroups = [];
+  let rootNode = null;
 
-  // 边：父 → 子，用两点线段连接，逐条生长
   for (const d of defs) {
     const kids = defs.filter((k) => k.depth === d.depth + 1 && Math.abs(k.x - d.x) < d.spread);
     for (const k of kids) {
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.Float32BufferAttribute([d.x, d.y, d.z, k.x, k.y, k.z], 3));
-      const mat = new THREE.LineBasicMaterial({
-        color: colors.line,
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-      });
+      const mat = new THREE.LineBasicMaterial({ color: colors.line, transparent: true, opacity: 0, depthWrite: false });
       const line = new THREE.Line(geo, mat);
       root.add(line);
-      edgePositions.push({ line, mat, appear: d.depth * 0.34 + 0.15 });
+      edges.push({ line, mat, appear: d.depth * 0.26 + 0.06, depth: d.depth });
     }
   }
 
-  // 节点：八面体线框
   for (const d of defs) {
     const g = new THREE.Group();
     g.position.set(d.x, d.y, d.z);
@@ -86,70 +90,124 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
     g.add(oct);
     root.add(g);
     nodeMats.push(mat);
-    nodeGroups.push({ g, oct, appear: d.depth * 0.34 + 0.3, spin: (rnd() - 0.5) * 0.6 });
-    if (isRoot) {
-      // 根节点里再嵌一颗小八面体，强调「起点」
-      const inner = new THREE.LineSegments(
-        new THREE.EdgesGeometry(new THREE.OctahedronGeometry(0.16, 0)),
-        new THREE.LineBasicMaterial({ color: colors.mark, transparent: true, opacity: 0, depthWrite: false }),
-      );
-      g.add(inner);
-      nodeMats.push(inner.material);
-    }
+    const node = {
+      g, oct, mat, depth: d.depth,
+      appear: d.depth * 0.26 + 0.16,
+      spin: (rnd() - 0.5) * 0.5,
+      // 点击脉冲会沿着深度依次点亮节点：delay 让波峰从根传到叶
+      wave: 0,
+      waveDelay: d.depth * 0.12,
+      base: d.x,
+    };
+    nodes.push(node);
+    if (isRoot) rootNode = node;
   }
 
   // 竖直轴线：树是「长出来」的，需要一根时间轴
-  const axisPts = new Float32Array([0, 8.4, 0, 0, -3.4, 0]);
   const axisGeo = new THREE.BufferGeometry();
-  axisGeo.setAttribute('position', new THREE.BufferAttribute(axisPts, 3));
-  const axis = new THREE.Line(
-    axisGeo,
-    new THREE.LineBasicMaterial({ color: colors.faint, transparent: true, opacity: 0.7, depthWrite: false }),
-  );
-  root.add(axis);
+  axisGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 8.6, 0, 0, -2.6, 0], 3));
+  const axisMat = new THREE.LineBasicMaterial({ color: colors.faint, transparent: true, opacity: 0.24, depthWrite: false });
+  root.add(new THREE.Line(axisGeo, axisMat));
+
+  // 深度刻度：每层一道短横线，滚动时依次亮起，像树的「生长高度」
+  const ticks = [];
+  for (let d = 0; d < 4; d++) {
+    const y = 7.4 - d * 2.9;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute([-0.35, y, 0, 0.35, y, 0], 3));
+    const m = new THREE.LineBasicMaterial({ color: colors.accent, transparent: true, opacity: 0, depthWrite: false });
+    root.add(new THREE.Line(g, m));
+    ticks.push({ m, at: d * 0.26 });
+  }
 
   const motes = dust(lowPower ? 140 : 320, 34, { color: colors.ink, size: 0.11, opacity: 0.4 });
   scene.add(motes);
 
   /*
-    取景：相机在 z=14、fov 38°，页头高度普遍在 420–520px 之间，
-    对应的可视半高约 ±4.8 世界单位。树本身从 y=7.4 长到 y=-1.3，
-    直接摆会顶到页头上边缘（根节点被切掉）。
-    所以整体缩到 0.68 并把树的几何中心挪到视口中心附近。
-  */
-  /*
-    宽屏把树放在右侧（左侧留给标题），窄屏则要收回中间 ——
-    手机上行宽只有 390px，树留在 x=6.4 就只剩半个枝干在外面。
+    窄屏的页头矮（约 300px），可视半高只有约 4.8 × (300/900) ≈ 1.6 世界单位，
+    所以树要缩到 0.42 并整体上移，否则叶节点会和标题、引语叠在一起。
+    宽屏则把树推到右侧，左侧留给文字。
   */
   const wide = host.clientWidth >= 900;
-  root.position.set(wide ? 6.4 : 0.4, -1.95, 0);
-  root.scale.setScalar(wide ? 0.68 : 0.5);
-  let grow = 0;
+  root.position.set(wide ? 6.4 : 0, wide ? -1.95 : 1.15, 0);
+  root.scale.setScalar(wide ? 0.68 : 0.42);
+
+  /* 状态：全部由 input 推导 */
+  let grow = 0;        // 实际生长度
+  let sway = 0;        // 指针牵引的倾角
+  let impulseSeen = 0; // 上一次读到的冲量，用来检测「新的一次点击」
+  const waves = [];    // 正在扩散的自检波
 
   return {
     update(t, dt, { reduced: isReduced }) {
-      if (!isReduced) grow = Math.min(1, grow + dt * 0.55);
+      const act = input.activity;
+
+      /*
+        生长：滚动是第一驱动。scroll 0→1 对应 0→1.15 的生长度，
+        再叠一点「刚进视口时先长 12%」的初始态（否则页头刚出现是一棵空轴）。
+        静置时只留极小呼吸，避免喧宾夺主。
+      */
+      const driven = clamp01(input.scroll * 1.15 + 0.12);
+      const idle = isReduced ? 0 : Math.sin(t * 0.35) * 0.012 * (1 - act);
+      grow = follow(grow, clamp01(driven + idle), 7, dt);
+
       const g = easeOut(grow);
-      for (const e of edgePositions) {
-        const p = clamp01((g - e.appear) / 0.34);
+
+      for (const e of edges) {
+        const p = clamp01((g - e.appear) / 0.3);
         e.mat.opacity = p * 0.85;
+        // 从父端长出：以起点为缩放原点
         e.line.scale.y = Math.max(0.001, p);
-        // 从父端长出：缩放原点放到起点
-        e.line.geometry.computeBoundingSphere?.();
       }
-      for (const n of nodeGroups) {
+
+      /* 指针牵引：整棵树朝光标方向倾一点，滚动时幅度更大 */
+      const lean = 0.16 + act * 0.1;
+      sway = follow(sway, input.px * lean, 3.2, dt);
+      root.rotation.y = sway;
+      root.rotation.x = follow(root.rotation.x, -input.py * 0.1, 3.2, dt);
+      root.rotation.z = follow(root.rotation.z, -input.px * 0.045, 3.2, dt);
+
+      /* 点击：新增一道自检波，沿深度向下扫过节点 */
+      if (input.impulse > impulseSeen + 0.15) waves.push({ t: 0, power: input.impulse });
+      impulseSeen = input.impulse;
+      for (let i = waves.length - 1; i >= 0; i--) {
+        waves[i].t += dt;
+        if (waves[i].t > 1.6) waves.splice(i, 1);
+      }
+
+      for (const n of nodes) {
         const p = clamp01((g - n.appear) / 0.3);
         n.oct.scale.setScalar(Math.max(0.001, easeOut(p)));
-        n.oct.rotation.y += n.spin * dt;
-        n.oct.rotation.x = Math.sin(t * 0.4 + n.appear * 3) * 0.12;
-        n.g.position.y += Math.sin(t * 0.7 + n.appear * 4) * 0.0016;
+        // 节点自转：静止几乎不转，活跃时明显
+        n.oct.rotation.y += n.spin * dt * (0.18 + act * 1.6);
+        n.oct.rotation.x = Math.sin(t * 0.4 + n.appear * 3) * (0.04 + act * 0.12);
+
+        /* 点击波：节点被扫过时膨胀一下，颜色也短暂偏向强调/警示 */
+        let pulse = 0;
+        for (const w of waves) {
+          const local = w.t - n.waveDelay;
+          if (local > 0 && local < 0.5) pulse = Math.max(pulse, Math.sin((local / 0.5) * Math.PI) * w.power);
+        }
+        n.oct.scale.multiplyScalar(1 + pulse * 0.55);
+        n.mat.opacity = easeOut(g) * (0.85 + pulse * 0.15);
+        n.g.position.x = n.base + Math.sin(t * 0.7 + n.appear * 4) * 0.02 * (0.3 + act);
       }
+
       for (const m of nodeMats) m.opacity = easeOut(g);
-      root.rotation.y = Math.sin(t * 0.12) * 0.22;
+      for (const tk of ticks) {
+        const p = clamp01((g - tk.at) / 0.2);
+        tk.m.opacity = p * 0.5;
+      }
+
+      /* 尘埃随滚动缓慢上移，制造「在往下走」的错觉 */
+      motes.position.y = (input.travel * 0.06) % 2 - 1;
+      motes.rotation.y = input.px * 0.15 + input.scroll * 0.6;
     },
     onTheme(c) {
-      for (const e of edgePositions) e.mat.color.copy(c.line);
-      for (const m of nodeMats) m.color.copy(m.color.getHex() === 0 ? c.accent : m.color);
+      for (const e of edges) e.mat.color.copy(c.line);
+      for (const n of nodes) n.mat.color.copy(n.depth === 0 ? c.mark : c.accent);
+      axisMat.color.copy(c.faint);
+      for (const tk of ticks) tk.m.color.copy(c.accent);
       motes.material.color.copy(c.ink);
     },
     dispose() {
@@ -160,11 +218,11 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
 
 /* ============================================================
    2. 归档：时间线螺旋
-   15 篇文章 = 15 块「记录牌」沿螺旋上升。同一年的一组半径更小、
-   颜色更浅，年份之间的落差就是时间本身。
+   滚动就是它的时间轴：往下滚，螺旋往前转，一块块「记录牌」从背后转到正面。
+   停手之后保留一点惯性，像转盘；指针左右移动会加一点侧倾。
    ============================================================ */
 
-export function helixScene({ THREE, scene, colors, reduced, lowPower, scroll, seed, host }) {
+export function helixScene({ THREE, scene, colors, reduced, lowPower, seed, host, input }) {
   const rnd = seeded(seed);
   const group = new THREE.Group();
   group.rotation.x = -0.09;
@@ -173,12 +231,9 @@ export function helixScene({ THREE, scene, colors, reduced, lowPower, scroll, se
   const COUNT = 15;
   const plates = [];
   const plateGeo = new THREE.BoxGeometry(2.15, 0.95, 0.06);
-  // 只画棱边：实心板会挡住后面的牌
   const plateEdges = new THREE.EdgesGeometry(plateGeo);
 
   for (let i = 0; i < COUNT; i++) {
-    // 半径与纵向步距都按「能塞进 ±4.8 的可视半高」来定，
-    // 之前 r=6.2 / 步距 0.78 会把上半段整个顶出画面（只剩底部几张牌）
     const a = (i / COUNT) * Math.PI * 2 * 1.45;
     const r = 4.3 - i * 0.04;
     const y = i * 0.36;
@@ -193,20 +248,12 @@ export function helixScene({ THREE, scene, colors, reduced, lowPower, scroll, se
     plate.rotation.y = -a + Math.PI / 2;
     group.add(plate);
 
-    // 牌的「正反面」用一块极淡的填充区分，让螺旋有体积感
     const fill = new THREE.Mesh(
       new THREE.PlaneGeometry(2.15, 0.95),
-      new THREE.MeshBasicMaterial({
-        color: colors.accent,
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-      }),
+      new THREE.MeshBasicMaterial({ color: colors.accent, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }),
     );
     plate.add(fill);
 
-    // 每篇一个小小的锚点，落在牌前方
     const anchor = new THREE.Mesh(
       new THREE.SphereGeometry(0.055, 8, 8),
       new THREE.MeshBasicMaterial({ color: colors.accent, transparent: true, opacity: 0 }),
@@ -214,48 +261,93 @@ export function helixScene({ THREE, scene, colors, reduced, lowPower, scroll, se
     anchor.position.set(0, 0, 0.5);
     plate.add(anchor);
 
-    plates.push({ plate, mat, fill, anchor, baseY: y, phase: rnd() * Math.PI * 2 });
+    plates.push({ plate, mat, fill, anchor, baseY: y, phase: rnd() * Math.PI * 2, spin: 0 });
   }
 
-  // 三个年份环：把螺旋圈成「逐年」的结构
   const rings = [];
   for (let k = 0; k < 3; k++) {
     const geo = new THREE.TorusGeometry(4.4 - k * 0.06, 0.01, 5, 96);
-    const mat = new THREE.LineBasicMaterial({ color: colors.faint, transparent: true, opacity: 0.35 });
+    const mat = new THREE.LineBasicMaterial({ color: colors.faint, transparent: true, opacity: 0 });
     const ring = new THREE.LineSegments(new THREE.WireframeGeometry(geo), mat);
     ring.rotation.x = Math.PI / 2;
     ring.position.y = k * 2.5 + 1.1;
     group.add(ring);
-    rings.push(mat);
+    rings.push({ mat, at: k * 0.22 });
   }
 
   const motes = dust(lowPower ? 120 : 260, 30, { color: colors.ink, size: 0.1, opacity: 0.35 });
   scene.add(motes);
 
+  /*
+    取景：相机 z=14 / fov 38°，可视半高约 ±4.8 世界单位。
+    螺旋从 y=0 爬到 y=5.04，加上 -2.1 的位移后上端到 y≈2.94，
+    在页头（矮）里合适；但首页那条 26rem 高的舞台更高，
+    所以整体再收一档，让 15 张牌完整落在框内而不是顶出去。
+  */
+  /*
+    取景：相机 z=14 / fov 38°，可视半高 ≈ tan(19°)×14 ≈ 4.82 世界单位。
+    螺旋纵向跨度约 5.1（15 张牌 × 0.36 步距 + 牌高），所以缩放取 0.78 刚好
+    留出余量；整体下移 2.1 让重心落在框中心。首页那条舞台更高，但
+    放大到填满反而会把牌推出左右边界，所以两处用同一组参数，靠舞台高度
+    自己留白 —— 留白比裁切好。
+  */
   const wide = host.clientWidth >= 700;
-  group.position.set(wide ? 1.4 : 0, -2.1, 0);
-  group.scale.setScalar(wide ? 0.9 : 0.62);
+  const baseScale = wide ? 0.78 : 0.56;
+  // 纵向偏移：螺旋缩放后跨度约 4.0，重心落在视口中心偏下一点
+  group.position.set(wide ? 1.4 : 0, -1.45, 0);
+  group.scale.setScalar(baseScale);
+
+  /* 滚动 → 角度：两个通道叠加。
+     直接映射保证「滚多少转多少」，惯性通道负责停手后的余韵。 */
+  let angle = 0;       // 直接映射的角度（随滚动）
+  let spinVel = 0;     // 惯性角速度
   let reveal = 0;
-  let spin = 0;
+  let clickSpin = 0;   // 点击附加的一次转动
 
   return {
     update(t, dt, { reduced: isReduced }) {
-      if (!isReduced) reveal = Math.min(1, reveal + dt * 0.5);
-      spin += dt * 0.055;
-      // 滚动驱动：往下滚，螺旋转过去看后面的牌
-      group.rotation.y = spin + scroll * 1.5;
+      const act = input.activity;
+
+      /* 主驱动：滚动位置决定螺旋的绝对角度 */
+      const targetAngle = input.scroll * Math.PI * 2.2;
+      angle = follow(angle, targetAngle, 9, dt);
+
+      /* 惯性：滚动增量喂给角速度，停手后自然衰减 —— 转盘手感 */
+      spinVel += input.scrollDelta * 26;
+      spinVel = damp(spinVel, 0, 2.2, dt);
+
+      /* 点击：给一次额外的转动冲量 */
+      if (input.impulse > 0.2) clickSpin += input.impulse * 0.05;
+      clickSpin = damp(clickSpin, 0, 3.4, dt);
+
+      /* 静置时的极缓漂移：有人操作时被 activity 压掉 */
+      const idleSpin = isReduced ? 0 : t * 0.008 * (1 - act);
+
+      group.rotation.y = angle + spinVel + clickSpin + idleSpin;
+      group.rotation.x = follow(group.rotation.x, -0.09 - input.py * 0.06, 3, dt);
+      group.rotation.z = follow(group.rotation.z, -input.px * 0.04, 3, dt);
+
+      // 入场揭示同样挂在滚动上
+      reveal = follow(reveal, clamp01(0.25 + input.scroll * 1.2), 6, dt);
+
       for (let i = 0; i < plates.length; i++) {
         const p = plates[i];
         const local = clamp01((reveal - i * 0.045) * 3.4);
-        const bob = Math.sin(t * 0.6 + p.phase) * 0.075;
+        // 牌自身的轻微浮动：静止时几乎停住
+        const bob = Math.sin(t * 0.6 + p.phase) * 0.075 * (0.15 + act);
         p.plate.position.y = p.baseY + bob;
         p.mat.opacity = 0.75 * easeOut(local);
         p.fill.opacity = 0.05 * easeOut(local);
         p.anchor.material.opacity = 0.9 * easeOut(local);
-        p.anchor.scale.setScalar(1 + Math.sin(t * 2 + p.phase) * 0.25);
+        // 锚点的脉动也吃 activity：有人在滚时才跳
+        p.anchor.scale.setScalar(1 + Math.sin(t * 2 + p.phase) * 0.25 * (0.2 + act));
       }
-      for (let k = 0; k < rings.length; k++) rings[k].opacity = 0.28 * easeOut(clamp01(reveal - k * 0.1));
-      motes.rotation.y = t * 0.02;
+      for (let k = 0; k < rings.length; k++) {
+        rings[k].mat.opacity = 0.28 * easeOut(clamp01(reveal - rings[k].at));
+      }
+
+      motes.rotation.y = input.px * 0.2 + input.scroll * 0.8;
+      motes.position.y = (input.travel * 0.05) % 2 - 1;
     },
     onTheme(c) {
       for (let i = 0; i < plates.length; i++) {
@@ -263,7 +355,7 @@ export function helixScene({ THREE, scene, colors, reduced, lowPower, scroll, se
         plates[i].fill.color.copy(c.accent);
         plates[i].anchor.material.color.copy(c.accent);
       }
-      for (const r of rings) r.color.copy(c.faint);
+      for (const r of rings) r.mat.color.copy(c.faint);
       motes.material.color.copy(c.ink);
     },
     dispose() {
@@ -275,21 +367,19 @@ export function helixScene({ THREE, scene, colors, reduced, lowPower, scroll, se
 
 /* ============================================================
    3. 关于：开普勒立体
-   正四面体 / 立方体 / 正八面体 / 正十二面体 / 正二十面体 互为内外接，
-   每层套一层球壳。开普勒当年就是用这套嵌套解释行星轨道的 ——
-   放在「关于我」这一页，代替一切自我介绍式的装饰。
+   滚动把三层立体「拆开」—— 往下滚，四面体/立方体/二十面体彼此拉开距离，
+   露出嵌套关系；往前滚，它们重新咬合。指针让整组缓慢偏转。
    ============================================================ */
 
-export function keplerScene({ THREE, scene, colors, reduced, lowPower }) {
+export function keplerScene({ THREE, scene, colors, reduced, lowPower, host, input }) {
   const group = new THREE.Group();
   group.rotation.set(0.35, -0.5, 0.1);
   scene.add(group);
 
   const shells = [];
   /*
-    五层全上会糊成一团毛线（正十二面体的棱太多）。
-    改成三层：四面体 → 立方体 → 正二十面体，每层之间留出明显的空隙，
-    棱的数量从少到多，正好是一个「复杂度递增」的读数。
+    三层：四面体 → 立方体 → 正二十面体。棱数由少到多，
+    正好是一条「复杂度递增」的读数；五层全上会糊成一团毛线。
   */
   const defs = [
     { geo: new THREE.TetrahedronGeometry(1.35), spin: 0.17, r: 1.55 },
@@ -299,29 +389,14 @@ export function keplerScene({ THREE, scene, colors, reduced, lowPower }) {
 
   for (const d of defs) {
     const g = new THREE.Group();
-    const mat = new THREE.LineBasicMaterial({
-      color: colors.accent,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-    });
+    const mat = new THREE.LineBasicMaterial({ color: colors.accent, transparent: true, opacity: 0, depthWrite: false });
     const solid = new THREE.LineSegments(new THREE.EdgesGeometry(d.geo), mat);
     g.add(solid);
 
-    // 球壳：只有三条经纬线，避免变成毛线球
-    const shellMat = new THREE.LineBasicMaterial({
-      color: colors.faint,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-    });
-    // 经线只给 12 条、纬线 6 条：再多就成毛线球了
-    const shell = new THREE.LineSegments(
-      new THREE.WireframeGeometry(new THREE.SphereGeometry(d.r, 12, 6)),
-      shellMat,
-    );
+    const shellMat = new THREE.LineBasicMaterial({ color: colors.faint, transparent: true, opacity: 0, depthWrite: false });
+    const shell = new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.SphereGeometry(d.r, 12, 6)), shellMat);
     g.add(shell);
-    // 球壳只留赤道与两条经线
+    // 球壳只留赤道与两条极区线
     const pos = shell.geometry.attributes.position;
     const keep = [];
     for (let i = 0; i < pos.count; i += 2) {
@@ -330,15 +405,12 @@ export function keplerScene({ THREE, scene, colors, reduced, lowPower }) {
       const flat = Math.abs(y1) < d.r * 0.03 && Math.abs(y2) < d.r * 0.03;
       const polar = Math.abs(y1) > d.r * 0.35 && Math.abs(y2) > d.r * 0.35;
       if (!flat && !polar) continue;
-      keep.push(
-        pos.getX(i), pos.getY(i), pos.getZ(i),
-        pos.getX(i + 1), pos.getY(i + 1), pos.getZ(i + 1),
-      );
+      keep.push(pos.getX(i), pos.getY(i), pos.getZ(i), pos.getX(i + 1), pos.getY(i + 1), pos.getZ(i + 1));
     }
     shell.geometry.setAttribute('position', new THREE.Float32BufferAttribute(keep, 3));
 
     group.add(g);
-    shells.push({ g, solid, mat, shell, shellMat, spin: d.spin, r: d.r });
+    shells.push({ g, solid, mat, shellMat, spin: d.spin, base: 1 });
   }
 
   const motes = dust(lowPower ? 110 : 240, 26, { color: colors.ink, size: 0.1, opacity: 0.4 });
@@ -350,29 +422,47 @@ export function keplerScene({ THREE, scene, colors, reduced, lowPower }) {
   scene.add(key);
 
   group.position.set(1.6, 0, 0);
+
   let reveal = 0;
+  let spread = 0;     // 拆开程度
+  let wobble = 0;     // 点击后的抖动
 
   return {
     update(t, dt, { reduced: isReduced }) {
-      if (!isReduced) reveal = Math.min(1, reveal + dt * 0.42);
+      const act = input.activity;
+      reveal = follow(reveal, clamp01(0.35 + input.scroll * 1.1), 6, dt);
+      // 滚动决定「拆开」：0.6 → 1.9 的缩放系数，拆开后三层立体的间距明显拉开
+      spread = follow(spread, 0.62 + input.scroll * 1.28, 6, dt);
+
+      /* 点击：一次短促的抖动，三个立体错峰回弹 */
+      if (input.impulse > 0.2) wobble = Math.min(1.2, wobble + input.impulse);
+      wobble = damp(wobble, 0, 4.5, dt);
+
       for (let i = 0; i < shells.length; i++) {
         const s = shells[i];
         const p = easeOut(clamp01((reveal - i * 0.13) / 0.5));
-        s.g.rotation.y += s.spin * dt;
-        s.g.rotation.x = Math.sin(t * 0.16 + i) * 0.14;
-        s.solid.scale.setScalar(0.55 + p * 0.45);
+        // 自转：静止近乎停住，活跃时明显
+        s.g.rotation.y += s.spin * dt * (0.2 + act * 2.2);
+        s.g.rotation.x = Math.sin(t * 0.16 + i) * 0.14 * (0.25 + act);
+        const scale = spread * (1 + wobble * 0.06 * Math.sin(t * 9 + i * 1.4));
+        s.solid.scale.setScalar(scale * (0.55 + p * 0.45));
         s.mat.opacity = 0.62 * p;
         s.shellMat.opacity = 0.22 * p;
       }
-      group.rotation.y = Math.sin(t * 0.08) * 0.34 - 0.4;
+
+      // 整组：指针牵引 + 滚动带来的轻微俯仰
+      group.rotation.y = follow(group.rotation.y, -0.4 + input.px * 0.5, 3, dt);
+      group.rotation.x = follow(group.rotation.x, 0.35 - input.py * 0.32, 3, dt);
+      group.rotation.z = follow(group.rotation.z, 0.1 + input.px * 0.08, 3, dt);
+
       key.position.x = Math.sin(t * 0.3) * 7;
       key.position.z = Math.cos(t * 0.3) * 7;
-      motes.rotation.y = -t * 0.015;
+      motes.rotation.y = -t * 0.015 * (0.3 + act) + input.px * 0.2;
     },
     onTheme(c) {
-      for (let i = 0; i < shells.length; i++) {
-        shells[i].mat.color.copy(i === shells.length - 1 ? c.accent : c.accent);
-        shells[i].shellMat.color.copy(c.faint);
+      for (const s of shells) {
+        s.mat.color.copy(c.accent);
+        s.shellMat.color.copy(c.faint);
       }
       motes.material.color.copy(c.ink);
     },
@@ -384,11 +474,11 @@ export function keplerScene({ THREE, scene, colors, reduced, lowPower }) {
 
 /* ============================================================
    4. 404：荒原
-   低多边形线框地平线，顶点按确定性噪声起伏，远处有雾。
-   镜头缓慢前进 —— 走在一片没有路的荒原上。
+   滚动就是前进：往下滚，镜头在荒原上向前推进，地形持续向后卷。
+   指针左右移动改变行进方向，点击给一次镜头震动。
    ============================================================ */
 
-export function wastelandScene({ THREE, scene, colors, camera, reduced, lowPower }) {
+export function wastelandScene({ THREE, scene, colors, camera, reduced, lowPower, input }) {
   const rnd = seeded('wasteland');
   const SIZE = 150;
   const SEG = 46;
@@ -396,7 +486,7 @@ export function wastelandScene({ THREE, scene, colors, camera, reduced, lowPower
   const geo = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG);
   geo.rotateX(-Math.PI / 2);
   const pos = geo.attributes.position;
-  // 用几个错开的正弦叠出「地形感」，比纯随机更像地貌而非噪点
+  // 几个错开的正弦叠出「地形感」，比纯随机更像地貌而非噪点
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
     const z = pos.getZ(i);
@@ -416,10 +506,8 @@ export function wastelandScene({ THREE, scene, colors, camera, reduced, lowPower
   );
   scene.add(terrain);
 
-  // 雾：让地平线隐入纸面，而不是硬切一条边
   scene.fog = new THREE.Fog(colors.ink.clone().setHSL(0, 0, 0.5), 26, 96);
 
-  // 悬浮的碎片：荒原上仅剩的人造物
   const shards = [];
   const shardGeos = [
     new THREE.TetrahedronGeometry(0.5),
@@ -429,12 +517,7 @@ export function wastelandScene({ THREE, scene, colors, camera, reduced, lowPower
   for (let i = 0; i < (lowPower ? 6 : 12); i++) {
     const g = new THREE.Group();
     const base = shardGeos[Math.floor(rnd() * shardGeos.length)];
-    const mat = new THREE.LineBasicMaterial({
-      color: colors.accent,
-      transparent: true,
-      opacity: 0.5,
-      depthWrite: false,
-    });
+    const mat = new THREE.LineBasicMaterial({ color: colors.accent, transparent: true, opacity: 0.5, depthWrite: false });
     g.add(new THREE.LineSegments(new THREE.EdgesGeometry(base), mat));
     const a = rnd() * Math.PI * 2;
     const r = 9 + rnd() * 22;
@@ -447,22 +530,45 @@ export function wastelandScene({ THREE, scene, colors, camera, reduced, lowPower
   motes.position.y = 8;
   scene.add(motes);
 
+  /* 滚动即行走：位置与朝向都从滚动量推出来 */
   let travel = 0;
+  let lateral = 0;
+  let shake = 0;
 
   return {
     update(t, dt, { reduced: isReduced }) {
-      if (!isReduced) travel += dt * 1.15;
-      camera.position.set(0, 7.4 + Math.sin(t * 0.24) * 0.5, 30);
-      camera.lookAt(0, 1.5, -6);
-      camera.rotation.z = Math.sin(t * 0.31) * 0.012;
+      const act = input.activity;
+
+      // 主驱动：滚动增量直接变成前进距离（滚得越多走得越远，不滚就不走）
+      travel += input.scrollDelta * 42;
+      // 静置时留一点点自走，让人知道这是可以滚动的活物
+      if (!isReduced) travel += dt * 0.5 * (1 - act);
+
+      // 指针控制横向偏移：左右移动指针 = 左右改变行进方向
+      lateral = follow(lateral, input.px * 5.5, 2.6, dt);
+      // 点击：镜头震一下
+      if (input.impulse > 0.2) shake = Math.min(1, shake + input.impulse);
+      shake = damp(shake, 0, 6, dt);
+
+      const shakeX = Math.sin(t * 42) * shake * 0.35;
+      const shakeY = Math.cos(t * 37) * shake * 0.28;
+
+      camera.position.set(lateral + shakeX, 7.4 + Math.sin(t * 0.24) * 0.4 * (0.4 + act) + input.py * 1.6 + shakeY, 30);
+      // 看向前方偏一点，产生「斜着走」的感觉
+      camera.lookAt(lateral * 0.6, 1.5 - input.py * 2.2, -6);
+      camera.rotation.z = Math.sin(t * 0.31) * 0.012 * (0.4 + act) + input.px * 0.02;
+
       // 地形向镜头推进后回卷，形成无限前进
       terrain.position.z = (travel % 8) - 4;
+
       for (const s of shards) {
-        s.g.position.y = s.baseY + Math.sin(t * 0.5 + s.phase) * 0.55;
-        s.g.rotation.x += dt * 0.12;
-        s.g.rotation.y += dt * 0.18;
+        s.g.position.y = s.baseY + Math.sin(t * 0.5 + s.phase) * 0.55 * (0.3 + act);
+        // 碎片自转同样吃 activity 与滚动
+        s.g.rotation.x += dt * (0.05 + act * 0.25) + input.scrollDelta * 2;
+        s.g.rotation.y += dt * (0.08 + act * 0.35);
       }
-      motes.rotation.y = t * 0.01;
+
+      motes.rotation.y = t * 0.01 * (0.3 + act) + input.px * 0.25;
       if (scene.fog) scene.fog.near = 26 + Math.sin(t * 0.2) * 2;
     },
     onTheme(c) {
@@ -481,11 +587,11 @@ export function wastelandScene({ THREE, scene, colors, camera, reduced, lowPower
 
 /* ============================================================
    5. 文章页：印记
-   小画布里的线框印章。形状由 slug 决定 —— 同一篇文章永远是同一个印记，
-   不同文章长得不一样（红黑树圆、设计模式方、题解三角）。
+   小画布里的线框印章。指针让它转向（像拿在手里看），滚动让它自转，
+   点击盖一次「戳」—— 快速下压再回弹。
    ============================================================ */
 
-export function sealScene({ THREE, scene, camera, colors, seed }) {
+export function sealScene({ THREE, scene, camera, colors, seed, input }) {
   const group = new THREE.Group();
   scene.add(group);
 
@@ -509,7 +615,7 @@ export function sealScene({ THREE, scene, camera, colors, seed }) {
   );
   group.add(inner);
 
-  // 一圈刻度：像印章边缘的齿
+  // 一圈刻度：印章边缘的齿
   const ticks = [];
   const tickCount = 24;
   for (let i = 0; i < tickCount; i++) {
@@ -528,28 +634,47 @@ export function sealScene({ THREE, scene, camera, colors, seed }) {
       depthWrite: false,
     });
     group.add(new THREE.Line(g, m));
-    ticks.push(m);
+    ticks.push({ m, accent: i % 6 === 0, phase: i * 0.3 });
   }
 
   camera.position.set(0, 0, 9.2);
 
+  let spin = 0;
+  let press = 0;   // 点击的「盖章」下压量
+  let seen = 0;
+
   return {
     update(t, dt, { reduced: isReduced }) {
-      if (!isReduced) {
-        group.rotation.y += dt * 0.42;
-        group.rotation.x += dt * 0.19;
-      } else {
-        group.rotation.set(0.5, 0.7, 0);
-      }
-      inner.rotation.y -= dt * 0.7;
-      outer.rotation.z += dt * 0.06;
-      const s = 1 + Math.sin(t * 0.9) * 0.015;
+      const act = input.activity;
+
+      /* 滚动驱动自转：页头离开视口的程度就是它转过的角度 */
+      spin = follow(spin, input.scroll * Math.PI * 1.6, 7, dt);
+
+      /* 指针让它像被拿在手里转动 */
+      group.rotation.y = spin + input.px * 0.55;
+      group.rotation.x = isReduced ? 0.5 : follow(group.rotation.x, 0.28 - input.py * 0.4, 4, dt);
+      group.rotation.z = follow(group.rotation.z, -input.px * 0.12, 4, dt);
+
+      /* 点击：下压 → 回弹 */
+      if (input.impulse > seen + 0.15) press = Math.min(1, input.impulse);
+      seen = input.impulse;
+      press = damp(press, 0, 5.5, dt);
+
+      const s = 1 + Math.sin(t * 0.9) * 0.015 * (0.25 + act) - press * 0.16;
       group.scale.setScalar(s);
+      // 下压时内层反向转一点，像被拧了一下
+      inner.rotation.y -= dt * (0.7 * (0.25 + act) + press * 6);
+      outer.rotation.z += dt * 0.06 * (0.25 + act);
+
+      for (const tk of ticks) {
+        // 齿的亮度跟着点击波动，像盖章时的机械反馈
+        tk.m.opacity = 0.5 + Math.sin(t * 1.4 + tk.phase) * 0.12 * (0.3 + act) + press * (tk.accent ? 0.5 : 0.25);
+      }
     },
     onTheme(c) {
       outer.material.color.copy(c.line);
       inner.material.color.copy(c.accent);
-      for (let i = 0; i < ticks.length; i++) ticks[i].color.copy(i % 6 === 0 ? c.mark : c.faint);
+      for (const tk of ticks) tk.m.color.copy(tk.accent ? c.mark : c.faint);
     },
     dispose() {
       accentGeo.dispose();
@@ -558,18 +683,17 @@ export function sealScene({ THREE, scene, camera, colors, seed }) {
 }
 
 /* ============================================================
-   6. 归档 / 标签页：标签球
-   17 个标签分布在一个球面上，用发光点表示，连线按「是否共现」连 ——
-   球体缓慢自转，指针划过时整体倾斜（JIEJOE 那种磁力手感）。
+   6. 标签球
+   指针牵引整颗球（磁力手感），滚动让它自转，点击让节点集体亮一下。
    ============================================================ */
 
-export function tagSphereScene({ THREE, scene, colors, lowPower, pointer, host }) {
+export function tagSphereScene({ THREE, scene, colors, lowPower, host, input }) {
   const group = new THREE.Group();
   scene.add(group);
 
   const COUNT = 17;
   const pts = [];
-  // 斐波那契球面：均匀分布，比 rand 出来的点好看得多
+  // 斐波那契球面：均匀分布，比随机点好看得多
   for (let i = 0; i < COUNT; i++) {
     const y = 1 - (i / (COUNT - 1)) * 2;
     const r = Math.sqrt(Math.max(0, 1 - y * y));
@@ -577,16 +701,15 @@ export function tagSphereScene({ THREE, scene, colors, lowPower, pointer, host }
     pts.push(new THREE.Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r).multiplyScalar(7.2));
   }
 
-  const nodeMat = new THREE.MeshBasicMaterial({ color: colors.accent, transparent: true, opacity: 0.9 });
   const nodeGeo = new THREE.SphereGeometry(0.09, 10, 10);
   const nodes = pts.map((p) => {
-    const m = new THREE.Mesh(nodeGeo, nodeMat.clone());
+    const m = new THREE.Mesh(nodeGeo, new THREE.MeshBasicMaterial({ color: colors.accent, transparent: true, opacity: 0.9 }));
     m.position.copy(p);
     group.add(m);
     return m;
   });
 
-  // 连线：近邻相连，形成一张网而不是一坨
+  // 近邻相连：形成一张网而不是一坨
   const segs = [];
   for (let i = 0; i < pts.length; i++) {
     for (let j = i + 1; j < pts.length; j++) {
@@ -594,16 +717,10 @@ export function tagSphereScene({ THREE, scene, colors, lowPower, pointer, host }
     }
   }
   const lineGeo = new THREE.BufferGeometry().setFromPoints(segs);
-  const netMat = new THREE.LineBasicMaterial({
-    color: colors.line,
-    transparent: true,
-    opacity: 0.34,
-    depthWrite: false,
-  });
+  const netMat = new THREE.LineBasicMaterial({ color: colors.line, transparent: true, opacity: 0.34, depthWrite: false });
   group.add(new THREE.LineSegments(lineGeo, netMat));
 
-  // 一层极淡的球壳，交代「这是一颗球」：经线 10 / 纬线 5 就够，
-  // 再密就变成一张盖住节点的网（首页那张 700px 宽的画布尤其明显）
+  // 极淡的球壳：经线 10 / 纬线 5 就够，再密就变成一张盖住节点的网
   const shellGeo = new THREE.SphereGeometry(7.2, 10, 5);
   const shellMat = new THREE.LineBasicMaterial({ color: colors.faint, transparent: true, opacity: 0.09, depthWrite: false });
   group.add(new THREE.LineSegments(new THREE.WireframeGeometry(shellGeo), shellMat));
@@ -611,20 +728,35 @@ export function tagSphereScene({ THREE, scene, colors, lowPower, pointer, host }
   const motes = dust(lowPower ? 90 : 200, 34, { color: colors.ink, size: 0.1, opacity: 0.32 });
   scene.add(motes);
 
-  // 宽容器时靠右（左边留文字），窄容器居中
   group.position.set(host.clientWidth >= 700 ? 5.5 : 0, 0, 0);
+
+  let spin = 0;
+  let pop = 0;
 
   return {
     update(t, dt, { reduced: isReduced }) {
-      if (!isReduced) group.rotation.y += dt * 0.09;
-      // 指针磁力：球整体朝光标方向偏
-      group.rotation.x = damp(group.rotation.x, pointer.y * 0.32, 2.4, dt);
-      const tilt = damp(group.rotation.z, -pointer.x * 0.18, 2.4, dt);
-      group.rotation.z = tilt;
+      const act = input.activity;
+
+      // 滚动驱动自转（容器滚过视口 = 球转过约一圈）
+      spin = follow(spin, input.scroll * Math.PI * 2, 7, dt);
+      group.rotation.y = spin;
+
+      /* 磁力：指针把球拽向光标方向；指针一动，惯性让它多甩一点 */
+      group.rotation.x = follow(group.rotation.x, input.py * 0.34 + input.pvy * 0.02, 2.6, dt);
+      const rz = -input.px * 0.2 - input.pvx * 0.015;
+      group.rotation.z = follow(group.rotation.z, rz, 2.6, dt);
+
+      /* 点击：节点集体涨一下，然后回落 */
+      if (input.impulse > 0.2) pop = Math.min(1, pop + input.impulse);
+      pop = damp(pop, 0, 4, dt);
+
       for (let i = 0; i < nodes.length; i++) {
-        nodes[i].scale.setScalar(1 + Math.sin(t * 1.6 + i * 0.7) * 0.28);
+        // 静止时几乎不跳动，交互时明显
+        const breathe = 1 + Math.sin(t * 1.6 + i * 0.7) * 0.28 * (0.15 + act);
+        nodes[i].scale.setScalar(breathe * (1 + pop * 0.5));
       }
-      motes.rotation.y = -t * 0.02;
+
+      motes.rotation.y = -input.scroll * 0.4 + input.px * 0.2;
     },
     onTheme(c) {
       for (const n of nodes) n.material.color.copy(c.accent);

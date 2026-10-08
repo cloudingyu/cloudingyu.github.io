@@ -187,6 +187,8 @@
     border-color 0.22s var(--ease),
     background-color 0.22s var(--ease);
 }
+.code:hover .code__copy,
+.code__copy:focus-visible { opacity: 1; }
 .code__copy:hover {
   color: var(--ink);
   border-color: var(--line-strong);
@@ -204,6 +206,9 @@
   -webkit-mask: var(--copy-mask) center / contain no-repeat;
   mask: var(--copy-mask) center / contain no-repeat;
   --copy-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7'%3E%3Crect x='9' y='9' width='11' height='11' rx='1.5'/%3E%3Cpath d='M15 5.5A1.5 1.5 0 0 0 13.5 4H5.5A1.5 1.5 0 0 0 4 5.5v8A1.5 1.5 0 0 0 5.5 15'/%3E%3C/svg%3E");
+  /* 复制按钮在未悬停时收着，悬停才亮 —— 一屏多块代码时不至于布满按钮 */
+  opacity: 0.55;
+  transition: opacity 0.24s var(--ease), color 0.22s var(--ease), border-color 0.22s var(--ease), background-color 0.22s var(--ease);
 }
 
 .code__copy.is-done {
