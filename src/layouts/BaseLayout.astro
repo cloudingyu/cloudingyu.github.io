@@ -29,8 +29,14 @@ interface Props {
   page?: PageKey;
   /** 覆盖该页默认的几何场景 */
   scene?: SceneKind;
-  /** 页头高度：紧凑 = 列表/归档，高 = 首页 */
-  hero?: 'tall' | 'compact' | 'bare';
+  /**
+   * 页头形态：
+   *   full    整屏开场，几何体放大到溢出画布（首页用）
+   *   tall    高页头
+   *   compact 紧凑页头（列表/归档）
+   *   bare    无页头（文章页，标题本身就是开场）
+   */
+  hero?: 'full' | 'tall' | 'compact' | 'bare';
   /** 页头是否显示该页的引言；默认跟随 hero（bare 的页面不显示） */
   showQuote?: boolean;
   /** 场景种子的附加串（文章页传 slug，让每篇的印记不同） */
@@ -129,11 +135,17 @@ const isActive = (href: string) =>
     {
       hero !== 'bare' && (
         <section class:list={['hero', `hero--${hero}`, 'hero--scene']}>
+          {/*
+            溢出层：几何体故意比容器大，向画布外「破开」——
+            这是刻意的版式主张，被裁掉的部分反而让画面显得更大。
+            scale 传给场景，几何体按它放大到超出可视范围。
+          */}
           <div
-            class="scene"
+            class="scene scene--bleed"
             data-scene={sceneKind}
             data-seed={sceneSeed}
-            data-scene-scroll={hero === 'tall' ? 'on' : 'on'}
+            data-scene-scroll="on"
+            data-scene-scale={hero === 'full' ? '1.55' : '1.12'}
             aria-hidden="true"
           />
           <div class="hero__veil" aria-hidden="true" />

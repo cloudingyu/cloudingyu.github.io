@@ -58,6 +58,14 @@ const FRIEND_NAMES = ['顺其自然2319', 'trs62'];
  * 已按用户要求撤掉 —— 页头改由 WebGL 几何场景承担。
  */
 const IMAGE_TOTAL = 46;
+/** 四个页面各自的引语原文（SITE_DATA.md 第 7 节，逐字比对） */
+const PAGE_QUOTES = {
+  home: '「好奇心仅是引领我们启程的火种。它点燃了我们对未知的渴望，却不足以照亮整个旅程。」',
+  about: '「节制与癫狂，秩序与诗意，能相提并论乎？」',
+  archive: '「未经反思的生活不值得过」',
+  notFound: '你来到了没有知识的荒原',
+};
+
 /** 不允许再出现在产物里的图片（背景照片 + 站外 GIF/徽章） */
 const RETIRED_IMAGES = [
   'images/site/home-bg.jpg',
@@ -385,7 +393,17 @@ await check('11. 首页 / 关于 / 归档 / 404 各有几何场景与引语，�
     assert(existsSync(distFile(file)), `缺 ${file}`);
     const html = await read(distFile(file));
     if (!html.includes(`data-scene="${scene}"`)) missing.push(`${key} 缺几何场景 ${scene}`);
-    if (!/class="[^"]*hero__quote/.test(html)) missing.push(`${key} 缺引语区块`);
+    /*
+      引语的落点随版式变：404 / 归档 / 关于仍在页头（hero__quote），
+      首页改版后放在开场区（opening__quote）。两者都算「引语区块」，
+      关键是那句原文必须出现在页面里。
+    */
+    if (!/class="[^"]*(hero__quote|opening__quote)/.test(html)) {
+      missing.push(`${key} 缺引语区块`);
+    }
+    // 该页的引语原文必须逐字出现（内容不能被版式改动冲掉）
+    const quote = PAGE_QUOTES[key];
+    if (!html.includes(quote)) missing.push(`${key} 的引语原文没有出现`);
     for (const retired of RETIRED_IMAGES) {
       if (html.includes(retired)) missing.push(`${key} 仍在引用旧背景图 ${retired}`);
     }

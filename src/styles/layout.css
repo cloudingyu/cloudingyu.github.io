@@ -196,6 +196,7 @@
   min-height: clamp(11rem, 26vh, 16rem);
   padding-block: var(--s6) var(--s5);
 }
+/* hero--full 的尺寸在 scene.css 里定义（整屏 + 溢出几何体）*/
 
 .hero__eyebrow {
   color: var(--ink-faint);

@@ -1,304 +1,573 @@
 ---
 /**
- * 首页：文章列表 + 三条几何带。
+ * 首页。
  *
- * 三条带各说一件事，都不是装饰：
- *   一、年份分布 —— 15 篇按年份的占比（首页只列最近 6 篇，这条给出全局）
- *   二、标签球 —— 17 个标签的立体网络（比一排胶囊更能看出标签之间的关系）
- *   三、时间螺旋 —— 从最新一篇往回走的「时间线」
+ * 版式主张（刻意不按「博客首页 = 一列文章标题」的常规来）：
  *
- * 页面里的 3D 由 src/scripts/geo/ 提供，容器只是带 data-scene 的 div。
+ *   一、开场整屏，标题压在几何体上。
+ *       树不是「页头右侧的一个插图」，而是从标题右侧长出去、溢出到屏幕外，
+ *       标题本身叠在它上面 —— 文字与图形互相穿插，不是文字给图形让位。
+ *
+ *   二、年份不是一条小进度条，而是一整段通铺的「地层」。
+ *       三年占满整个视口宽度，篇数用大字号压在色块上；往下滚，色块从各自
+ *       那一年底部升起来。它代替了常见的「按年折叠列表」。
+ *
+ *   三、标签球与标题并列，容器右侧不留边距 —— 球被裁掉一块，
+ *       版心在这里被故意打破。
+ *
+ *   四、索引排成两条纵栏，而不是一列流水账。
+ *
+ * 仍然保留：每页 6 篇的分页（/、/page/2、/page/3）、15 篇的完整入口。
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import PostList from '../components/PostList.astro';
-import { allPosts, paginate, groupByYear, tagCounts } from '../lib/posts';
-import { SITE, POSTS_PER_PAGE } from '../data/site';
+import PostCard from '../components/PostCard.astro';
+import Pagination from '../components/Pagination.astro';
+import { allPosts, paginate, groupByYear, tagCounts, formatDate, permalink } from '../lib/posts';
+import { SITE, POSTS_PER_PAGE, PAGES } from '../data/site';
 
 const posts = await allPosts();
 const [first] = paginate(posts, POSTS_PER_PAGE);
 const years = groupByYear(posts);
 const tags = tagCounts(posts);
 
-// 年份分布：宽度按篇数占比算
 const total = posts.length;
+const featured = tags.filter((t) => t.featured);
 
 /*
-  刻意写成「块体箭头 + 显式 return」，而不是箭头直接返回括号对象。
-  后者会让编译器在解析 .astro 的 frontmatter 时报
-  Expected } but found :，且错误位置指向别处，换成块体即正常。
+  地层：年份从早到晚排列（左旧右新），每一层宽度按篇数占比。
+  刻意写成「块体箭头 + 显式 return」—— 箭头直接返回括号对象会让
+  Astro 的编译器在 frontmatter 里解析失败。
 */
-const yearBars = years.map((y) => {
+const ordered = [...years].sort((a, b) => a.year - b.year);
+const strata = ordered.map((y) => {
   return {
     year: y.year,
     count: y.posts.length,
     pct: Math.round((y.posts.length / total) * 100),
+    // 该年最新一篇的日期，作为这一层的注脚
+    latest: y.posts[0] ? formatDate(y.posts[0].data.date, 'slash') : '',
   };
 });
 
-const featured = tags.filter((t) => t.featured);
+// 开场右侧的近路：最近几篇
+const recent = posts.slice(0, 5);
 ---
 
 <BaseLayout
   page="home"
-  hero="tall"
-  showQuote
+  hero="full"
+  showQuote={false}
   description={`${SITE.seoTitle} —— ${SITE.tagline}`}
 >
-  <PostList page={first} total={posts.length} />
+  <!-- ================= 开场：标题与树互相穿插 ================= -->
+  <section class="opening" data-scroll-target aria-label="站点开场">
+    <div class="opening__grid">
+      <div class="opening__lead">
+        <p class="opening__kicker mono-meta">
+          {total} 篇 · {tags.length} 个标签 · 2022–2026
+        </p>
+        <h2 class="opening__title">
+          算法题解、<br />面向对象设计、<br /><span class="opening__title-tail">工具与随笔</span>
+        </h2>
+        {/*
+          首页的引语（SITE_DATA.md 第 7 节）是内容，必须原样出现在页面上。
+          之前它挂在页头，现在页头交给几何体，就把这句放在开场里 ——
+          字号与位置都比原来更突出，而不是被压在一张背景图上。
+        */}
+        <blockquote class="opening__quote">{PAGES.home.quote}</blockquote>
 
-  <!-- ① 年份分布：一根可点开的条 -->
-  <section class="shell dist" data-scroll-target aria-labelledby="dist-head">
-    <div class="dist__head">
-      <h2 class="dist__title" id="dist-head">这些文章分布在哪里</h2>
-      <a class="dist__more mono-meta" href="/archive/" data-magnetic="0.2">看完整归档 →</a>
+        <p class="opening__note">
+          页头那棵树上的节点就是这里全部的文章。<span class="opening__mark">根节点</span>是最近的一篇，
+          越往下越早 —— 往下滚动，它会一层层长出来。
+        </p>
+        <div class="opening__actions">
+          <a class="btn btn--solid" href="#index" data-magnetic="0.16">从最新读起</a>
+          <a class="btn" href="/archive/" data-magnetic="0.16">看完整归档</a>
+        </div>
+      </div>
+
+      <aside class="opening__aside" aria-label="最近更新">
+        <p class="mono-meta opening__aside-head">最近更新</p>
+        <ol class="opening__recent">
+          {
+            recent.map((p) => (
+              <li>
+                <time class="mono-meta" datetime={p.data.date.toISOString()}>
+                  {formatDate(p.data.date, 'slash')}
+                </time>
+                <a href={permalink(p)}>{p.data.title}</a>
+              </li>
+            ))
+          }
+        </ol>
+      </aside>
     </div>
+  </section>
 
-    <div class="dist__bar" role="img" aria-label={yearBars.map((y) => `${y.year} 年 ${y.count} 篇`).join('，')}>
+  <!-- ================= 地层：三年通铺 ================= -->
+  <section class="strata" data-scroll-target aria-labelledby="strata-head">
+    <h2 class="strata__head" id="strata-head">
+      <span class="mono-meta">这些文章分布在哪里</span>
+    </h2>
+
+    <div class="strata__band">
       {
-        yearBars.map((y, i) => (
+        strata.map((s) => (
           <a
-            class="dist__seg"
+            class="strata__layer"
             href="/archive/"
-            style={`--w:${y.pct}%;--i:${i};--span:${years.length}`}
-            aria-label={`${y.year} 年，${y.count} 篇`}
+            style={`--w:${s.pct}%`}
+            aria-label={`${s.year} 年，${s.count} 篇`}
           >
-            <span class="dist__seg-fill" />
-            <span class="dist__seg-label mono-meta">{y.year}</span>
-            <span class="dist__seg-count">{y.count}</span>
+            <span class="strata__fill" />
+            <span class="strata__year">{s.year}</span>
+            <span class="strata__count">
+              {s.count}
+              <span class="mono-meta"> 篇</span>
+            </span>
+            <span class="strata__note mono-meta">最近一篇 {s.latest}</span>
           </a>
         ))
       }
     </div>
+
+    <p class="strata__foot mono-meta">
+      每一层占的宽度就是那一年的篇数占比；往下滚动，色块从底部升起来
+    </p>
   </section>
 
-  <!-- ② 标签球：几何体本体 -->
-  <section class="shell net" aria-labelledby="net-head">
-    <div class="net__grid">
-      <div class="net__text">
-        <h2 class="net__title" id="net-head">{tags.length} 个标签，一张网</h2>
-        <p class="net__note">
-          球面上的每个点是一个标签，连线表示它们出现在同一批文章里。
-          文章数 ≥ 2 的标签——{featured.map((t) => t.tag).join('、')}——是这张网里最先被牵引的部分。
-        </p>
-        <a class="net__link mono-meta" href="/archive/#tags-head" data-magnetic="0.2">按标签浏览 →</a>
-      </div>
-      <div class="net__stage">
-        <div class="scene scene--stage" data-scene="tags" data-seed="home-net" aria-hidden="true" />
-      </div>
+  <!-- ================= 标签球：与标题并列，球体破出容器 ================= -->
+  <section class="orb" data-scroll-target aria-labelledby="orb-head">
+    <div class="orb__text">
+      <h2 class="orb__title" id="orb-head">
+        <span class="orb__num">{tags.length}</span>
+        个标签，一张网
+      </h2>
+      <p class="orb__note">
+        球面上的每个点是一个标签，连线表示它们出现在同一批文章里。
+        文章数 ≥ 2 的标签——{featured.map((t) => t.tag).join('、')}——是这张网里最先被牵引的部分。
+      </p>
+      <a class="orb__link" href="/archive/#tags-head" data-magnetic="0.16">按标签浏览 →</a>
+    </div>
+    <div class="orb__stage">
+      <div
+        class="scene scene--bleed"
+        data-scene="tags"
+        data-seed="home-net"
+        data-scene-scale="1.5"
+        aria-hidden="true"
+      />
     </div>
   </section>
 
-  <!-- ③ 时间螺旋：从最新到最早 -->
-  <section class="shell spiral" aria-labelledby="spiral-head">
-    <h2 class="spiral__title" id="spiral-head">2022 → 2026</h2>
+  <!-- ================= 索引：两条纵栏 ================= -->
+  <section class="index" id="index" aria-labelledby="index-head">
+    <div class="index__head">
+      <h2 class="index__title" id="index-head">
+        最新 <span class="mono-meta">第 {first.current} / {first.total} 页</span>
+      </h2>
+      <p class="index__hint mono-meta">共 {total} 篇 · 每页 {POSTS_PER_PAGE} 篇</p>
+    </div>
+
+    <div class="index__grid">
+      {first.items.map((post, i) => <PostCard post={post} index={i} />)}
+    </div>
+
+    <Pagination page={first} />
+  </section>
+
+  <!-- ================= 时间螺旋：收尾 ================= -->
+  <section class="spiral" data-scroll-target aria-labelledby="spiral-head">
+    <h2 class="spiral__title" id="spiral-head">
+      <span class="mono-meta">2022 → 2026</span>
+    </h2>
     <div class="spiral__stage">
-      <div class="scene scene--stage" data-scene="helix" data-seed="home-spiral" aria-hidden="true" />
+      <div
+        class="scene scene--bleed"
+        data-scene="helix"
+        data-seed="home-spiral"
+        data-scene-scale="1.35"
+        aria-hidden="true"
+      />
     </div>
     <p class="spiral__note mono-meta">
-      从最近的一篇倒着往回走，一共 {total} 篇
+      从最近的一篇倒着往回走，一共 {total} 篇 —— 滚动时它跟着你转
     </p>
   </section>
 </BaseLayout>
 
 <style>
-  /* --- ① 年份分布 --- */
+  /* ======================= 开场 ======================= */
 
-  .dist {
-    margin-top: var(--s8);
-  }
-
-  .dist__head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--s3) var(--s5);
-    padding-bottom: var(--s3);
-    border-bottom: 1px solid var(--line-strong);
-    margin-bottom: var(--s6);
-  }
-
-  .dist__title {
-    font-size: 1.12rem;
-    font-weight: 620;
-  }
-
-  .dist__more {
-    color: var(--ink-faint);
-    transition: color 0.24s var(--ease);
-  }
-  .dist__more:hover { color: var(--accent); }
-
-  .dist__bar {
-    display: flex;
-    align-items: stretch;
-    gap: 2px;
-    height: 9.5rem;
-  }
-
-  /*
-    每一段是一根柱子：宽度按篇数占比，高度做错峰。
-    悬停时从左长出的填充线变亮 —— 数据条不比色，比的是「被指到的那一根」。
-  */
-  /*
-    每一段是一栏：等宽的年份标签在左上，篇数在正中，底部一条强调线。
-    之前把数字挤在左下角、年份贴在同一条基线上，两栏一窄就叠在一起。
-  */
-  .dist__seg {
+  .opening {
+    /* 负上边距：让标题区与整屏页头的几何体咬合，而不是被一条线切开 */
+    margin-top: calc(-1 * clamp(4rem, 12vh, 8rem));
+    padding-bottom: var(--s8);
     position: relative;
-    flex: 0 0 var(--w);
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    padding: 0.5rem 0.75rem 0.6rem;
-    border-inline: 1px solid var(--line);
-    overflow: hidden;
-    transition: border-color 0.3s var(--ease);
-  }
-  .dist__seg:first-child { border-left: 0; }
-  .dist__seg:last-child { border-right: 0; }
-  .dist__seg:hover { border-color: var(--line-strong); }
-
-  /*
-    填充高度由 --in 决定（motion.js 按「这一栏在视口里的推进度」写进来），
-    所以柱子是跟着滚动长出来的，不是进视口就一次性弹到位。
-    --in 的兜底是 0.04：未滚动时留一条极浅的底。
-  */
-  .dist__seg-fill {
-    position: absolute;
-    inset: 0;
-    background: color-mix(in srgb, var(--accent) 6%, transparent);
-    transform: scaleY(calc(0.04 + var(--in, 0) * 0.96));
-    transform-origin: bottom;
-    will-change: transform;
-  }
-  /* 底部一条会随悬停加粗的强调线 */
-  .dist__seg::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 2px;
-    background: var(--accent);
-    opacity: 0.55;
-    transform: scaleX(0.12);
-    transform-origin: left;
-    transition: transform 0.6s var(--ease), opacity 0.3s var(--ease);
-  }
-  .dist__seg::after { transform: scaleX(calc(0.12 + var(--in, 0) * 0.88)); }
-  .dist__seg:hover::after { opacity: 1; }
-
-  .dist__seg:hover .dist__seg-fill {
-    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    z-index: 2;
   }
 
-  .dist__seg-label {
-    position: relative;
-    color: var(--ink-faint);
-    justify-self: start;
-  }
-  .dist__seg-count {
-    position: relative;
-    grid-row: 2;
-    align-self: center;
-    justify-self: center;
-    font-family: var(--font-serif);
-    /* 数字大小跟着栏宽走：窄栏用小字号，避免撑破 */
-    font-size: clamp(1.3rem, 0.7rem + 2.6vw, 2.6rem);
-    font-weight: 620;
-    line-height: 1;
-    color: var(--ink);
-    font-variant-numeric: tabular-nums;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .dist__seg-fill { transition: none; transform: scaleY(1); }
-  }
-
-  /* --- ② 标签球 --- */
-
-  .net {
-    margin-top: var(--s9);
-  }
-
-  .net__grid {
+  .opening__grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--s6);
-    border-top: 1px solid var(--line-strong);
-    padding-top: var(--s7);
+    align-items: end;
+    padding-inline: var(--gutter);
+    max-width: var(--page-max);
+    margin-inline: auto;
   }
-  @media (min-width: 56rem) {
-    .net__grid {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  @media (min-width: 62rem) {
+    .opening__grid {
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 22rem);
       gap: var(--s8);
-      align-items: center;
     }
   }
 
-  .net__title {
-    font-size: clamp(1.35rem, 1.1rem + 1vw, 1.9rem);
-    margin-bottom: var(--s4);
+  .opening__kicker {
+    margin: 0 0 var(--s4);
+    color: var(--ink-faint);
   }
 
-  .net__note {
-    color: var(--ink-muted);
-    font-size: 0.92rem;
+  /* 大字号标题：全页最大的元素，制造一眼记住的尺度对比 */
+  .opening__title {
+    font-size: clamp(2.3rem, 1.2rem + 4.4vw, 4.8rem);
+    font-weight: 640;
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+    margin: 0 0 var(--s5);
+    max-width: 18ch;
+  }
+
+  /* 末行换成描边字（空心），与实心前两行拉开层次 */
+  .opening__title-tail {
+    -webkit-text-stroke: 1px var(--ink);
+    color: transparent;
+  }
+  @supports not (-webkit-text-stroke: 1px black) {
+    .opening__title-tail { color: var(--ink); }
+  }
+
+  /*
+    引语：用大一号的衬线字排在标题与说明之间，左侧一道短描线。
+    它是这一页的「题记」，不该被折成小字附注。
+  */
+  .opening__quote {
+    margin: var(--s5) 0 var(--s4);
+    padding-left: var(--s4);
+    border-left: 2px solid var(--accent);
+    font-family: var(--font-serif);
+    font-size: clamp(1rem, 0.92rem + 0.5vw, 1.35rem);
     line-height: 1.85;
+    color: var(--ink-soft);
     max-width: 44ch;
   }
 
-  .net__link {
+  .opening__note {
+    color: var(--ink-muted);
+    font-size: 0.95rem;
+    line-height: 1.9;
+    max-width: 46ch;
+  }
+
+  .opening__mark {
+    color: var(--mark);
+    border-bottom: 1px solid color-mix(in srgb, var(--mark) 40%, transparent);
+  }
+
+  .opening__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s3);
+    margin-top: var(--s5);
+  }
+
+  /* 按钮：本站不用圆角与阴影，所以按钮也只靠描线与位移反馈 */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.6rem 1.1rem;
+    border: 1px solid var(--line-strong);
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--panel);
+    transition: transform 0.28s var(--ease), border-color 0.28s var(--ease),
+      background-color 0.28s var(--ease), color 0.28s var(--ease);
+  }
+  .btn:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .btn--solid {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .btn--solid:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--paper);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn, .btn:hover { transition: none; transform: none; }
+  }
+
+  /* --- 最近更新 --- */
+
+  .opening__aside {
+    border-top: 1px solid var(--line-strong);
+    padding-top: var(--s4);
+  }
+
+  .opening__aside-head {
+    margin: 0 0 var(--s4);
+    color: var(--ink-faint);
+  }
+
+  .opening__recent {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .opening__recent li {
+    display: grid;
+    grid-template-columns: 5.6rem minmax(0, 1fr);
+    gap: var(--s3);
+    align-items: baseline;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--line);
+  }
+  .opening__recent li:first-child { border-top: 0; }
+
+  .opening__recent a {
+    font-family: var(--font-serif);
+    font-size: 0.98rem;
+    line-height: 1.45;
+    color: var(--ink);
+    transition: color 0.22s var(--ease);
+  }
+  .opening__recent a:hover { color: var(--accent); }
+
+  /* ======================= 地层 ======================= */
+
+  .strata {
+    margin-top: var(--s8);
+  }
+
+  .strata__head {
+    max-width: var(--page-max);
+    margin: 0 auto var(--s4);
+    padding-inline: var(--gutter);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+  }
+
+  /* 通铺：这一块不套 .shell，直接占满视口宽度 */
+  .strata__band {
+    display: flex;
+    width: 100%;
+    height: clamp(15rem, 34vw, 26rem);
+    border-block: 1px solid var(--line-strong);
+  }
+
+  .strata__layer {
+    position: relative;
+    flex: 0 0 var(--w);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1rem clamp(0.75rem, 2vw, 2rem) clamp(1rem, 2.5vw, 2.2rem);
+    overflow: hidden;
+    border-left: 1px solid var(--line);
+  }
+  .strata__layer:first-child { border-left: 0; }
+
+  /*
+    fill 的高度读 --in（motion.js 按这一层在视口里的推进度写入）。
+    这是一条连续的滚动反馈：滚到哪儿，色块升到哪儿。
+  */
+  .strata__fill {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    transform: scaleY(var(--in, 0));
+    transform-origin: bottom;
+    will-change: transform;
+    transition: background-color 0.3s var(--ease);
+  }
+  .strata__layer:hover .strata__fill {
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+  }
+
+  .strata__year {
+    position: relative;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+  }
+
+  .strata__count {
+    position: relative;
+    font-family: var(--font-serif);
+    /* 篇数就是这一层的尺标 —— 给到 clamp 上限，让它成为画面主角 */
+    font-size: clamp(2.6rem, 1rem + 5.6vw, 6rem);
+    font-weight: 620;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    margin-top: 0.15em;
+  }
+
+  .strata__note {
+    position: relative;
+    margin-top: 0.5rem;
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+  }
+  @media (max-width: 34rem) {
+    .strata__note { display: none; }
+  }
+
+  .strata__foot {
+    max-width: var(--page-max);
+    margin: var(--s4) auto 0;
+    padding-inline: var(--gutter);
+    color: var(--ink-faint);
+    font-size: 0.7rem;
+  }
+
+  /* ======================= 标签球 ======================= */
+
+  .orb {
+    max-width: var(--page-max);
+    margin: var(--s9) auto 0;
+    padding-inline: var(--gutter);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s5);
+    align-items: center;
+  }
+  @media (min-width: 56rem) {
+    .orb {
+      /* 文字栏窄、球栏宽 —— 故意不对称 */
+      grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+      gap: var(--s6);
+    }
+  }
+
+  .orb__title {
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.2rem);
+    line-height: 1.15;
+    margin: 0 0 var(--s4);
+  }
+
+  .orb__num {
+    font-family: var(--font-serif);
+    font-size: clamp(3.2rem, 1rem + 7vw, 6.5rem);
+    font-weight: 620;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.1em;
+  }
+
+  .orb__note {
+    color: var(--ink-muted);
+    font-size: 0.92rem;
+    line-height: 1.9;
+    max-width: 40ch;
+  }
+
+  .orb__link {
     display: inline-block;
     margin-top: var(--s4);
     color: var(--accent);
   }
 
-  .net__stage {
+  .orb__stage {
     position: relative;
-    height: clamp(15rem, 34vw, 22rem);
+    height: clamp(18rem, 40vw, 30rem);
     border: 1px solid var(--line);
     border-radius: 2px;
     background: var(--panel);
     overflow: hidden;
   }
+  @media (min-width: 56rem) {
+    /* 往右破出容器：右边不留边距，球被裁掉一块 */
+    .orb__stage { margin-right: calc(-1 * var(--gutter)); }
+  }
 
-  /* --- ③ 时间螺旋 --- */
+  /* ======================= 索引 ======================= */
+
+  .index {
+    max-width: var(--page-max);
+    margin: var(--s9) auto 0;
+    padding-inline: var(--gutter);
+  }
+
+  .index__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--s3) var(--s5);
+    padding-bottom: var(--s4);
+    border-bottom: 1px solid var(--line-strong);
+    margin-bottom: var(--s2);
+  }
+
+  .index__title {
+    font-size: clamp(1.25rem, 1rem + 0.8vw, 1.6rem);
+  }
+
+  .index__hint { color: var(--ink-faint); }
+
+  /*
+    两条纵栏：宽屏把 6 篇排成 2×3，而不是一列。
+    这是「破开单列目录」的关键一步 —— 一屏能交代更多，也不再是流水账。
+  */
+  .index__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0 var(--s7);
+  }
+  @media (min-width: 60rem) {
+    .index__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  /* ======================= 时间螺旋 ======================= */
 
   .spiral {
     margin-top: var(--s9);
   }
 
   .spiral__title {
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
+    max-width: var(--page-max);
+    margin: 0 auto var(--s4);
+    padding-inline: var(--gutter);
+    font-size: 1rem;
     font-weight: 500;
-    letter-spacing: 0.1em;
-    color: var(--ink-faint);
-    text-align: center;
-    margin-bottom: var(--s4);
   }
 
   .spiral__stage {
     position: relative;
-    height: clamp(16rem, 40vw, 26rem);
+    height: clamp(18rem, 46vw, 32rem);
     overflow: hidden;
-    mask-image: radial-gradient(78% 92% at 50% 50%, #000 55%, transparent 100%);
-    -webkit-mask-image: radial-gradient(78% 92% at 50% 50%, #000 55%, transparent 100%);
+    mask-image: radial-gradient(80% 92% at 50% 50%, #000 58%, transparent 100%);
+    -webkit-mask-image: radial-gradient(80% 92% at 50% 50%, #000 58%, transparent 100%);
   }
 
   .spiral__note {
-    text-align: center;
+    max-width: var(--page-max);
+    margin: var(--s3) auto 0;
+    padding-inline: var(--gutter);
     color: var(--ink-faint);
-    margin-top: var(--s3);
-  }
-
-  /* --- 通用：正文里的场景舞台 --- */
-
-  .scene--stage {
-    position: absolute;
-    inset: 0;
+    font-size: 0.7rem;
   }
 </style>
-
-

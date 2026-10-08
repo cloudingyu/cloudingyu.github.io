@@ -195,6 +195,13 @@ export function mountScene(host, factory, opts = {}) {
     reduced,
     lowPower,
     host,
+    /*
+      取景倍数：>1 表示几何体故意比画布大，向边缘外溢出。
+      这是版式决定 —— 被裁掉的部分让画面显得更大、也更有「破开」的姿态。
+      场景把它乘到自己的取景参数上，而不是简单缩放整个 group，
+      这样几何体的相对比例与取景逻辑仍然是各自的。
+    */
+    viewScale: opts.viewScale ?? 1,
     seed: opts.seed ?? 'cloudingyu',
     get scroll() {
       return input.scroll;

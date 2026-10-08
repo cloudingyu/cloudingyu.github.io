@@ -48,6 +48,8 @@ async function mountScenes() {
       const unmount = engine.mountScene(host, factory, {
         seed: host.dataset.seed || 'cloudingyu',
         scroll: host.dataset.sceneScroll !== 'off',
+        // 取景倍数：data-scene-scale="1.55" → 几何体放大到溢出画布
+        viewScale: Number(host.dataset.sceneScale) || 1,
       });
       host.classList.add('scene--on');
       liveScenes.push(unmount);

@@ -35,26 +35,52 @@ const follow = (cur, target, lambda, dt) => damp(cur, target, lambda, dt);
    指针牵引整棵树的倾角，点击给一次贯穿全树的自检脉冲。
    ============================================================ */
 
-export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, host, input }) {
+export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, host, input, viewScale = 1 }) {
   const root = new THREE.Group();
   scene.add(root);
 
   const rnd = seeded(seed);
-  const NODE_GEO = new THREE.OctahedronGeometry(0.46, 0);
+  /*
+    节点按深度分级：根节点最大、越深越小。尺寸本身在讲层级，
+    也让最下面那层不会因为数量多而糊成一片。
+  */
+  const NODE_SIZE = [1.5, 1.05, 0.78, 0.6];
+  const NODE_GEO = new THREE.OctahedronGeometry(0.42, 0);
 
-  /** 随机插入长出一棵不完全平衡的树 —— 完全平衡的树反而看不出结构。 */
+  /*
+    树形：真正的二叉分支，而不是「每层等距排列」。
+    横轴按 2^depth 的网格铺开（每层间距减半），所以最下一层能横跨
+    整个视口宽度 —— 整屏开场就是靠这一层把画面撑满的。
+    纵向步距 2.6、四层，跨度约 8 个世界单位，正好覆盖整屏可视区。
+  */
   const defs = [];
+  const LEVELS = 4;
+  // 取景分档：整屏宽屏 / 整屏窄屏 / 普通页头宽屏 / 普通页头窄屏
+  const wide = host.clientWidth >= 900;
+  const nk = wide ? 'wide' : 'narrow';
   const build = () => {
-    const insert = (depth, x, z, spread) => {
-      if (depth > 3) return;
-      defs.push({ depth, x, y: 7.4 - depth * 2.9, z, spread });
-      const next = spread * 0.6;
-      if (depth < 3) {
-        if (rnd() > 0.18) insert(depth + 1, x - next, z + (rnd() - 0.5) * next * 0.5, next);
-        if (rnd() > 0.18) insert(depth + 1, x + next, z + (rnd() - 0.5) * next * 0.5, next);
-      }
+    const insert = (depth, x, z, span) => {
+      defs.push({ depth, x, y: 4.9 - depth * 2.35, z, span });
+      if (depth + 1 >= LEVELS) return;
+      /*
+        子节点偏移 = span/4，下一层的 span = span/2 —— 两者是同一个比例，
+        所以第 k 层最外侧节点落在 ±span0/4 × (1 + 1/2 + 1/4 + …) ≈ ±span0/2。
+        早先写成「偏移 span/2、下一层 span/2」，宽度每层不收敛，
+        最外侧会跑到 ±span0，整棵树横跨屏幕两倍宽（实测 ±11.9 世界单位）。
+      */
+      const half = span / 4;
+      const next = span / 2;
+      // 每侧都有小概率缺枝：完全不缺就是一棵完美平衡树，反而不像数据结构
+      if (rnd() > 0.12) insert(depth + 1, x - half, z + (rnd() - 0.5) * half * 0.5, next);
+      if (rnd() > 0.12) insert(depth + 1, x + half, z + (rnd() - 0.5) * half * 0.5, next);
     };
-    insert(0, 0, 0, 5.0);
+    /*
+      span 是这一层「子节点的展开宽度」。递归衰减后最外侧节点落在 ±span/2：
+      span=13.6 → ±6.8 世界单位，而 1440×900 下的可视半宽约 7.7，
+      所以最外层留在画面内，只让枝尖轻轻碰到边缘。
+    */
+    // 窄屏的可视半宽只有 ±2.6（390×844，aspect 0.46），跨度必须单独收窄
+    insert(0, 0, 0, nk === 'narrow' ? 5.4 : 13.6);
   };
   build();
 
@@ -64,14 +90,18 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
   let rootNode = null;
 
   for (const d of defs) {
-    const kids = defs.filter((k) => k.depth === d.depth + 1 && Math.abs(k.x - d.x) < d.spread);
+    // 子节点 = 下一层里横向距离约等于 span/4 的那些（二叉分支的父子关系）
+    const offset = d.span / 4;
+    const kids = defs.filter(
+      (k) => k.depth === d.depth + 1 && Math.abs(Math.abs(k.x - d.x) - offset) < offset * 0.5,
+    );
     for (const k of kids) {
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.Float32BufferAttribute([d.x, d.y, d.z, k.x, k.y, k.z], 3));
       const mat = new THREE.LineBasicMaterial({ color: colors.line, transparent: true, opacity: 0, depthWrite: false });
       const line = new THREE.Line(geo, mat);
       root.add(line);
-      edges.push({ line, mat, appear: d.depth * 0.26 + 0.06, depth: d.depth });
+      edges.push({ line, mat, appear: 0.04 + d.depth * 0.17, depth: d.depth });
     }
   }
 
@@ -87,12 +117,13 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
     });
     const oct = new THREE.LineSegments(new THREE.EdgesGeometry(NODE_GEO), mat);
     oct.scale.setScalar(0.001);
+    const size = NODE_SIZE[d.depth] ?? 0.6;
     g.add(oct);
     root.add(g);
     nodeMats.push(mat);
     const node = {
-      g, oct, mat, depth: d.depth,
-      appear: d.depth * 0.26 + 0.16,
+      g, oct, mat, depth: d.depth, size,
+      appear: 0.06 + d.depth * 0.17,
       spin: (rnd() - 0.5) * 0.5,
       // 点击脉冲会沿着深度依次点亮节点：delay 让波峰从根传到叶
       wave: 0,
@@ -105,32 +136,59 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
 
   // 竖直轴线：树是「长出来」的，需要一根时间轴
   const axisGeo = new THREE.BufferGeometry();
-  axisGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 8.6, 0, 0, -2.6, 0], 3));
+  axisGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 6.0, 0, 0, -2.9, 0], 3));
   const axisMat = new THREE.LineBasicMaterial({ color: colors.faint, transparent: true, opacity: 0.24, depthWrite: false });
   root.add(new THREE.Line(axisGeo, axisMat));
 
   // 深度刻度：每层一道短横线，滚动时依次亮起，像树的「生长高度」
   const ticks = [];
-  for (let d = 0; d < 4; d++) {
-    const y = 7.4 - d * 2.9;
+  for (let d = 0; d < LEVELS; d++) {
+    const y = 4.9 - d * 2.35;
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute([-0.35, y, 0, 0.35, y, 0], 3));
     const m = new THREE.LineBasicMaterial({ color: colors.accent, transparent: true, opacity: 0, depthWrite: false });
     root.add(new THREE.Line(g, m));
-    ticks.push({ m, at: d * 0.26 });
+    ticks.push({ m, at: d * 0.2 });
   }
 
   const motes = dust(lowPower ? 140 : 320, 34, { color: colors.ink, size: 0.11, opacity: 0.4 });
   scene.add(motes);
 
   /*
-    窄屏的页头矮（约 300px），可视半高只有约 4.8 × (300/900) ≈ 1.6 世界单位，
-    所以树要缩到 0.42 并整体上移，否则叶节点会和标题、引语叠在一起。
-    宽屏则把树推到右侧，左侧留给文字。
+    取景：可视半高 = tan(fov/2) × 相机距离 = tan(19°) × 14 ≈ 4.82 世界单位。
+    树的纵向跨度约 8.0（y=5.2 → y=-2.6），横向最下一层铺到 ±8.6。
+
+    整屏开场（viewScale ≥ 1.4）：左右都不留余量，最外层枝叶溢出画布，
+      纵向略微上移，让根节点靠近屏幕上方、叶层压到标题区。
+    普通页头（viewScale ≈ 1.1）：树收在右侧，左侧留给文字。
+    窄屏：收回中间并等比缩小。
   */
-  const wide = host.clientWidth >= 900;
-  root.position.set(wide ? 6.4 : 0, wide ? -1.95 : 1.15, 0);
-  root.scale.setScalar(wide ? 0.68 : 0.42);
+  const full = viewScale >= 1.35;
+  if (full && !wide) {
+    /*
+      整屏 + 窄屏：可视半宽只有 ±2.6、半高 4.82 × (844/900 比例下仍约 4.8)。
+      所以树要缩到 0.5 上下并整体上移，把叶子留在标题上方。
+    */
+    root.position.set(0, 1.0, 0);
+    root.scale.setScalar(0.5 * viewScale);
+  } else if (full && wide) {
+    /*
+      纵向对齐：视口可视半高 4.82，树顶在 4.9、树底在 -2.15（局部坐标）。
+      缩放 1.05 后要把「树顶」压到 4.3 以内才会完整落在屏内，
+      所以基准位取 -0.85 —— 根节点贴着页头上沿，叶层压到标题区上方。
+    */
+    root.position.set(0, -0.85, 0);
+    root.scale.setScalar(0.68 * viewScale);
+  } else if (wide) {
+    root.position.set(7.2 * viewScale, -2.6 * viewScale, 0);
+    root.scale.setScalar(0.92 * viewScale);
+  } else {
+    root.position.set(0, 1.15 * viewScale, 0);
+    root.scale.setScalar(0.4 * viewScale);
+  }
+  // 记下基准位，滚动时在基准附近漂移（见 update）
+  const basePos = root.position.clone();
+  const baseScale = root.scale.x;
 
   /* 状态：全部由 input 推导 */
   let grow = 0;        // 实际生长度
@@ -160,6 +218,17 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
         e.line.scale.y = Math.max(0.001, p);
       }
 
+      /*
+        滚动漂移：整屏开场里，树随着滚动放大并轻微下沉 ——
+        于是它不是「页头那张图」，而是会跟着视线长进正文里的东西。
+      */
+      if (full) {
+        const drift = easeInOut(clamp01(input.scroll * 1.35));
+        // 漂移同时下沉与放大：树「朝观者压过来」一点，然后随页头一起离开
+        root.position.set(basePos.x, basePos.y + drift * 0.9, basePos.z);
+        root.scale.setScalar(baseScale * (1 + drift * 0.14));
+      }
+
       /* 指针牵引：整棵树朝光标方向倾一点，滚动时幅度更大 */
       const lean = 0.16 + act * 0.1;
       sway = follow(sway, input.px * lean, 3.2, dt);
@@ -177,7 +246,7 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
 
       for (const n of nodes) {
         const p = clamp01((g - n.appear) / 0.3);
-        n.oct.scale.setScalar(Math.max(0.001, easeOut(p)));
+        n.oct.scale.setScalar(Math.max(0.001, easeOut(p) * n.size));
         // 节点自转：静止几乎不转，活跃时明显
         n.oct.rotation.y += n.spin * dt * (0.18 + act * 1.6);
         n.oct.rotation.x = Math.sin(t * 0.4 + n.appear * 3) * (0.04 + act * 0.12);
@@ -188,7 +257,7 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
           const local = w.t - n.waveDelay;
           if (local > 0 && local < 0.5) pulse = Math.max(pulse, Math.sin((local / 0.5) * Math.PI) * w.power);
         }
-        n.oct.scale.multiplyScalar(1 + pulse * 0.55);
+        n.oct.scale.multiplyScalar(1 + pulse * 0.5);
         n.mat.opacity = easeOut(g) * (0.85 + pulse * 0.15);
         n.g.position.x = n.base + Math.sin(t * 0.7 + n.appear * 4) * 0.02 * (0.3 + act);
       }
@@ -222,7 +291,7 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
    停手之后保留一点惯性，像转盘；指针左右移动会加一点侧倾。
    ============================================================ */
 
-export function helixScene({ THREE, scene, colors, reduced, lowPower, seed, host, input }) {
+export function helixScene({ THREE, scene, colors, reduced, lowPower, seed, host, input, viewScale = 1 }) {
   const rnd = seeded(seed);
   const group = new THREE.Group();
   group.rotation.x = -0.09;
@@ -292,9 +361,9 @@ export function helixScene({ THREE, scene, colors, reduced, lowPower, seed, host
     自己留白 —— 留白比裁切好。
   */
   const wide = host.clientWidth >= 700;
-  const baseScale = wide ? 0.78 : 0.56;
+  const baseScale = (wide ? 0.86 : 0.6) * viewScale;
   // 纵向偏移：螺旋缩放后跨度约 4.0，重心落在视口中心偏下一点
-  group.position.set(wide ? 1.4 : 0, -1.45, 0);
+  group.position.set(wide ? 1.4 * viewScale : 0, -1.45, 0);
   group.scale.setScalar(baseScale);
 
   /* 滚动 → 角度：两个通道叠加。
@@ -371,7 +440,7 @@ export function helixScene({ THREE, scene, colors, reduced, lowPower, seed, host
    露出嵌套关系；往前滚，它们重新咬合。指针让整组缓慢偏转。
    ============================================================ */
 
-export function keplerScene({ THREE, scene, colors, reduced, lowPower, host, input }) {
+export function keplerScene({ THREE, scene, colors, reduced, lowPower, host, input, viewScale = 1 }) {
   const group = new THREE.Group();
   group.rotation.set(0.35, -0.5, 0.1);
   scene.add(group);
@@ -421,7 +490,8 @@ export function keplerScene({ THREE, scene, colors, reduced, lowPower, host, inp
   key.position.set(6, 8, 10);
   scene.add(key);
 
-  group.position.set(1.6, 0, 0);
+  group.position.set(1.9 * viewScale, 0, 0);
+  group.scale.setScalar(viewScale);
 
   let reveal = 0;
   let spread = 0;     // 拆开程度
@@ -478,7 +548,7 @@ export function keplerScene({ THREE, scene, colors, reduced, lowPower, host, inp
    指针左右移动改变行进方向，点击给一次镜头震动。
    ============================================================ */
 
-export function wastelandScene({ THREE, scene, colors, camera, reduced, lowPower, input }) {
+export function wastelandScene({ THREE, scene, colors, camera, reduced, lowPower, input, viewScale = 1 }) {
   const rnd = seeded('wasteland');
   const SIZE = 150;
   const SEG = 46;
@@ -553,7 +623,11 @@ export function wastelandScene({ THREE, scene, colors, camera, reduced, lowPower
       const shakeX = Math.sin(t * 42) * shake * 0.35;
       const shakeY = Math.cos(t * 37) * shake * 0.28;
 
-      camera.position.set(lateral + shakeX, 7.4 + Math.sin(t * 0.24) * 0.4 * (0.4 + act) + input.py * 1.6 + shakeY, 30);
+      camera.position.set(
+        lateral + shakeX,
+        7.4 + Math.sin(t * 0.24) * 0.4 * (0.4 + act) + input.py * 1.6 + shakeY,
+        30 / viewScale,
+      );
       // 看向前方偏一点，产生「斜着走」的感觉
       camera.lookAt(lateral * 0.6, 1.5 - input.py * 2.2, -6);
       camera.rotation.z = Math.sin(t * 0.31) * 0.012 * (0.4 + act) + input.px * 0.02;
@@ -591,7 +665,7 @@ export function wastelandScene({ THREE, scene, colors, camera, reduced, lowPower
    点击盖一次「戳」—— 快速下压再回弹。
    ============================================================ */
 
-export function sealScene({ THREE, scene, camera, colors, seed, input }) {
+export function sealScene({ THREE, scene, camera, colors, seed, input, viewScale = 1 }) {
   const group = new THREE.Group();
   scene.add(group);
 
@@ -637,7 +711,7 @@ export function sealScene({ THREE, scene, camera, colors, seed, input }) {
     ticks.push({ m, accent: i % 6 === 0, phase: i * 0.3 });
   }
 
-  camera.position.set(0, 0, 9.2);
+  camera.position.set(0, 0, 9.2 / viewScale);
 
   let spin = 0;
   let press = 0;   // 点击的「盖章」下压量
@@ -687,7 +761,7 @@ export function sealScene({ THREE, scene, camera, colors, seed, input }) {
    指针牵引整颗球（磁力手感），滚动让它自转，点击让节点集体亮一下。
    ============================================================ */
 
-export function tagSphereScene({ THREE, scene, colors, lowPower, host, input }) {
+export function tagSphereScene({ THREE, scene, colors, lowPower, host, input, viewScale = 1 }) {
   const group = new THREE.Group();
   scene.add(group);
 
@@ -701,7 +775,7 @@ export function tagSphereScene({ THREE, scene, colors, lowPower, host, input }) 
     pts.push(new THREE.Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r).multiplyScalar(7.2));
   }
 
-  const nodeGeo = new THREE.SphereGeometry(0.09, 10, 10);
+  const nodeGeo = new THREE.SphereGeometry(0.17, 10, 10);
   const nodes = pts.map((p) => {
     const m = new THREE.Mesh(nodeGeo, new THREE.MeshBasicMaterial({ color: colors.accent, transparent: true, opacity: 0.9 }));
     m.position.copy(p);
@@ -717,18 +791,37 @@ export function tagSphereScene({ THREE, scene, colors, lowPower, host, input }) 
     }
   }
   const lineGeo = new THREE.BufferGeometry().setFromPoints(segs);
-  const netMat = new THREE.LineBasicMaterial({ color: colors.line, transparent: true, opacity: 0.34, depthWrite: false });
+  const netMat = new THREE.LineBasicMaterial({ color: colors.line, transparent: true, opacity: 0.42, depthWrite: false });
   group.add(new THREE.LineSegments(lineGeo, netMat));
 
   // 极淡的球壳：经线 10 / 纬线 5 就够，再密就变成一张盖住节点的网
   const shellGeo = new THREE.SphereGeometry(7.2, 10, 5);
-  const shellMat = new THREE.LineBasicMaterial({ color: colors.faint, transparent: true, opacity: 0.09, depthWrite: false });
+  const shellMat = new THREE.LineBasicMaterial({ color: colors.faint, transparent: true, opacity: 0.13, depthWrite: false });
   group.add(new THREE.LineSegments(new THREE.WireframeGeometry(shellGeo), shellMat));
 
   const motes = dust(lowPower ? 90 : 200, 34, { color: colors.ink, size: 0.1, opacity: 0.32 });
   scene.add(motes);
 
-  group.position.set(host.clientWidth >= 700 ? 5.5 : 0, 0, 0);
+  /*
+    取景：球半径 7.2。可视半高 4.82、半宽 = 4.82 × aspect。
+    舞台的 aspect 通常只有 1.3–1.9，半宽 6.3–9.2 —— 球本身就比框宽，
+    所以必须把「右侧偏移」按 aspect 收，否则球心一偏就整团出框。
+    向右偏移量取 min(2.4, 半宽 - 3.2)，保证球心到右边缘至少留 3.2 个单位的球面。
+  */
+  /*
+    取景：球半径 7.2，直径 14.4。可视半高 4.82、半宽 4.82 × aspect；
+    舞台 aspect 常见 1.3–2.0 → 半宽 6.3–9.6。球比框大，所以：
+      · 缩放取「能塞进高度」的比例：4.82 × 2 / 14.4 ≈ 0.67，再乘一点余量；
+      · 缩放上限同时受宽度约束，避免宽舞台把球放得横向出框；
+      · 球心居中（不再向右偏移）—— 之前偏移 2.4 个单位，球右半边整块被裁掉。
+  */
+  const vw = host.clientWidth || 800;
+  const vh = host.clientHeight || 400;
+  const aspect = Math.max(vw / vh, 0.5);
+  const half = 4.82;
+  const fit = Math.min((half * 2) / 14.4, (half * aspect * 2) / 14.4) * 1.06;
+  group.scale.setScalar(Math.min(viewScale, fit));
+  group.position.set(0, 0, 0);
 
   let spin = 0;
   let pop = 0;
