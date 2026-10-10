@@ -33,22 +33,6 @@ const tags = tagCounts(posts);
 const total = posts.length;
 const featured = tags.filter((t) => t.featured);
 
-/*
-  地层：年份从早到晚排列（左旧右新），每一层宽度按篇数占比。
-  刻意写成「块体箭头 + 显式 return」—— 箭头直接返回括号对象会让
-  Astro 的编译器在 frontmatter 里解析失败。
-*/
-const ordered = [...years].sort((a, b) => a.year - b.year);
-const strata = ordered.map((y) => {
-  return {
-    year: y.year,
-    count: y.posts.length,
-    pct: Math.round((y.posts.length / total) * 100),
-    // 该年最新一篇的日期，作为这一层的注脚
-    latest: y.posts[0] ? formatDate(y.posts[0].data.date, 'slash') : '',
-  };
-});
-
 // 开场右侧的近路：最近几篇
 const recent = posts.slice(0, 5);
 ---
@@ -66,8 +50,14 @@ const recent = posts.slice(0, 5);
         <p class="opening__kicker mono-meta">
           {total} 篇 · {tags.length} 个标签 · 2022–2026
         </p>
+        {/*
+          开场第一眼要说清「这是谁的博客」。
+          站点名取自 SITE_DATA.md（唯一事实来源），副标语也是原文 ——
+          之前这里写的是一串文章方向，等于替作者把博客题材定死了。
+        */}
         <h2 class="opening__title">
-          算法题解、<br />面向对象设计、<br /><span class="opening__title-tail">工具与随笔</span>
+          <span class="opening__name">{SITE.title}</span>
+          <span class="opening__tagline">{SITE.tagline}</span>
         </h2>
         {/*
           首页的引语（SITE_DATA.md 第 7 节）是内容，必须原样出现在页面上。
@@ -76,9 +66,14 @@ const recent = posts.slice(0, 5);
         */}
         <blockquote class="opening__quote">{PAGES.home.quote}</blockquote>
 
+        {/*
+          这段不写「本站只写某几类内容」—— 作者之后会写别的方向。
+          只描述几何体在做什么，以及怎么用它，不承诺题材。
+        */}
         <p class="opening__note">
-          页头那棵树上的节点就是这里全部的文章。<span class="opening__mark">根节点</span>是最近的一篇，
-          越往下越早 —— 往下滚动，它会一层层长出来。
+          页头那棵树上的每个节点，都是这里的一篇文章。
+          <span class="opening__mark">根节点</span>是最新的一篇，越往下越早 ——
+          按日期长的结构，题材不限。往下滚动，它会一层层长出来。
         </p>
         <div class="opening__actions">
           <a class="btn btn--solid" href="#index" data-magnetic="0.16">从最新读起</a>
@@ -102,38 +97,6 @@ const recent = posts.slice(0, 5);
         </ol>
       </aside>
     </div>
-  </section>
-
-  <!-- ================= 地层：三年通铺 ================= -->
-  <section class="strata" data-scroll-target aria-labelledby="strata-head">
-    <h2 class="strata__head" id="strata-head">
-      <span class="mono-meta">这些文章分布在哪里</span>
-    </h2>
-
-    <div class="strata__band">
-      {
-        strata.map((s) => (
-          <a
-            class="strata__layer"
-            href="/archive/"
-            style={`--w:${s.pct}%`}
-            aria-label={`${s.year} 年，${s.count} 篇`}
-          >
-            <span class="strata__fill" />
-            <span class="strata__year">{s.year}</span>
-            <span class="strata__count">
-              {s.count}
-              <span class="mono-meta"> 篇</span>
-            </span>
-            <span class="strata__note mono-meta">最近一篇 {s.latest}</span>
-          </a>
-        ))
-      }
-    </div>
-
-    <p class="strata__foot mono-meta">
-      每一层占的宽度就是那一年的篇数占比；往下滚动，色块从底部升起来
-    </p>
   </section>
 
   <!-- ================= 标签球：与标题并列，球体破出容器 ================= -->
@@ -200,9 +163,12 @@ const recent = posts.slice(0, 5);
   /* ======================= 开场 ======================= */
 
   .opening {
-    /* 负上边距：让标题区与整屏页头的几何体咬合，而不是被一条线切开 */
-    margin-top: calc(-1 * clamp(4rem, 12vh, 8rem));
-    padding-bottom: var(--s8);
+    /*
+      负上边距：让标题区与整屏页头的几何体咬合，而不是被一条线切开。
+      数值收在 clamp(3rem, 8vh, 5.5rem) —— 再多就会把标题推到首屏之外。
+    */
+    margin-top: calc(-1 * clamp(2rem, 6vh, 4rem));
+    padding-bottom: var(--s6);
     position: relative;
     z-index: 2;
   }
@@ -224,27 +190,47 @@ const recent = posts.slice(0, 5);
   }
 
   .opening__kicker {
-    margin: 0 0 var(--s4);
+    margin: 0 0 var(--s3);
     color: var(--ink-faint);
   }
 
   /* 大字号标题：全页最大的元素，制造一眼记住的尺度对比 */
   .opening__title {
-    font-size: clamp(2.3rem, 1.2rem + 4.4vw, 4.8rem);
+    /* 字号上限收到 3.6rem：再大一行放不下，站名与副标语就会被拆到两行开外 */
+    font-size: clamp(1.9rem, 1.1rem + 3vw, 3.6rem);
     font-weight: 640;
-    line-height: 1.06;
-    letter-spacing: -0.03em;
-    margin: 0 0 var(--s5);
-    max-width: 18ch;
+    line-height: 1.1;
+    letter-spacing: -0.028em;
+    margin: 0 0 var(--s4);
+    max-width: 22ch;
   }
 
   /* 末行换成描边字（空心），与实心前两行拉开层次 */
-  .opening__title-tail {
+  /*
+    两行结构：
+      第一行 站点名 —— 实心、最大，一眼认出「这是谁的博客」；
+      第二行 副标语 —— 描边空心字，小一档，说明「这是个什么样的博客」。
+    实虚对比把两层意思分开，也让整块文字有明确的视觉重心。
+  */
+  .opening__name {
+    display: block;
+    font-size: clamp(2rem, 1.1rem + 3.2vw, 3.9rem);
+    font-weight: 650;
+    line-height: 1.02;
+  }
+
+  .opening__tagline {
+    display: block;
+    margin-top: 0.18em;
+    font-size: clamp(1.5rem, 0.9rem + 2.1vw, 2.75rem);
+    font-weight: 600;
+    line-height: 1.12;
+    /* 空心字：只留描线，与上一行的实心拉开层次 */
     -webkit-text-stroke: 1px var(--ink);
     color: transparent;
   }
   @supports not (-webkit-text-stroke: 1px black) {
-    .opening__title-tail { color: var(--ink); }
+    .opening__tagline { color: var(--ink); }
   }
 
   /*
@@ -252,7 +238,7 @@ const recent = posts.slice(0, 5);
     它是这一页的「题记」，不该被折成小字附注。
   */
   .opening__quote {
-    margin: var(--s5) 0 var(--s4);
+    margin: var(--s4) 0 var(--s3);
     padding-left: var(--s4);
     border-left: 2px solid var(--accent);
     font-family: var(--font-serif);
@@ -278,7 +264,7 @@ const recent = posts.slice(0, 5);
     display: flex;
     flex-wrap: wrap;
     gap: var(--s3);
-    margin-top: var(--s5);
+    margin-top: var(--s4);
   }
 
   /* 按钮：本站不用圆角与阴影，所以按钮也只靠描线与位移反馈 */
@@ -348,98 +334,6 @@ const recent = posts.slice(0, 5);
     transition: color 0.22s var(--ease);
   }
   .opening__recent a:hover { color: var(--accent); }
-
-  /* ======================= 地层 ======================= */
-
-  .strata {
-    margin-top: var(--s8);
-  }
-
-  .strata__head {
-    max-width: var(--page-max);
-    margin: 0 auto var(--s4);
-    padding-inline: var(--gutter);
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--ink-muted);
-  }
-
-  /* 通铺：这一块不套 .shell，直接占满视口宽度 */
-  .strata__band {
-    display: flex;
-    width: 100%;
-    height: clamp(15rem, 34vw, 26rem);
-    border-block: 1px solid var(--line-strong);
-  }
-
-  .strata__layer {
-    position: relative;
-    flex: 0 0 var(--w);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 1rem clamp(0.75rem, 2vw, 2rem) clamp(1rem, 2.5vw, 2.2rem);
-    overflow: hidden;
-    border-left: 1px solid var(--line);
-  }
-  .strata__layer:first-child { border-left: 0; }
-
-  /*
-    fill 的高度读 --in（motion.js 按这一层在视口里的推进度写入）。
-    这是一条连续的滚动反馈：滚到哪儿，色块升到哪儿。
-  */
-  .strata__fill {
-    position: absolute;
-    inset: 0;
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
-    border-top: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-    transform: scaleY(var(--in, 0));
-    transform-origin: bottom;
-    will-change: transform;
-    transition: background-color 0.3s var(--ease);
-  }
-  .strata__layer:hover .strata__fill {
-    background: color-mix(in srgb, var(--accent) 15%, transparent);
-  }
-
-  .strata__year {
-    position: relative;
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
-    letter-spacing: 0.1em;
-    color: var(--ink-muted);
-  }
-
-  .strata__count {
-    position: relative;
-    font-family: var(--font-serif);
-    /* 篇数就是这一层的尺标 —— 给到 clamp 上限，让它成为画面主角 */
-    font-size: clamp(2.6rem, 1rem + 5.6vw, 6rem);
-    font-weight: 620;
-    line-height: 0.95;
-    letter-spacing: -0.03em;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink);
-    margin-top: 0.15em;
-  }
-
-  .strata__note {
-    position: relative;
-    margin-top: 0.5rem;
-    font-size: 0.68rem;
-    color: var(--ink-faint);
-  }
-  @media (max-width: 34rem) {
-    .strata__note { display: none; }
-  }
-
-  .strata__foot {
-    max-width: var(--page-max);
-    margin: var(--s4) auto 0;
-    padding-inline: var(--gutter);
-    color: var(--ink-faint);
-    font-size: 0.7rem;
-  }
 
   /* ======================= 标签球 ======================= */
 

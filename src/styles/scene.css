@@ -253,8 +253,20 @@ html[data-theme-transition]::view-transition-new(root) {
   移动端地址栏收起时 vh 会把内容顶出屏幕。兜底再给 vh。
 */
 .hero--full {
-  min-height: 100vh;
-  min-height: 100svh;
+  /*
+    整屏页头要「减掉站牌高度」：站牌是 sticky 的，若页头仍按 100vh 算，
+    下方标题区就会被推到首屏之外 —— 打开页面第一眼只看到几何体，
+    看不到「这是谁的博客」。所以这里用 100svh - 站牌高度。
+  */
+  /*
+    取 72svh：整屏（100svh）会把标题区整个推到折叠线以下 ——
+    打开页面第一眼只看得到几何体，看不到站点名，这与「一眼看出这是谁的博客」
+    正好相反。72svh + 开场区刚好让「站名 · 副标语」落在首屏内，
+    几何体仍然占满上方三分之二。
+  */
+  --masthead-h: 4.25rem;
+  min-height: calc(72vh - var(--masthead-h));
+  min-height: calc(72svh - var(--masthead-h));
   display: flex;
   align-items: flex-end;
   /* 不留底边界线：整屏页头与下方内容要连成一片，硬线会把树切断 */
@@ -266,7 +278,7 @@ html[data-theme-transition]::view-transition-new(root) {
 
 .hero--full .hero__inner {
   min-height: auto;
-  padding-block: var(--s8) var(--s7);
+  padding-block: var(--s6) var(--s5);
 }
 
 /*
