@@ -100,8 +100,7 @@ const jsonLd =
     const key = 'cy-theme';
     let saved = null;
     try { saved = localStorage.getItem(key); } catch (e) { /* 隐私模式 */ }
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const theme = saved === 'light' || saved === 'dark' ? saved : (prefersDark ? 'dark' : 'light');
+    const theme = saved === 'light' || saved === 'dark' ? saved : 'light';
     document.documentElement.dataset.theme = theme;
   })();
 </script>

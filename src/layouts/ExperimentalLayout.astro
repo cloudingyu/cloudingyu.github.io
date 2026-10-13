@@ -22,13 +22,9 @@ const [emailName, emailDomain] = SITE.email.split('@');
 ---
 
 <!doctype html>
-<html lang={SITE.lang}>
+<html lang={SITE.lang} data-theme="light">
   <head>
     <Head {title} {description} {type} {published} {tags} {image} {noindex} {author} />
-    <script is:inline>
-      try { if (!localStorage.getItem('cy-theme')) document.documentElement.dataset.theme = 'dark'; }
-      catch { document.documentElement.dataset.theme = 'dark'; }
-    </script>
     <slot name="head" />
   </head>
   <body class="experimental">

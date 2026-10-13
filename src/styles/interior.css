@@ -41,6 +41,11 @@
 .experimental #main .post__body { width: calc(100% - var(--exp-space) * 2); max-width: 76rem; margin-inline: auto; padding-top: .75rem; }
 .post__opening-rule { height: 1px; background: var(--line-strong); margin-bottom: 2rem; }
 .experimental #main .post__prose { width: 100%; max-width: 50rem; margin-inline: auto; }
+.experimental #main .post__prose { --heading-major: #bfa9ff; --heading-middle: #aab9e6; --heading-minor: #a6c6c2; }
+[data-theme='light'] .experimental #main .post__prose { --heading-major: #5941bf; --heading-middle: #4f639c; --heading-minor: #3f736d; }
+.experimental #main .post__prose :is(h1, h2) { color: var(--heading-major); }
+.experimental #main .post__prose h3 { color: var(--heading-middle); }
+.experimental #main .post__prose :is(h4, h5, h6) { color: var(--heading-minor); }
 .experimental #main .post__grid:not(.post__grid--with-toc) .post__prose { margin-inline: 0; }
 .experimental #main .post__prose > :first-child { margin-top: 0; }
 .experimental #main .prose { font-family: var(--font-sans); font-size: 1.25rem; line-height: 1.9; }
