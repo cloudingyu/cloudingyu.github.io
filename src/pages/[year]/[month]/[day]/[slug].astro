@@ -10,6 +10,7 @@
  * KaTeX 与 Shiki 的结果都由 astro.config.mjs 里那条 unified 处理器产出。
  */
 import Arrow from '../../../../components/Arrow.astro';
+import ReadingNavigation from '../../../../components/ReadingNavigation.astro';
 import { render } from 'astro:content';
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import Tag from '../../../../components/Tag.astro';
@@ -55,6 +56,10 @@ const showToc = toc.length >= 2;
   image={cover || undefined}
   description={subtitle || `${title} —— ${AUTHOR.name} 的技术笔记`}
 >
+  <ReadingNavigation slot="reading-navigation" neighbors={[
+    ...(prev ? [{ href: permalink(prev), label: '上一篇', title: prev.data.title, rel: 'prev' }] : []),
+    ...(next ? [{ href: permalink(next), label: '下一篇', title: next.data.title, rel: 'next' }] : []),
+  ]} />
   <article class="post" data-article>
     <header class="shell post__head">
 
@@ -274,7 +279,9 @@ const showToc = toc.length >= 2;
   .post__toc {
     grid-row: 1;
     align-self: start;
+    scrollbar-width: none;
   }
+  .post__toc::-webkit-scrollbar { display: none; }
   @media (min-width: 68rem) {
     .post__grid--with-toc .post__toc {
       grid-column: 2;

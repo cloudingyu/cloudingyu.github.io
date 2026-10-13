@@ -6,20 +6,13 @@
   "scripts": {
     "sync": "node scripts/sync-content.mjs",
     "notes:sync": "node scripts/sync-notebook.mjs",
-    "notes:inventory": "node course-notes/workflow.mjs inventory",
-    "notes:status": "node course-notes/workflow.mjs status",
-    "notes:prepare": "node course-notes/workflow.mjs prepare",
-    "notes:validate": "node course-notes/workflow.mjs validate",
-    "notes:publish": "node course-notes/workflow.mjs publish",
-    "notes:check": "node course-notes/workflow.mjs check",
-    "notes:test": "node --test course-notes/workflow.test.mjs",
     "vendor": "node scripts/vendor-katex.mjs",
     "prepare-content": "npm run sync && npm run vendor",
     "dev": "npm run prepare-content && astro dev",
     "start": "npm run prepare-content && astro dev",
-    "build": "npm run prepare-content && npm run notes:check && astro build",
+    "build": "npm run prepare-content && astro build",
     "preview": "astro preview",
-    "check": "npm run prepare-content && npm run notes:check && astro check",
+    "check": "npm run prepare-content && astro check",
     "verify": "node scripts/verify.mjs"
   },
   "dependencies": {

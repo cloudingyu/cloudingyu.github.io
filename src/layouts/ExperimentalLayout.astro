@@ -1,5 +1,6 @@
 ---
 import Arrow from '../components/Arrow.astro';
+import NavIcon from '../components/NavIcon.astro';
 import Head from '../components/Head.astro';
 import { SITE, AUTHOR, SOCIALS, FRIENDS } from '../data/site';
 import '../styles/global.css';
@@ -32,9 +33,15 @@ const [emailName, emailDomain] = SITE.email.split('@');
     {type === 'article' && <div class="reading-progress" aria-hidden="true"><i id="progress-bar" /></div>}
     <header class="exp-nav">
       <a class="exp-brand" href="/" aria-label="小鱼儿clouding的博客 首页"><span class="exp-brand__name">小鱼儿<span class="exp-brand__accent">clouding</span>的博客</span></a>
-      <nav aria-label="主导航"><a href={articleList} aria-current={current.startsWith('/page/') ? 'page' : undefined}>文章</a><a href="/about/" aria-current={active('/about/') ? 'page' : undefined}>关于</a><a href="/archive/" aria-current={active('/archive/') || active('/tags/') ? 'page' : undefined}>归档</a><a href="/search/" aria-label="搜索文章" aria-current={active('/search/') ? 'page' : undefined}>搜索 <Arrow /></a></nav>
+      <nav aria-label="主导航">
+        <a href={articleList} aria-current={current.startsWith('/page/') ? 'page' : undefined}><NavIcon name="articles" />文章</a>
+        <a href="/about/" aria-current={active('/about/') ? 'page' : undefined}><NavIcon name="about" />关于</a>
+        <a href="/archive/" aria-current={active('/archive/') || active('/tags/') ? 'page' : undefined}><NavIcon name="archive" />归档</a>
+        <a href="/search/" aria-label="搜索文章" aria-current={active('/search/') ? 'page' : undefined}><NavIcon name="search" />搜索</a>
+      </nav>
       <button class="exp-theme" type="button" data-exp-theme aria-label="切换明暗主题" disabled><span class="exp-theme__icon" aria-hidden="true" /></button>
     </header>
+    {type === 'article' && <slot name="reading-navigation" />}
     <main id="main"><slot /></main>
     <footer class="exp-footer">
       <div class="exp-footer__lead" data-exp-reveal>
@@ -87,7 +94,7 @@ const [emailName, emailDomain] = SITE.email.split('@');
   .exp-brand__name { color: var(--ink); font-size: clamp(1.25rem, 1.8vw, 1.7rem); line-height: 1.5; font-weight: 700; white-space: nowrap; }
   .exp-brand__accent { color: var(--brand-accent); font-weight: inherit; margin-inline: .15em; }
   .exp-nav nav { display: flex; gap: clamp(1rem, 3vw, 3rem); font-size: 1.05rem; font-weight: 500; margin-left: auto; }
-  .exp-nav nav a { position: relative; }
+  .exp-nav nav a { position: relative; display: inline-flex; align-items: center; gap: .4rem; }
   .exp-nav nav a::after { content: ''; position: absolute; left: 0; right: 0; bottom: -0.25rem; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: right; transition: transform 0.35s var(--exp-ease); }
   .exp-nav nav a:hover::after { transform: scaleX(1); transform-origin: left; }
   .exp-nav nav a[aria-current='page'] { color: var(--accent); }

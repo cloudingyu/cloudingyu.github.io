@@ -57,19 +57,15 @@ GitHub Actions 按锁文件安装依赖，完成构建、源码检查和内容�
 
 目前仅导入 2026 年秋季学期的概统、计算理论基础、操作系统、计算机视觉四门课。`notebook/2026-autumn/` 保存独立 Markdown 快照，构建时生成课程列表与每篇笔记的静态阅读页。笔记列表与阅读页以日期为标题，开头的日期和内容分行显示。阅读样式参考 Obsidian 导出的 PDF：霞鹜文楷与 Times New Roman 组合，加粗正文使用黑体字体，Maple Mono 代码字体，1.5 倍行距，以及紧凑的段落、列表、引用和多级标题。沿用网站的明暗颜色，阅读区域加宽，不显示笔记目录。标题中的公式保留 KaTeX 排版。博客与课程笔记的正文共用 `src/styles/reading.css`，统一字体、字号、行距与段落格式；访问博客不会下载课程笔记内容。字体仅在正文实际使用时加载。
 
-课程还原笔记经过独立的网站知识整理流程后发布，再构建。完整流程见 [网站课程笔记整理项目](course-notes/README.md)，包含 6-luna 写作规范、来源盘点、增量处理、独立复核、发布及当前仓库提交。
+博客和课程笔记正文支持悬浮球阅读转盘：原顶栏滚出屏幕后，距离屏幕右边 12 像素的扁平圆球旋转浮现；点击球体，四个符号按钮随转盘旋转展开，不改变阅读位置。按钮提供主页、回到顶部、上一篇和下一篇；缺少相邻文章或笔记时，对应按钮置灰且不可点击。笔记的主页按钮返回学期笔记界面。再次点击球体、点击正文或按 Esc 收起转盘；原顶栏重新出现时球体收起。鼠标移动和悬停不会展开菜单。手机沿用右上角入口并缩小转盘，入口位置兼容屏幕安全区域。组件与交互分别在 `src/components/ReadingNavigation.astro`、`src/scripts/reading-navigation.js`，支持键盘操作、明暗主题和减少动态效果。
+
+更新本地笔记后，显式同步，再构建：
 
 ```sh
-npm run notes:inventory
-npm run notes:prepare -- --note probability/2026-09-30
-# 完成草稿整理与独立复核后：
-npm run notes:validate -- --note probability/2026-09-30
-npm run notes:publish -- --note probability/2026-09-30
+npm run notes:sync -- "你的笔记 Markdown 根目录"
 npm run build
 ```
 
-来源路径配置在被 Git 忽略的 `course-notes/local.config.json`，示例见同目录 `config.example.json`。原笔记根目录应有 `Math/概率论与数理统计`、`Math/计算理论基础`、`CS/操作系统` 和 `CS/计算机视觉`，文件名以 `2026.月.日.md` 结尾。原笔记和 OnlineCourses 资料只读，每篇审核通过后更新对应网站快照、公开核查记录和来源清单，提交到本仓库。来源删除只标记缺失，不自动删除页面。`notes:sync -- --note <课程ID/YYYY-MM-DD>` 是发布别名，旧的原目录整批同步调用已停止使用。
-
-当前 20 篇旧快照均登记为待整理；项目搭建不代表内容已完成转换。check/build 校验已发布整理成果，CI 直接读取仓库文件，不访问本地原件。入口路径和课程配置在 `src/data/notebook-config.mjs` 中维护，路径修改时须同时调整页面路由文件夹名。
+根目录下应有 `Math/概率论与数理统计`、`Math/计算理论基础`、`CS/操作系统` 和 `CS/计算机视觉`。文件名以 `2026.月.日.md` 结尾；只同步这四个文件夹顶层的 Markdown 文件。同步不修改原笔记，同一日期的快照会更新，原目录中删除的笔记也会从该课程快照移除。提交快照后，GitHub Pages 的构建直接使用它们，不需要读取本地源目录。入口路径和课程配置在 `src/data/notebook-config.mjs` 中维护，路径修改时须同时调整页面路由文件夹名。
 
 `public/fonts/notebook/` 保存文楷与 Maple Mono 的 WOFF2 子集及 OFL 许可；浏览器优先使用已安装的对应字体。子集包含当前博客与笔记使用的字形，未来新增生僻字会使用系统字体补足。需要扩充字形时，在本地安装 `fonttools[woff]`，执行 `python scripts/subset-notebook-fonts.py --font-dir "字体目录"` 后提交更新后的字体文件。字体目录应包含 `LXGWWenKaiMono-Regular.ttf`、`MapleMono-Regular.ttf` 和 `MapleMono-Bold.ttf`，普通构建无需 Python 或原始字体。

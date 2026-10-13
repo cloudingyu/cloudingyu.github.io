@@ -1,4 +1,5 @@
 import { bindReading } from './reading-interactions.js';
+import { bindReadingNavigation } from './reading-navigation.js';
 
 let cleanup = () => {};
 
@@ -15,6 +16,7 @@ function bindExperiment() {
   const cursorText = cursor.querySelector('[data-cursor-text]');
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const readingCleanup = bindReading(body);
+  const navigationCleanup = bindReadingNavigation(body);
   const fine = matchMedia('(hover: hover) and (pointer: fine)');
   const input = { x: 0, y: 0, scroll: 0 };
   const target = { x: 0, y: 0, scroll: 0 };
@@ -91,7 +93,10 @@ function bindExperiment() {
       target.x = clamp((event.clientX - heroRect.left) / heroRect.width * 2 - 1, -1, 1);
       target.y = clamp((event.clientY + scrollY - heroRect.top) / heroRect.height * 2 - 1, -1, 1);
     }
-    const link = event.target.closest('a, button:not(:disabled)');
+    // Let the native pointer leave the globe and compact dial unobscured.
+    const navigationPointer = event.target.closest('[data-reading-navigation]');
+    cursor.style.opacity = navigationPointer ? '0' : '1';
+    const link = navigationPointer ? null : event.target.closest('a, button:not(:disabled)');
     if (link !== hoveredLink) {
       hoveredLink = link;
       cursor.classList.toggle('is-link', !!link);
@@ -259,7 +264,7 @@ function bindExperiment() {
     clearTimeout(scrollingTimer);
     cancelAnimationFrame(frame);
     animations.forEach((animation) => animation.cancel());
-    artObserver.disconnect(); revealObserver.disconnect(); motionObserver.disconnect(); heroResize.disconnect(); art?.dispose(); readingCleanup();
+    artObserver.disconnect(); revealObserver.disconnect(); motionObserver.disconnect(); heroResize.disconnect(); art?.dispose(); readingCleanup(); navigationCleanup();
     themeButton.removeEventListener('click', onTheme);
     morphButton?.removeEventListener('click', onMorph);
     window.removeEventListener('pointermove', onPointer);

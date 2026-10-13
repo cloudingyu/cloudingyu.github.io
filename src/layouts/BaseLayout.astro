@@ -24,6 +24,7 @@ const { title, page = 'home', hero = 'compact', showQuote = hero !== 'bare', ...
 
 <ExperimentalLayout {title} {...meta}>
   <slot name="head" slot="head" />
+  <slot name="reading-navigation" slot="reading-navigation" />
   {hero !== 'bare' && (
     <section class:list={['page-opening', { 'page-opening--404': page === 'notFound', 'page-opening--about': page === 'about', 'page-opening--collection': page === 'home' }]} aria-labelledby="page-title">
       <div class="page-opening__type">

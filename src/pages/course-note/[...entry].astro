@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Arrow from '../../components/Arrow.astro';
+import ReadingNavigation from '../../components/ReadingNavigation.astro';
 import { NOTEBOOK_PATH, NOTEBOOK_SEMESTER } from '../../data/notebook-config.mjs';
 import { loadNotebook, renderSemesterNote, courseUrl, noteUrl, noteDate } from '../../lib/notebook';
 import type { CourseNotes, SemesterNote } from '../../lib/notebook';
@@ -31,6 +32,10 @@ const title = note && course ? `${course.name} · ${noteDate(note.date)}` : cour
 ---
 
 <BaseLayout hero="bare" title={title} type={note ? 'article' : 'website'} published={note ? new Date(note.date) : undefined} description="课堂笔记与学习记录。" noindex>
+  {note && course && <ReadingNavigation slot="reading-navigation" label={`${course.name} · 阅读导航`} homeHref={NOTEBOOK_PATH + '/'} homeLabel="学期笔记主页" neighbors={[
+    ...(newer ? [{ href: noteUrl(newer), label: '较新笔记', title: noteDate(newer.date), rel: 'prev' }] : []),
+    ...(older ? [{ href: noteUrl(older), label: '较早笔记', title: noteDate(older.date), rel: 'next' }] : []),
+  ]} />}
   <Fragment slot="head">
     <meta name="referrer" content="same-origin" />
   </Fragment>
