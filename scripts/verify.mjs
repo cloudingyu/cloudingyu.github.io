@@ -393,7 +393,9 @@ await check('11. 各页面文案符合要求，背景照片已撤底', async () 
     const html = await read(distFile(file));
     const quoteBlock = key === 'home'
       ? html.match(/<p\b[^>]*class="[^"]*home-manifesto[^"]*"[^>]*>([\s\S]*?)<\/p>/i)
-      : html.match(/<blockquote\b[^>]*class="[^"]*page-opening__quote[^"]*"[^>]*>([\s\S]*?)<\/blockquote>/i);
+      : key === 'notFound'
+        ? html.match(/<p\b[^>]*class="[^"]*notfound__message[^"]*"[^>]*>([\s\S]*?)<\/p>/i)
+        : html.match(/<blockquote\b[^>]*class="[^"]*page-opening__quote[^"]*"[^>]*>([\s\S]*?)<\/blockquote>/i);
     if (!quoteBlock) {
       missing.push(`${key} 缺引语区块`);
     }
