@@ -58,9 +58,9 @@ const FRIEND_NAMES = ['顺其自然2319', 'trs62'];
  * 已按用户要求撤掉 —— 页头改由 WebGL 几何场景承担。
  */
 const IMAGE_TOTAL = 46;
-/** 四个页面各自的引语原文（SITE_DATA.md 第 7 节，核对正文，允许引号版式变化） */
+/** 页面文案：主页保留 BUILD. BREAK. LEARN.，其余页面沿用引语。 */
 const PAGE_QUOTES = {
-  home: '「好奇心仅是引领我们启程的火种。它点燃了我们对未知的渴望，却不足以照亮整个旅程。」',
+  home: 'BUILD. BREAK. LEARN.',
   about: '「节制与癫狂，秩序与诗意，能相提并论乎？」',
   archive: '「未经反思的生活不值得过」',
   notFound: '你来到了没有知识的荒原',
@@ -380,7 +380,7 @@ await check('10. 小写署名 cloudingyu 与一句话文章都按原样保留', 
 });
 
 /* 11. 页面引语与背景素材 */
-await check('11. 首页 / 关于 / 归档 / 404 保留原始引语，背景照片已撤底', async () => {
+await check('11. 各页面文案符合要求，背景照片已撤底', async () => {
   const pages = {
     home: ['index.html', null],
     about: ['about/index.html', null],
@@ -391,12 +391,9 @@ await check('11. 首页 / 关于 / 归档 / 404 保留原始引语，背景照�
   for (const [key, [file]] of Object.entries(pages)) {
     assert(existsSync(distFile(file)), `缺 ${file}`);
     const html = await read(distFile(file));
-    /*
-      引语的落点随版式变：404 / 归档 / 关于仍在页头（page-opening__quote），
-      首页改版后放在文章列表下方（opening__quote）。两者都算「引语区块」，
-      关键是那句原文必须出现在页面里。
-    */
-    const quoteBlock = html.match(/<blockquote\b[^>]*class="[^"]*(?:page-opening__quote|opening__quote)[^"]*"[^>]*>([\s\S]*?)<\/blockquote>/i);
+    const quoteBlock = key === 'home'
+      ? html.match(/<p\b[^>]*class="[^"]*home-manifesto[^"]*"[^>]*>([\s\S]*?)<\/p>/i)
+      : html.match(/<blockquote\b[^>]*class="[^"]*page-opening__quote[^"]*"[^>]*>([\s\S]*?)<\/blockquote>/i);
     if (!quoteBlock) {
       missing.push(`${key} 缺引语区块`);
     }
@@ -423,7 +420,7 @@ await check('11. 首页 / 关于 / 归档 / 404 保留原始引语，背景照�
     }
   }
   assert(offsite.length === 0, `仍有站外图片：\n     ${offsite.slice(0, 5).join('\n     ')}`);
-  return '4 处原始引语，无背景照片、无站外图片';
+  return '主页简短文案、其余页面引语，无背景照片、无站外图片';
 });
 
 /* 12. 社交与友链 */

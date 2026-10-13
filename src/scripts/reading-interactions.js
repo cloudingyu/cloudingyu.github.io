@@ -83,30 +83,47 @@ export function bindReading(body) {
     link, heading: document.getElementById(decodeURIComponent(link.hash.slice(1))),
   })).filter(({ heading }) => heading);
   let frame = 0;
+  let layoutDirty = true;
+  let articleTop = 0;
+  let articleHeight = 0;
+  let activeHeading = null;
+  let displayedPercent = -1;
 
   const update = () => {
     frame = 0;
-    const rect = article.getBoundingClientRect();
-    const range = Math.max(rect.height - innerHeight * .65, 1);
-    const progress = Math.min(1, Math.max(0, (innerHeight * .2 - rect.top) / range));
+    // Read positions together only after layout changes, before changing the DOM.
+    if (layoutDirty) {
+      const rect = article.getBoundingClientRect();
+      articleTop = rect.top + scrollY;
+      articleHeight = rect.height;
+      for (const entry of headings) entry.top = entry.heading.getBoundingClientRect().top + scrollY;
+      layoutDirty = false;
+    }
+    const range = Math.max(articleHeight - innerHeight * .65, 1);
+    const progress = Math.min(1, Math.max(0, (scrollY + innerHeight * .2 - articleTop) / range));
     if (bar) bar.style.transform = `scaleX(${progress})`;
-    if (percent) percent.textContent = `${Math.round(progress * 100)}%`;
+    const rounded = Math.round(progress * 100);
+    if (percent && rounded !== displayedPercent) { percent.textContent = `${rounded}%`; displayedPercent = rounded; }
     let active = headings[0];
     for (const entry of headings) {
-      if (entry.heading.getBoundingClientRect().top <= innerHeight * .28) active = entry;
+      if (entry.top <= scrollY + innerHeight * .28) active = entry;
       else break;
     }
-    headings.forEach((entry) => {
-      const current = active === entry;
-      entry.link.classList.toggle('is-current', current);
-      if (current) entry.link.setAttribute('aria-current', 'location');
-      else entry.link.removeAttribute('aria-current');
-    });
+    if (active !== activeHeading) {
+      activeHeading?.link.classList.remove('is-current');
+      activeHeading?.link.removeAttribute('aria-current');
+      active?.link.classList.add('is-current');
+      active?.link.setAttribute('aria-current', 'location');
+      activeHeading = active;
+    }
   };
   const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
+  const invalidate = () => { layoutDirty = true; schedule(); };
   window.addEventListener('scroll', schedule, { passive: true });
-  window.addEventListener('resize', schedule, { passive: true });
-  const resize = new ResizeObserver(schedule);
+  window.addEventListener('resize', invalidate, { passive: true });
+  body.addEventListener('load', invalidate, true);
+  directory?.addEventListener('toggle', invalidate);
+  const resize = new ResizeObserver(invalidate);
   resize.observe(article);
   update();
   return () => {
@@ -115,6 +132,8 @@ export function bindReading(body) {
     resize.disconnect();
     compact.removeEventListener('change', adaptDirectory);
     window.removeEventListener('scroll', schedule);
-    window.removeEventListener('resize', schedule);
+    window.removeEventListener('resize', invalidate);
+    body.removeEventListener('load', invalidate, true);
+    directory?.removeEventListener('toggle', invalidate);
   };
 }

@@ -11,6 +11,8 @@ function bindExperiment() {
   const cursor = body.querySelector('.exp-cursor');
   const themeButton = body.querySelector('[data-exp-theme]');
   const morphButton = body.querySelector('[data-morph]');
+  const signalBand = body.querySelector('.signal-band__offset');
+  const cursorText = cursor.querySelector('[data-cursor-text]');
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const readingCleanup = bindReading(body);
   const fine = matchMedia('(hover: hover) and (pointer: fine)');
@@ -29,6 +31,12 @@ function bindExperiment() {
   let tx = cx, ty = cy;
   let cursorVisible = false;
   let magnet = null;
+  let magnetRect = null;
+  let hoveredLink = null;
+  let pointerEvent = null;
+  let scrollingTimer = 0;
+  let heroRect = null;
+  let paintedScroll = -1;
   const animations = new Set();
   const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
   const remember = (animation) => {
@@ -37,7 +45,11 @@ function bindExperiment() {
   };
 
   const paint = () => {
-    hero?.style.setProperty('--hero-progress', String(motion.matches ? 0 : input.scroll));
+    const progress = motion.matches ? 0 : input.scroll;
+    if (hero && progress !== paintedScroll) {
+      hero.style.setProperty('--hero-progress', String(progress));
+      paintedScroll = progress;
+    }
     if (fine.matches && !motion.matches && cursorVisible) {
       cursor.style.transform = `translate3d(${cx}px, ${cy}px, 0) translate(-50%, -50%)`;
     }
@@ -45,6 +57,7 @@ function bindExperiment() {
   const tick = (time) => {
     frame = 0;
     if (disposed || document.hidden || motion.matches) return;
+    if (pointerEvent) { processPointer(pointerEvent); pointerEvent = null; }
     const dt = previous ? Math.min((time - previous) / 1000, .05) : 1 / 60;
     previous = time;
     const amount = 1 - Math.exp(-9 * dt);
@@ -67,45 +80,68 @@ function bindExperiment() {
     magnet?.style.setProperty('--mag-x', '0px');
     magnet?.style.setProperty('--mag-y', '0px');
     magnet = null;
+    magnetRect = null;
+  };
+  const processPointer = (event) => {
+    tx = event.clientX; ty = event.clientY;
+    if (!cursorVisible) { cx = tx; cy = ty; cursorVisible = true; cursor.style.opacity = '1'; }
+    if (heroRect && !hero.hasAttribute('data-offscreen')) {
+      target.x = clamp((event.clientX - heroRect.left) / heroRect.width * 2 - 1, -1, 1);
+      target.y = clamp((event.clientY + scrollY - heroRect.top) / heroRect.height * 2 - 1, -1, 1);
+    }
+    const link = event.target.closest('a, button:not(:disabled)');
+    if (link !== hoveredLink) {
+      hoveredLink = link;
+      cursor.classList.toggle('is-link', !!link);
+      const label = link?.dataset.cursorLabel || '';
+      cursor.classList.toggle('has-label', !!label);
+      cursorText.textContent = label;
+    }
+
+    const nextMagnet = event.target.closest('[data-magnet]');
+    if (nextMagnet !== magnet) {
+      const rect = nextMagnet?.getBoundingClientRect();
+      resetMagnet(); magnet = nextMagnet;
+      if (rect) magnetRect = { left: rect.left, top: rect.top + scrollY, width: rect.width, height: rect.height };
+    }
+    if (magnet) {
+      const r = magnetRect;
+      magnet.style.setProperty('--mag-x', `${clamp((event.clientX - r.left - r.width / 2) * .17, -12, 12)}px`);
+      magnet.style.setProperty('--mag-y', `${clamp((event.clientY + scrollY - r.top - r.height / 2) * .2, -9, 9)}px`);
+    }
+
   };
   const onPointer = (event) => {
     if (!fine.matches || motion.matches || event.pointerType === 'touch') return;
-    tx = event.clientX; ty = event.clientY;
-    if (!cursorVisible) { cx = tx; cy = ty; cursorVisible = true; cursor.style.opacity = '1'; }
-    if (hero) {
-      const rect = hero.getBoundingClientRect();
-      target.x = clamp((event.clientX - rect.left) / rect.width * 2 - 1, -1, 1);
-      target.y = clamp((event.clientY - rect.top) / rect.height * 2 - 1, -1, 1);
-    }
-    const link = event.target.closest('a, button:not(:disabled)');
-    cursor.classList.toggle('is-link', !!link);
-    const label = link?.dataset.cursorLabel || '';
-    cursor.classList.toggle('has-label', !!label);
-    cursor.querySelector('[data-cursor-text]').textContent = label;
-
-    const nextMagnet = event.target.closest('[data-magnet]');
-    if (nextMagnet !== magnet) { resetMagnet(); magnet = nextMagnet; }
-    if (magnet) {
-      const r = magnet.getBoundingClientRect();
-      magnet.style.setProperty('--mag-x', `${clamp((event.clientX - r.left - r.width / 2) * .17, -12, 12)}px`);
-      magnet.style.setProperty('--mag-y', `${clamp((event.clientY - r.top - r.height / 2) * .2, -9, 9)}px`);
-    }
-
+    pointerEvent = event;
     schedule();
   };
   const onLeave = () => {
+    pointerEvent = null;
+    hoveredLink = null;
     cursorVisible = false;
     cursor.style.opacity = '0';
     target.x = 0; target.y = 0;
     resetMagnet(); schedule();
   };
   const onScroll = () => {
+    if (heroRect) {
+      target.scroll = clamp(scrollY / Math.max(heroRect.height, 1), 0, 1);
+      // Move the already rendered cloud with CSS while scrolling; release the GPU.
+      art?.setScrolling(true);
+      clearTimeout(scrollingTimer);
+      scrollingTimer = setTimeout(() => { scrollingTimer = 0; art?.setScrolling(false); }, 150);
+    }
+    signalBand?.style.setProperty('--signal-offset', String(motion.matches ? 0 : scrollY * .12));
+    schedule();
+  };
+  const onResize = () => {
     if (hero) {
       const rect = hero.getBoundingClientRect();
-      target.scroll = clamp(scrollY / Math.max(rect.height, 1), 0, 1);
+      heroRect = { left: rect.left, top: rect.top + scrollY, width: rect.width, height: rect.height };
     }
-    body.style.setProperty('--signal-offset', String(motion.matches ? 0 : scrollY * .12));
-    schedule();
+    resetMagnet();
+    onScroll();
   };
   const onVisibility = () => {
     body.toggleAttribute('data-page-hidden', document.hidden);
@@ -120,8 +156,11 @@ function bindExperiment() {
       Object.assign(input, { x: 0, y: 0, scroll: 0 });
       Object.assign(target, input);
       onLeave(); paint();
-      body.style.setProperty('--signal-offset', '0');
-    } else onScroll();
+      signalBand?.style.setProperty('--signal-offset', '0');
+    } else {
+      onScroll();
+      if (hero && !art && !artLoading) { artObserver.unobserve(hero); artObserver.observe(hero); }
+    }
   };
   const updateThemeLabel = () => {
     themeButton.setAttribute('aria-label', document.documentElement.dataset.theme === 'dark' ? '切换到白昼配色' : '切换到暗夜配色');
@@ -152,20 +191,21 @@ function bindExperiment() {
     if (!motion.matches) remember(morphButton.animate([{ transform: 'scale(.9)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 450, easing: 'cubic-bezier(.16,1,.3,1)' }));
   };
   const loadArt = async () => {
-    if (disposed || hero.hasAttribute('data-offscreen')) { artLoading = false; return; }
+    if (disposed || motion.matches || hero.hasAttribute('data-offscreen')) { artLoading = false; return; }
     try {
       const { mountCloud } = await import('./cloud-sculpture.js');
       if (disposed) return;
       const mounted = await mountCloud(host, input, { signal: artController.signal });
       if (disposed) { mounted.dispose(); return; }
       art = mounted;
+      art.setScrolling(scrollingTimer !== 0);
       morphButton.disabled = false;
     } catch { if (!disposed) host.setAttribute('data-canvas-fallback', ''); }
     finally { artLoading = false; }
   };
   const artObserver = new IntersectionObserver(([entry]) => {
     hero.toggleAttribute('data-offscreen', !entry.isIntersecting);
-    if (!entry.isIntersecting || art || artLoading) return;
+    if (!entry.isIntersecting || motion.matches || art || artLoading) return;
     artLoading = true;
     // Paint the readable homepage first; the CSS cloud is visible during initialization.
     artFrame = requestAnimationFrame(() => {
@@ -183,12 +223,18 @@ function bindExperiment() {
       revealObserver.unobserve(entry.target);
       if (motion.matches || !entry.target.animate) return;
       remember(entry.target.animate([
-        { opacity: 0, transform: 'translateY(35px)', clipPath: 'inset(0 0 14% 0)' },
-        { opacity: 1, transform: 'none', clipPath: 'inset(0)' },
-      ], { duration: 1000, delay: Math.min(i, 2) * 95, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' }));
+        { opacity: 0, transform: 'translateY(35px)' },
+        { opacity: 1, transform: 'none' },
+      ], { duration: 550, delay: Math.min(i, 2) * 60, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' }));
     });
   }, { threshold: .08 });
   body.querySelectorAll('[data-exp-reveal], .archive__stats > div, .year__head, .year__list .item, .about__main, .about__card, .notfound__path').forEach((el) => revealObserver.observe(el));
+  const motionObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) entry.target.toggleAttribute('data-motion-paused', !entry.isIntersecting);
+  });
+  body.querySelectorAll('.signal-band, .topic-flow').forEach((el) => motionObserver.observe(el));
+  const heroResize = new ResizeObserver(onResize);
+  if (hero) heroResize.observe(hero);
 
   themeButton.disabled = false;
   themeButton.addEventListener('click', onTheme);
@@ -196,11 +242,11 @@ function bindExperiment() {
   window.addEventListener('pointermove', onPointer, { passive: true });
   document.documentElement.addEventListener('pointerleave', onLeave);
   window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll, { passive: true });
+  window.addEventListener('resize', onResize, { passive: true });
   document.addEventListener('visibilitychange', onVisibility);
   motion.addEventListener('change', onPreference);
   fine.addEventListener('change', onPreference);
-  updateThemeLabel(); onPreference(); onScroll();
+  updateThemeLabel(); onResize(); onPreference();
 
   cleanup = () => {
     disposed = true;
@@ -208,15 +254,16 @@ function bindExperiment() {
     cancelAnimationFrame(artFrame);
     if (artIdle) cancelIdleCallback(artIdle);
     clearTimeout(artTimer);
+    clearTimeout(scrollingTimer);
     cancelAnimationFrame(frame);
     animations.forEach((animation) => animation.cancel());
-    artObserver.disconnect(); revealObserver.disconnect(); art?.dispose(); readingCleanup();
+    artObserver.disconnect(); revealObserver.disconnect(); motionObserver.disconnect(); heroResize.disconnect(); art?.dispose(); readingCleanup();
     themeButton.removeEventListener('click', onTheme);
     morphButton?.removeEventListener('click', onMorph);
     window.removeEventListener('pointermove', onPointer);
     document.documentElement.removeEventListener('pointerleave', onLeave);
     window.removeEventListener('scroll', onScroll);
-    window.removeEventListener('resize', onScroll);
+    window.removeEventListener('resize', onResize);
     document.removeEventListener('visibilitychange', onVisibility);
     motion.removeEventListener('change', onPreference);
     fine.removeEventListener('change', onPreference);

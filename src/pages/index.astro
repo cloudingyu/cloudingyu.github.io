@@ -10,8 +10,6 @@ const posts = await allPosts();
 const [first] = paginate(posts, POSTS_PER_PAGE);
 const latest = posts[0]!;
 const tags = tagCounts(posts);
-const homeQuote = PAGES.home.quote.replace(/^「|」$/g, '');
-const homeQuoteLines = homeQuote.match(/[^。]+。?/g) ?? [homeQuote];
 ---
 
 <ExperimentalLayout description={SITE.description}>
@@ -51,11 +49,7 @@ const homeQuoteLines = homeQuote.match(/[^。]+。?/g) ?? [homeQuote];
   <section class="exp-topics" aria-labelledby="topics-title">
     <div class="topics-heading"><h2 id="topics-title" data-exp-reveal>按<span>主题</span>阅读</h2></div>
     <div class="topic-flow"><div class="topic-flow__track">{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`} data-cursor-label="探索">{tag}<sup>{count}</sup><span aria-hidden="true"><Arrow /></span></a>)}{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`} aria-hidden="true" tabindex="-1">{tag}<sup>{count}</sup><span><Arrow /></span></a>)}</div></div>
-    <blockquote class="opening__quote" data-exp-reveal>
-      <span class="quote-mark" aria-hidden="true">“</span>
-      {homeQuoteLines.map((line) => <span class="quote-line">{line}</span>)}
-      <span class="quote-mark quote-mark--close" aria-hidden="true">”</span>
-    </blockquote>
+    <p class="home-manifesto" data-exp-reveal>{PAGES.home.quote}</p>
   </section>
 </ExperimentalLayout>
 
@@ -72,24 +66,24 @@ const homeQuoteLines = homeQuote.match(/[^。]+。?/g) ?? [homeQuote];
   .hero-line > span { display: block; }
   .hero-line--acid { color: var(--accent); }
   .hero-period { display: inline-block; width: .5em; color: var(--exp-purple); margin-left: .12em; letter-spacing: 0; }
-  .hero-type p { font-size: .9rem; line-height: 1.9; margin: 1.5rem 0; color: var(--ink-soft); letter-spacing: .02em; }
+  .hero-type p { font-size: 1.1875rem; line-height: 1.9; margin: 1.5rem 0; color: var(--ink-soft); letter-spacing: .02em; }
   .hero-type p > span { color: var(--ink-muted); }
   .hero-cta { pointer-events: auto; display: inline-flex; align-items: center; justify-content: space-between; gap: 2.8rem; background: var(--accent); color: var(--paper); font-size: .85rem; font-weight: 700; padding: 1rem 1.4rem; border-radius: 3rem; translate: var(--mag-x, 0px) var(--mag-y, 0px); transition: scale .3s var(--exp-ease); }
   .hero-cta > span:last-child { font-size: 1.4rem; line-height: 1; }
   .hero-cta:hover { scale: 1.04; }
   .cloud-stage { position: absolute; z-index: 1; top: 2%; right: -1%; width: 65%; height: 100%; pointer-events: none; translate: calc(var(--hero-progress) * 45px) calc(var(--hero-progress) * -90px); scale: calc(1 + var(--hero-progress) * .18); rotate: calc(var(--hero-progress) * 5deg); opacity: max(0, calc(1 - var(--hero-progress) * .8)); }
   .cloud-stage :global(canvas) { position: absolute; width: 100%; height: 100%; inset: 0; z-index: 1; }
-  :global([data-theme='light']) .cloud-stage :global(canvas) { filter: drop-shadow(0 22px 24px #303c7628); }
-  :global([data-theme='light']) .cloud-fallback { filter: brightness(.85) drop-shadow(0 22px 24px #303c7628); }
+  :global([data-theme='light']) .cloud-stage__halo { background: radial-gradient(ellipse, #303c761a, transparent 66%); }
+  :global([data-theme='light']) .cloud-fallback { background-image: url('/art/cloud-preview-light.webp'); filter: drop-shadow(0 22px 24px #303c7628); }
   .cloud-stage__halo { position: absolute; inset: 22% 5%; border-radius: 50%; background: radial-gradient(ellipse, color-mix(in srgb, var(--exp-purple) 9%, transparent), transparent 66%); filter: blur(1rem); }
-  .cloud-fallback { position: absolute; width: 88%; height: 46%; top: 26%; left: 6%; background: radial-gradient(ellipse at 58% 39%, #f8f9ff 0 22%, transparent 23%), radial-gradient(ellipse at 33% 48%, #e4e8f7 0 22%, transparent 23%), radial-gradient(ellipse at 76% 62%, #c2c8dc 0 21%, transparent 22%), radial-gradient(ellipse at 21% 67%, #d7dcec 0 16%, transparent 17%), radial-gradient(ellipse at 49% 72%, #abb3ce 0 32%, transparent 33%); filter: drop-shadow(0 20px 28px #888bbf24); transform: rotate(-5deg); }
+  .cloud-fallback { position: absolute; inset: 0; background: url('/art/cloud-preview-dark.webp') center / contain no-repeat; }
   .cloud-stage[data-canvas-ready] .cloud-fallback { opacity: 0; }
-  .hero-orbit-tag { position: absolute; z-index: 2; display: flex; gap: 1.8rem; border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent); padding: .65rem 1rem; border-radius: 3rem; background: color-mix(in srgb, var(--panel) 65%, transparent); backdrop-filter: blur(14px); font-size: .85rem; }
+  .hero-orbit-tag { position: absolute; z-index: 2; display: flex; gap: 1.8rem; border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent); padding: .65rem 1rem; border-radius: 3rem; background: color-mix(in srgb, var(--panel) 92%, transparent); font-size: .85rem; }
   .hero-orbit-tag:hover { color: var(--accent); border-color: var(--accent); }
   .hero-orbit-tag span { color: var(--accent); }
   .hero-orbit-tag--one { top: 30%; right: 6%; rotate: 9deg; transform: translateY(calc(var(--hero-progress) * -140px)); }
   .hero-orbit-tag--two { top: 66%; right: 38%; rotate: -10deg; transform: translate(calc(var(--hero-progress) * -40px), calc(var(--hero-progress) * -70px)); }
-  .hero-morph { position: absolute; z-index: 5; right: 10%; top: 64%; display: flex; align-items: center; gap: .7rem; font-size: .85rem; color: var(--ink); transform: translateY(calc(var(--hero-progress) * -75px)); padding: .45rem .8rem .45rem .45rem; border: 1px solid var(--line-strong); border-radius: 3rem; background: color-mix(in srgb, var(--paper) 75%, transparent); backdrop-filter: blur(12px); }
+  .hero-morph { position: absolute; z-index: 5; right: 10%; top: 64%; display: flex; align-items: center; gap: .7rem; font-size: .85rem; color: var(--ink); transform: translateY(calc(var(--hero-progress) * -75px)); padding: .45rem .8rem .45rem .45rem; border: 1px solid var(--line-strong); border-radius: 3rem; background: color-mix(in srgb, var(--paper) 92%, transparent); }
   .hero-morph > span:first-child { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border: 1px solid var(--line-strong); border-radius: 50%; font-size: 1.4rem; transition: rotate .6s var(--exp-ease), background .3s; }
   .hero-morph:hover > span:first-child { rotate: 180deg; background: var(--accent); color: var(--paper); }
   .hero-morph:disabled { display: none; }
@@ -123,22 +117,20 @@ const homeQuoteLines = homeQuote.match(/[^。]+。?/g) ?? [homeQuote];
   .topic-flow a > span { color: var(--accent); font-size: 1.2rem; }
   .topic-flow a:hover { background: var(--accent); color: var(--paper); rotate: -3deg; }
   .topic-flow a:hover :is(sup, span) { color: inherit; }
-  .opening__quote { position: relative; margin: 5rem var(--exp-space) 0; font-size: clamp(1.3rem, 2.4vw, 2.65rem); font-weight: 500; line-height: 1.65; letter-spacing: -.03em; }
-  .quote-line { display: block; text-wrap: pretty; }
-  .quote-mark { display: block; font-family: Georgia, serif; color: var(--exp-purple); font-size: 6rem; line-height: .7; margin-bottom: 1rem; }
-  .quote-mark--close { text-align: right; margin-top: 1.5rem; margin-bottom: 0; }
+  .home-manifesto { margin: 4rem var(--exp-space) 0; font: 750 clamp(1.4rem, 3.5vw, 3.5rem)/1.3 var(--font-sans); letter-spacing: -.035em; color: var(--exp-purple); }
   @media (prefers-reduced-motion: no-preference) {
-    .hero-line > span { animation: giant-rise 1.3s var(--exp-ease) both; }
-    .hero-line--acid > span { animation-delay: .15s; }
+    .hero-line > span { animation: giant-rise .75s var(--exp-ease) both; }
+    .hero-line--acid > span { animation-delay: .08s; }
     .hero-cta { animation-delay: .5s; }
     .latest-dock { animation-delay: .7s; }
-    .cloud-stage { animation: sculpture-arrive 1.7s var(--exp-ease) both; }
+    .cloud-stage { animation: sculpture-arrive 1s var(--exp-ease) both; }
     .hero-orbit-tag--one { animation: orbit-float 5s ease-in-out infinite alternate; }
     .hero-orbit-tag--two { animation: orbit-float 7s ease-in-out infinite alternate-reverse; }
     .signal-band__track { animation: signal-run 28s linear infinite; }
     .topic-flow__track { animation: topics-run 80s linear infinite; }
     .topic-flow:hover .topic-flow__track, .topic-flow:focus-within .topic-flow__track { animation-play-state: paused; }
     .exp-hero[data-offscreen] .hero-orbit-tag { animation-play-state: paused; }
+    .signal-band[data-motion-paused] .signal-band__track, .topic-flow[data-motion-paused] .topic-flow__track { animation-play-state: paused; }
   }
   @keyframes giant-rise { from { transform: translateY(115%) rotate(4deg); opacity: 0; } to { transform: none; opacity: 1; } }
   @keyframes details-rise { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -155,7 +147,7 @@ const homeQuoteLines = homeQuote.match(/[^。]+。?/g) ?? [homeQuote];
     .exp-hero { padding-block: 1rem; }
     .hero-type { width: 80%; align-self: flex-start; padding-top: clamp(1rem, 4svh, 2rem); }
     .hero-type h1 { font-size: clamp(3.5rem, min(18vw, 13svh), 7rem); }
-    .hero-type p { font-size: .75rem; margin-top: 1rem; }
+    .hero-type p { font-size: 1.0625rem; margin-top: 1rem; }
     .hero-cta { padding: .85rem 1.2rem; gap: 2rem; font-size: .75rem; }
     .cloud-stage { width: 125%; height: 78%; top: 24%; right: -12%; }
     .hero-orbit-tag--one { top: 48%; right: 3%; font-size: .75rem; padding: .5rem .75rem; gap: 1rem; }
@@ -170,8 +162,7 @@ const homeQuoteLines = homeQuote.match(/[^。]+。?/g) ?? [homeQuote];
     .journal-heading { margin-bottom: 1.5rem; gap: 1rem; }
     .journal-heading > a { font-size: .75rem; }
     .journal-heading > a span { margin-left: .75rem; }
-    .opening__quote { margin-top: 3rem; }
-    .quote-line { display: inline; }
+    .home-manifesto { margin-top: 3rem; }
     .exp-topics { padding-block: 3rem; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -183,7 +174,7 @@ const homeQuoteLines = homeQuote.match(/[^。]+。?/g) ?? [homeQuote];
   @media (min-width: 48.01rem) and (max-height: 38rem) {
     .exp-hero { padding-block: .5rem; }
     .hero-type h1 { font-size: clamp(2.5rem, 12dvh, 5rem); }
-    .hero-type p { font-size: .8rem; margin-block: .6rem; }
+    .hero-type p { font-size: 1.125rem; margin-block: .6rem; }
     .hero-cta { padding-block: .7rem; }
     .latest-dock { bottom: .75rem; padding-block: .75rem; }
   }

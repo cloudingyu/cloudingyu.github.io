@@ -13,7 +13,7 @@
 | 站点标题（页头品牌） | `CloudingYu的博客` |
 | SEO 标题 | `小鱼儿clouding的博客 \| CY's Blog` |
 | 站点内容描述 | `CloudingYu 的技术笔记，记录算法、机器学习与软件设计。` |
-| 首页导语 | `「好奇心仅是引领我们启程的火种。它点燃了我们对未知的渴望，却不足以照亮整个旅程。」` |
+| 首页导语 | `BUILD. BREAK. LEARN.` |
 | 邮箱 | `cloudingyu@gmail.com` |
 | 站点 URL | `http://cloudingyu.github.io` |
 | 关键词 | 无（原配置为空字符串） |
@@ -98,7 +98,7 @@
 
 | 页面 | 背景图 | 页面描述文案 |
 | --- | --- | --- |
-| 首页 | `images/site/home-bg.jpg` | `「好奇心仅是引领我们启程的火种。它点燃了我们对未知的渴望，却不足以照亮整个旅程。」` |
+| 首页 | `images/site/home-bg.jpg` | `BUILD. BREAK. LEARN.` |
 | About | `images/site/about-bg.jpg` | `「节制与癫狂，秩序与诗意，能相提并论乎？」` |
 | Archive | `images/site/archive-bg.jpg` | `「未经反思的生活不值得过」` |
 | 404 | `images/site/404-bg.jpg` | `你来到了没有知识的荒原` |

@@ -1,4 +1,4 @@
-import { Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, ShaderMaterial, Mesh, Color, Vector3, BackSide, ACESFilmicToneMapping } from 'three';
+import { Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, ShaderMaterial, Mesh, Color, Vector3, Vector4, BackSide, ACESFilmicToneMapping } from 'three';
 
 // A density field is sampled through a volume, giving the cloud depth and soft edges.
 const vertexShader = `
@@ -13,9 +13,9 @@ const fragmentShader = `
   uniform vec3 uCamera;
   uniform vec3 uAcid;
   uniform vec3 uPurple;
-  uniform float uTime;
-  uniform float uMorph;
-  uniform float uPulse;
+  uniform vec3 uDrift;
+  uniform vec4 uShape;
+  uniform float uBreathing;
   uniform float uDay;
   uniform int uSteps;
   varying vec3 vLocal;
@@ -94,19 +94,16 @@ const fragmentShader = `
     return cat(p, breathing);
   }
   float cloudShape(vec3 p) {
-    float breathing = sin(uTime * .35) * .06 + uPulse * .08;
-    // Cycle forward, including the transition from the cat back to the original cloud.
-    float id = mod(floor(uMorph), 3.0), amount = fract(uMorph);
-    if (amount < .001) return shapeAt(p, id, breathing);
-    float next = mod(id + 1.0, 3.0);
-    if (amount > .999) return shapeAt(p, next, breathing);
-    return mix(shapeAt(p, id, breathing), shapeAt(p, next, breathing), smoothstep(0.0, 1.0, amount));
+    if (uShape.z < .000003) return shapeAt(p, uShape.x, uBreathing);
+    if (uShape.z > .999997) return shapeAt(p, uShape.y, uBreathing);
+    return mix(shapeAt(p, uShape.x, uBreathing), shapeAt(p, uShape.y, uBreathing), uShape.z);
   }
   float densityAt(vec3 p, float shape) {
-    vec3 drift = vec3(uTime * .045, -uTime * .035, uTime * .025) + uMorph * vec3(3.1, 1.7, -2.4);
-    float texture = billow(p * 3.1 + drift);
-    float original = 1.0 - smoothstep(0.0, 1.0, min(mod(uMorph, 3.0), 3.0 - mod(uMorph, 3.0)));
-    float d = shape + (texture - .5) * mix(.22, .42, original);
+    // Noise is in [0, 1]; beyond this bound density is exactly zero.
+    // Keep every ray step and the original lighting, only omit zero-density work.
+    if (shape >= .1 + uShape.w * .5) return 0.0;
+    float texture = billow(p * 3.1 + uDrift);
+    float d = shape + (texture - .5) * uShape.w;
     return clamp((.1 - d) * 2.7, 0.0, 1.0);
   }
   float density(vec3 p) {
@@ -128,9 +125,10 @@ const fragmentShader = `
     for (int i = 0; i < 56; i++) {
       if (i >= uSteps || sum.a > .985) break;
       vec3 p = uCamera + ray * distance;
-      float fog = density(p);
+      float shape = cloudShape(p);
+      float fog = densityAt(p, shape);
       if (fog > .005) {
-        float slope = (cloudShape(p + sun * .25) - cloudShape(p)) / .25;
+        float slope = (cloudShape(p + sun * .25) - shape) / .25;
         float shade = clamp(.2 + slope * .8, .12, 1.0);
         shade *= exp(-density(p + sun * .55) * .85);
         float under = smoothstep(-.9, .9, p.y);
@@ -157,7 +155,7 @@ const fragmentShader = `
 export async function mountCloud(host, input, { signal } = {}) {
   const checkAbort = () => { if (signal?.aborted) throw new DOMException('Cloud initialization cancelled', 'AbortError'); };
   checkAbort();
-  const renderer = new WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'high-performance' });
+  const renderer = new WebGLRenderer({ alpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'high-performance' });
   renderer.setClearAlpha(0);
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.1;
@@ -168,7 +166,7 @@ export async function mountCloud(host, input, { signal } = {}) {
   const camera = new PerspectiveCamera(36, 1, .1, 30);
   camera.position.z = 11.5;
   const geometry = new BoxGeometry(8, 5, 5);
-  const uniforms = { uTime: { value: 0 }, uMorph: { value: 0 }, uPulse: { value: 0 }, uAcid: { value: new Color('#d0ff45') }, uPurple: { value: new Color('#bfa9ff') }, uDay: { value: 0 }, uCamera: { value: new Vector3() }, uSteps: { value: 48 } };
+  const uniforms = { uDrift: { value: new Vector3() }, uShape: { value: new Vector4(0, 1, 0, .42) }, uBreathing: { value: 0 }, uAcid: { value: new Color('#d0ff45') }, uPurple: { value: new Color('#bfa9ff') }, uDay: { value: 0 }, uCamera: { value: new Vector3() }, uSteps: { value: 48 } };
   const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader, transparent: true, depthWrite: false, side: BackSide });
   const sculpture = new Mesh(geometry, material);
   scene.add(sculpture);
@@ -185,16 +183,72 @@ export async function mountCloud(host, input, { signal } = {}) {
   let pulse = 0;
   let x = 0;
   let y = 0;
+  let scrolling = false;
+  let quality = 1;
+  let width = 0;
+  let height = 0;
+  let lastQualityChange = performance.now();
+  let lastFrame = 0;
+  let frameCost = 16.7;
+  let gpuCost = 0;
+  let gpuSamples = 0;
+  let renderCount = 0;
+  const gl = renderer.getContext();
+  const timer = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+  let query = null;
+  const smooth = (value) => { const t = Math.max(0, Math.min(1, value)); return t * t * (3 - 2 * t); };
+  const setResolution = () => {
+    const budget = (innerWidth < 768 ? 120000 : 280000) * quality;
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5, Math.sqrt(budget / (width * height))));
+    renderer.setSize(width, height, false);
+  };
+  const adaptQuality = (cost, now, measuredGPU) => {
+    if (reduced.matches || scrolling || now - lastQualityChange < 2000) return;
+    const slow = cost > (measuredGPU ? 14 : 28);
+    const fast = measuredGPU && cost < 7 && now - lastQualityChange > 8000;
+    const next = slow ? Math.max(.25, quality * .8) : fast ? Math.min(1, quality + .1) : quality;
+    if (next === quality) return;
+    quality = next;
+    lastQualityChange = now;
+    setResolution();
+  };
 
   const render = () => {
+    if (disposed || gl.isContextLost()) return;
+    const now = performance.now();
+    if (query && gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE)) {
+      if (!gl.getParameter(timer.GPU_DISJOINT_EXT)) {
+        const cost = gl.getQueryParameter(query, gl.QUERY_RESULT) / 1e6;
+        gpuCost = gpuSamples ? gpuCost * .6 + cost * .4 : cost;
+        gpuSamples += 1;
+        if (gpuSamples >= 3) adaptQuality(gpuCost, now, true);
+      } else { gpuCost = 0; gpuSamples = 0; }
+      gl.deleteQuery(query);
+      query = null;
+    }
+    const amount = morph - Math.floor(morph);
+    const id = Math.floor(morph) % 3;
+    const position = morph % 3;
+    const original = 1 - smooth(Math.min(position, 3 - position));
+    uniforms.uShape.value.set(id, (id + 1) % 3, smooth(amount), .22 + .2 * original);
+    uniforms.uBreathing.value = Math.sin(elapsed * .35) * .06 + (reduced.matches ? 0 : pulse) * .08;
+    uniforms.uDrift.value.set(elapsed * .045 + morph * 3.1, -elapsed * .035 + morph * 1.7, elapsed * .025 - morph * 2.4);
     sculpture.updateMatrixWorld();
     uniforms.uCamera.value.copy(camera.position);
     sculpture.worldToLocal(uniforms.uCamera.value);
-    renderer.render(scene, camera);
+    const measure = timer && !query && renderCount++ % 15 === 0 && !reduced.matches;
+    if (measure) { query = gl.createQuery(); gl.beginQuery(timer.TIME_ELAPSED_EXT, query); }
+    try { renderer.render(scene, camera); }
+    finally { if (measure) gl.endQuery(timer.TIME_ELAPSED_EXT); }
   };
   const tick = (now) => {
     frame = 0;
-    if (disposed || !visible || document.hidden || reduced.matches) return;
+    if (disposed || !visible || document.hidden || reduced.matches || scrolling) return;
+    if (lastFrame) {
+      frameCost = frameCost * .95 + Math.min(now - lastFrame, 100) * .05;
+      if (!timer || gpuSamples === 0) adaptQuality(frameCost, now, false);
+    }
+    lastFrame = now;
     if (now - previous < 1000 / 30) { frame = requestAnimationFrame(tick); return; }
     const dt = Math.min((now - previous) / 1000, .08);
     previous = now;
@@ -204,28 +258,25 @@ export async function mountCloud(host, input, { signal } = {}) {
     y += (input.y - y) * follow;
     morph += (morphTarget - morph) * follow;
     pulse *= Math.exp(-3.3 * dt);
-    uniforms.uTime.value = elapsed;
-    uniforms.uMorph.value = morph;
-    uniforms.uPulse.value = pulse;
     sculpture.rotation.set(.08 + y * .28 + Math.sin(elapsed * .18) * .045, -.12 + x * .5 + Math.sin(elapsed * .13) * .12 + input.scroll * .3, -.05 + Math.sin(elapsed * .16) * .03);
     sculpture.position.y = Math.sin(elapsed * .5) * .09 + input.scroll * .4;
     render();
     frame = requestAnimationFrame(tick);
   };
   const start = () => {
-    if (disposed || frame || !visible || document.hidden) return;
+    if (disposed || frame || !visible || document.hidden || scrolling) return;
     if (reduced.matches) { render(); return; }
     previous = performance.now();
+    lastFrame = 0;
     frame = requestAnimationFrame(tick);
   };
   const stop = () => { cancelAnimationFrame(frame); frame = 0; };
   const resize = () => {
     const w = host.clientWidth, h = host.clientHeight;
-    if (!w || !h || disposed) return;
-    const budget = innerWidth < 768 ? 120000 : 280000;
+    if (!w || !h || disposed || (width === w && height === h)) return;
+    width = w; height = h;
     uniforms.uSteps.value = innerWidth < 768 ? 36 : 48;
-    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5, Math.sqrt(budget / (w * h))));
-    renderer.setSize(w, h, false);
+    setResolution();
     camera.position.z = Math.max(5.4, 7.1 / (w / h)) / (2 * Math.tan(Math.PI / 10));
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
@@ -243,8 +294,6 @@ export async function mountCloud(host, input, { signal } = {}) {
     if (reduced.matches) {
       pulse = 0;
       morph = morphTarget;
-      uniforms.uPulse.value = 0;
-      uniforms.uMorph.value = morphTarget;
       render();
     } else start();
   };
@@ -273,10 +322,14 @@ export async function mountCloud(host, input, { signal } = {}) {
   document.addEventListener('visibilitychange', onVisibility);
 
   return {
+    setScrolling(value) {
+      scrolling = value;
+      if (scrolling) stop(); else start();
+    },
     reshape() {
       morphTarget += 1;
       pulse = 1;
-      if (reduced.matches) { morph = morphTarget; uniforms.uMorph.value = morphTarget; render(); }
+      if (reduced.matches) { morph = morphTarget; render(); }
       else start();
     },
     dispose() {
@@ -284,6 +337,7 @@ export async function mountCloud(host, input, { signal } = {}) {
       stop(); io.disconnect(); ro.disconnect(); theme.disconnect();
       reduced.removeEventListener('change', onPreference);
       document.removeEventListener('visibilitychange', onVisibility);
+      if (query) gl.deleteQuery(query);
       geometry.dispose(); material.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
       host.removeAttribute('data-canvas-ready');
     },

@@ -73,6 +73,7 @@ const yearSpan = years.length
         全部文章
       </h2>
 
+      <div class="archive__timeline">
       {
         years.map(({ year, posts: items }) => (
           <div class="year">
@@ -82,7 +83,7 @@ const yearSpan = years.length
               <span class="year__line" aria-hidden="true" />
             </h3>
 
-            <ol class="year__list">
+            <ol class="year__list" aria-labelledby={`year-${year}`}>
               {items.map((p) => (
                 <li class="item">
                   <time class="mono-meta item__date" datetime={p.data.date.toISOString()}>
@@ -102,6 +103,7 @@ const yearSpan = years.length
           </div>
         ))
       }
+      </div>
     </section>
   </div>
 </BaseLayout>

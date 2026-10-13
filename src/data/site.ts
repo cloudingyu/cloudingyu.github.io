@@ -46,7 +46,7 @@ export type PageKey = 'home' | 'about' | 'archive' | 'notFound';
 
 export const PAGES: Record<PageKey, { quote: string; scene: SceneKind }> = {
   home: {
-    quote: '「好奇心仅是引领我们启程的火种。它点燃了我们对未知的渴望，却不足以照亮整个旅程。」',
+    quote: 'BUILD. BREAK. LEARN.',
     scene: 'tree',
   },
   about: {
