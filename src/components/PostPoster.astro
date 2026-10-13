@@ -7,7 +7,7 @@ const { post, index = 0, headingLevel = 'h2' } = Astro.props;
 const Heading = headingLevel;
 ---
 <article class="journal-entry entry" data-exp-reveal>
-  <a class="journal-entry__link" href={permalink(post)} data-cursor-label="阅读">
+  <a class="journal-entry__link" href={permalink(post)}>
     <span class="journal-entry__number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
     <div class="journal-entry__content">
       <div class="journal-entry__meta"><time datetime={post.data.date.toISOString()}>{formatDate(post.data.date, 'dash')}</time><span>{post.data.tags[0] || '记录'}</span></div>

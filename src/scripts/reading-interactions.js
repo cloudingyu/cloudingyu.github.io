@@ -72,13 +72,30 @@ export function bindReading(body) {
   const bar = body.querySelector('#progress-bar');
   const percent = body.querySelector('[data-reading-progress]');
   const directory = body.querySelector('.post__toc-panel');
+  const directoryToggle = directory?.querySelector('[data-toc-toggle]');
+  const directoryList = directory?.querySelector('nav');
+  const directoryGrid = directory?.closest('.post__grid');
   const compact = matchMedia('(max-width: 67.99rem)');
-  const adaptDirectory = () => { if (directory) directory.open = !compact.matches; };
+  const setDirectoryCollapsed = (collapsed) => {
+    if (!directoryToggle || !directoryList || !directoryGrid) return;
+    directoryGrid.toggleAttribute('data-toc-collapsed', collapsed);
+    directoryList.inert = collapsed;
+    directoryToggle.setAttribute('aria-expanded', String(!collapsed));
+    const label = collapsed ? '展开目录' : '收起目录';
+    directoryToggle.setAttribute('aria-label', label);
+    directoryToggle.title = label;
+  };
+  const adaptDirectory = () => setDirectoryCollapsed(compact.matches);
+  const toggleDirectory = () => {
+    setDirectoryCollapsed(!directoryGrid.hasAttribute('data-toc-collapsed'));
+    invalidate();
+  };
   if (directory && !directory.hasAttribute('data-directory-ready')) {
     adaptDirectory();
     directory.setAttribute('data-directory-ready', '');
   }
   compact.addEventListener('change', adaptDirectory);
+  directoryToggle?.addEventListener('click', toggleDirectory);
   const headings = [...body.querySelectorAll('.post__toc a[href^="#"]')].map((link) => ({
     link, heading: document.getElementById(decodeURIComponent(link.hash.slice(1))),
   })).filter(({ heading }) => heading);
@@ -122,7 +139,6 @@ export function bindReading(body) {
   window.addEventListener('scroll', schedule, { passive: true });
   window.addEventListener('resize', invalidate, { passive: true });
   body.addEventListener('load', invalidate, true);
-  directory?.addEventListener('toggle', invalidate);
   const resize = new ResizeObserver(invalidate);
   resize.observe(article);
   update();
@@ -131,9 +147,9 @@ export function bindReading(body) {
     cancelAnimationFrame(frame);
     resize.disconnect();
     compact.removeEventListener('change', adaptDirectory);
+    directoryToggle?.removeEventListener('click', toggleDirectory);
     window.removeEventListener('scroll', schedule);
     window.removeEventListener('resize', invalidate);
     body.removeEventListener('load', invalidate, true);
-    directory?.removeEventListener('toggle', invalidate);
   };
 }

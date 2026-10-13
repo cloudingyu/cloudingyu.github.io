@@ -17,7 +17,7 @@ export const SITE = {
 } as const;
 
 export const AUTHOR = {
-  /** 文章署名基准。注意：第 15 篇原文署名为小写 cloudingyu，保留原样。 */
+  /** 文章署名统一使用 CloudingYu。 */
   name: 'CloudingYu',
   avatar: 'images/site/profile_pic.jpg',
   /** 侧边栏自我介绍 */

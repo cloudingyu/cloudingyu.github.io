@@ -17,8 +17,7 @@
  *      layout / header-style / mathjax 是 Jekyll 的版式开关（README #2 明确
  *      它们属于「设计层，重做」），丢弃。
  *      header-img 改名 cover（只有 vim-VScode 一篇有），字段名跟 schema 对齐。
- *      title/subtitle/date/author/tags **原样保留**，包括第 15 篇的小写
- *      author: cloudingyu —— 那是原始数据，不是笔误，不许「修正」。
+ *      title/subtitle/date/author/tags 原样保留；源文章的署名统一为 CloudingYu。
  *   4. 文件名 .markdown → .md（Astro 的内容条目类型只注册 .md）
  *
  * 幂等：重复跑结果一致，不会累积改动。

@@ -46,24 +46,24 @@ const [emailName, emailDomain] = SITE.email.split('@');
     <footer class="exp-footer">
       <div class="exp-footer__lead" data-exp-reveal>
         <p>KEEP THE<br /><span>CURIOSITY.</span></p>
-        <a class="footer-email" href={`mailto:${SITE.email}`} data-cursor-label="联系" aria-label={`发送邮件至 ${SITE.email}`}>
+        <a class="footer-email" href={`mailto:${SITE.email}`} aria-label={`发送邮件至 ${SITE.email}`}>
           <span class="footer-email__address"><span class="footer-email__name">{emailName}</span><span class="footer-email__at">@</span><span class="footer-email__domain">{emailDomain}</span></span>
           <span class="footer-email__arrow" aria-hidden="true"><Arrow /></span>
         </a>
       </div>
       <div class="exp-footer__links">
         <section class="footer-directory" aria-labelledby="footer-social" data-exp-reveal>
-          <h2 id="footer-social">找到我<span aria-hidden="true"><Arrow /></span></h2>
+          <h2 id="footer-social">找到我</h2>
           {SOCIALS.map((s) => <a href={s.url} target="_blank" rel="me noopener noreferrer"><span>{s.name}</span><i aria-hidden="true"><Arrow /></i></a>)}
         </section>
         <section class="footer-directory" aria-labelledby="footer-friends" data-exp-reveal>
-          <h2 id="footer-friends">朋友们<span aria-hidden="true"><Arrow /></span></h2>
+          <h2 id="footer-friends">朋友们</h2>
           {FRIENDS.map((f) => <a href={f.url} target="_blank" rel="noopener noreferrer"><span>{f.name}</span><i aria-hidden="true"><Arrow /></i></a>)}
         </section>
       </div>
       <div class="exp-footer__base"><span>© {new Date().getFullYear()} {AUTHOR.name}</span><a href="#main">回到顶部 <Arrow direction="up" /></a></div>
     </footer>
-    <div class="exp-cursor" aria-hidden="true"><span><Arrow /><b data-cursor-text></b></span></div>
+    <div class="exp-cursor" aria-hidden="true" />
     <script>import '../scripts/experimental-home.js';</script>
     <slot name="scripts" />
   </body>
@@ -121,22 +121,17 @@ const [emailName, emailDomain] = SITE.email.split('@');
   .exp-footer__links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(2rem, 8vw, 8rem); margin-top: 4rem; }
   .footer-directory { min-width: 0; padding-top: 1.25rem; }
   .footer-directory h2 { position: relative; font-size: clamp(1.4rem, 2.5vw, 2.2rem); font-weight: 700; letter-spacing: -.04em; margin-bottom: 1.5rem; }
-  .footer-directory h2 > span { position: absolute; right: 0; bottom: 0; color: var(--exp-purple); font-weight: 300; }
   .footer-directory a { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: .8rem 0; font-size: 1.125rem; color: var(--ink-soft); }
   .footer-directory a > span { transition: translate .4s var(--exp-ease), color .3s; }
   .footer-directory a i { font-style: normal; color: var(--ink-faint); transition: translate .4s var(--exp-ease), color .3s; }
   .footer-directory a:hover > span { translate: .3rem 0; color: var(--accent); }
   .footer-directory a:hover i { translate: .15rem -.15rem; color: var(--accent); }
   .exp-footer__base { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--line); font-size: .8rem; color: var(--ink-muted); }
-  .exp-cursor { display: none; position: fixed; top: 0; left: 0; z-index: 100; width: 2.25rem; height: 2.25rem; border: 1px solid var(--accent); border-radius: 50%; pointer-events: none; align-items: center; justify-content: center; color: var(--accent); will-change: transform; opacity: 0; transition: width .3s var(--exp-ease), height .3s var(--exp-ease), opacity .2s, background .3s; }
-  .exp-cursor span { opacity: 0; font-size: .8rem; }
-  .exp-cursor b { font-weight: inherit; }
-  .exp-cursor.has-label .ui-arrow, .exp-cursor:not(.has-label) b { display: none; }
-  .exp-cursor.is-link { width: 4rem; height: 4rem; background: var(--accent); color: var(--paper); }
-  .exp-cursor.is-link span { opacity: 1; }
-  @media (hover: hover) and (pointer: fine) {
+  .exp-cursor { display: none; position: fixed; top: 0; left: 0; z-index: 100; width: 2.25rem; height: 2.25rem; border: 2px solid var(--accent); border-radius: 50%; background: transparent; pointer-events: none; will-change: transform; opacity: 0; transition: width .3s var(--exp-ease), height .3s var(--exp-ease), background .3s, border-color .3s, opacity .2s; }
+  .exp-cursor.is-link { width: 1rem; height: 1rem; background: var(--accent); }
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
     .experimental[data-cursor-ready] .exp-cursor { display: flex; }
-    .experimental[data-cursor-ready], .experimental[data-cursor-ready] :is(a, button) { cursor: none; }
+    .experimental[data-cursor-ready], .experimental[data-cursor-ready] :is(a, button:not(:disabled), summary, [role='button']:not([aria-disabled='true'])) { cursor: none; }
   }
   .experimental[data-page-hidden] *, .experimental[data-page-hidden] *::before, .experimental[data-page-hidden] *::after { animation-play-state: paused !important; }
   html[data-exp-theme-transition]::view-transition-old(root) { animation: none; }

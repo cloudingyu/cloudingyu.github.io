@@ -364,10 +364,15 @@ await check('9. 只有 vim-VScode 一篇有头图，其余 14 篇不出现伪造
   return '1 篇有封面（bg.png），14 篇按版式承接';
 });
 
-/* 10. 原文保真：两处「坑」 */
-await check('10. 小写署名 cloudingyu 与一句话文章都按原样保留', async () => {
-  const ml = await read(distFile('2026/03/22', 'MLInit', 'index.html'));
-  assert(/class="post__author"[^>]*>cloudingyu</.test(ml), '第 15 篇的小写署名 cloudingyu 被改动了');
+/* 10. 统一署名与一句话文章 */
+await check('10. 文章署名统一为 CloudingYu，一句话文章正文保留', async () => {
+  for (const [date, slug] of EXPECTED_POSTS) {
+    const html = await read(distFile(date, slug, 'index.html'));
+    assert(/class="post__author"[^>]*>CloudingYu</.test(html), `${slug} 的文章署名不是 CloudingYu`);
+    assert(html.includes('name="author" content="CloudingYu"'), `${slug} 的作者元数据不是 CloudingYu`);
+  }
+  const search = JSON.parse(await read(distFile('search-index.json')));
+  assert(search.every((post) => post.author === 'CloudingYu'), '搜索索引的文章署名未统一');
 
   const rb = await read(distFile('2025/04/11', 'red-black-tree', 'index.html'));
   assert(
@@ -376,7 +381,7 @@ await check('10. 小写署名 cloudingyu 与一句话文章都按原样保留', 
   );
   // 这篇不应被误当作 draft 或空内容而缺失
   assert(existsSync(distFile('2025/04/11', 'red-black-tree', 'index.html')), '红黑树那篇没有生成页面');
-  return 'cloudingyu 小写署名保留；一句话正文保留';
+  return '15 篇文章、作者元数据和搜索索引统一署名；一句话正文保留';
 });
 
 /* 11. 页面引语与背景素材 */

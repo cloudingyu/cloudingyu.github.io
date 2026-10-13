@@ -104,9 +104,16 @@ const showToc = toc.length >= 2;
         {
           showToc && (
             <aside class="post__toc" aria-label="本文目录">
-              <details class="post__toc-panel" open>
-              <summary class="post__toc-head">本文目录 <span><span data-reading-progress>0%</span><i aria-hidden="true"><Arrow direction="down" /></i></span></summary>
-              <nav>
+              <div class="post__toc-panel">
+              <button class="post__toc-head" type="button" data-toc-toggle aria-expanded="true" aria-controls="post-toc-list" aria-label="收起目录" title="收起目录">
+                <span class="post__toc-label">本文目录</span>
+                <span class="post__toc-meta">
+                  <span data-reading-progress>0%</span>
+                  <i aria-hidden="true"><Arrow direction="right" /></i>
+                  <svg class="post__toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 6h1m4 0h11M4 12h1m4 0h11M4 18h1m4 0h11" /></svg>
+                </span>
+              </button>
+              <nav id="post-toc-list">
                 <ul>
                   {toc.map((h) => (
                     <li class:list={[`depth-${h.depth}`]}>
@@ -117,7 +124,7 @@ const showToc = toc.length >= 2;
                   ))}
                 </ul>
               </nav>
-              </details>
+              </div>
             </aside>
           )
         }

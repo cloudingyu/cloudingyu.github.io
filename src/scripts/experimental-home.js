@@ -13,7 +13,6 @@ function bindExperiment() {
   const themeButton = body.querySelector('[data-exp-theme]');
   const morphButton = body.querySelector('[data-morph]');
   const signalBand = body.querySelector('.signal-band__offset');
-  const cursorText = cursor.querySelector('[data-cursor-text]');
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const readingCleanup = bindReading(body);
   const navigationCleanup = bindReadingNavigation(body);
@@ -67,7 +66,7 @@ function bindExperiment() {
     // Let the cloud ease the pointer once, rather than chaining two slow followers.
     const pointerChanged = input.x !== target.x || input.y !== target.y;
     input.x = target.x; input.y = target.y;
-    input.scroll += (target.scroll - input.scroll) * amount;
+    input.scroll += (target.scroll - input.scroll) * (1 - Math.exp(-14 * dt));
     if (Math.abs(input.scroll - target.scroll) > .0008) pending = true;
     if (pointerChanged) art?.wake();
     cx += (tx - cx) * amount; cy += (ty - cy) * amount;
@@ -93,16 +92,11 @@ function bindExperiment() {
       target.x = clamp((event.clientX - heroRect.left) / heroRect.width * 2 - 1, -1, 1);
       target.y = clamp((event.clientY + scrollY - heroRect.top) / heroRect.height * 2 - 1, -1, 1);
     }
-    // Let the native pointer leave the globe and compact dial unobscured.
-    const navigationPointer = event.target.closest('[data-reading-navigation]');
-    cursor.style.opacity = navigationPointer ? '0' : '1';
-    const link = navigationPointer ? null : event.target.closest('a, button:not(:disabled)');
+    cursor.style.opacity = '1';
+    const link = event.target.closest('a[href], button:not(:disabled), summary, [role="button"]:not([aria-disabled="true"])');
     if (link !== hoveredLink) {
       hoveredLink = link;
       cursor.classList.toggle('is-link', !!link);
-      const label = link?.dataset.cursorLabel || '';
-      cursor.classList.toggle('has-label', !!label);
-      cursorText.textContent = label;
     }
 
     const nextMagnet = event.target.closest('[data-magnet]');
@@ -128,12 +122,15 @@ function bindExperiment() {
     hoveredLink = null;
     cursorVisible = false;
     cursor.style.opacity = '0';
+    cursor.classList.remove('is-link');
     target.x = 0; target.y = 0;
     resetMagnet(); schedule();
   };
   const onScroll = () => {
     if (heroRect) {
-      target.scroll = clamp(scrollY / Math.max(heroRect.height, 1), 0, 1);
+      // Give the first wheel movement a clear response, easing into the full range.
+      const distance = clamp(scrollY / Math.max(heroRect.height * .72, 1), 0, 1);
+      target.scroll = 1 - Math.pow(1 - distance, 1.35);
       // Move the already rendered cloud with CSS while scrolling; release the GPU.
       art?.setScrolling(true);
       clearTimeout(scrollingTimer);
@@ -225,16 +222,17 @@ function bindExperiment() {
   }, { rootMargin: '100px' });
   if (hero && host) artObserver.observe(hero);
 
+  const homepageReveal = !!hero;
   const revealObserver = new IntersectionObserver((entries) => {
     entries.filter((entry) => entry.isIntersecting).forEach((entry, i) => {
       revealObserver.unobserve(entry.target);
       if (motion.matches || !entry.target.animate) return;
       remember(entry.target.animate([
-        { opacity: 0, transform: 'translateY(35px)' },
+        { opacity: 0, transform: homepageReveal ? `translateY(${fine.matches ? 56 : 36}px) scale(.98)` : 'translateY(35px)' },
         { opacity: 1, transform: 'none' },
-      ], { duration: 550, delay: Math.min(i, 2) * 60, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' }));
+      ], { duration: homepageReveal ? 760 : 550, delay: Math.min(i, 2) * 60, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' }));
     });
-  }, { threshold: .08 });
+  }, { threshold: homepageReveal ? .01 : .08, rootMargin: homepageReveal ? '0px 0px 32px 0px' : '0px' });
   body.querySelectorAll('[data-exp-reveal], .archive__stats > div, .year__head, .year__list .item, .about__main, .about__card, .notfound__path').forEach((el) => revealObserver.observe(el));
   const motionObserver = new IntersectionObserver((entries) => {
     for (const entry of entries) entry.target.toggleAttribute('data-motion-paused', !entry.isIntersecting);
