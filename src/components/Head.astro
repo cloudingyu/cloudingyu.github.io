@@ -22,7 +22,7 @@ interface Props {
 
 const {
   title,
-  description = SITE.tagline,
+  description = SITE.description,
   type = 'website',
   published,
   tags = [],
@@ -53,7 +53,7 @@ const jsonLd =
         '@type': 'WebSite',
         name: SITE.title,
         alternateName: SITE.seoTitle,
-        description: SITE.tagline,
+        description: SITE.description,
         url: SITE.url,
         author: { '@type': 'Person', name: AUTHOR.name },
       };
@@ -68,8 +68,8 @@ const jsonLd =
 
 <!-- 站点作者与语言 -->
 <meta name="author" content={author} />
-<meta name="theme-color" content="#F6F7F5" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#0D1113" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#eeefe7" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#090a0c" media="(prefers-color-scheme: dark)" />
 
 <!-- Open Graph / Twitter -->
 <meta property="og:type" content={type} />
@@ -109,7 +109,7 @@ const jsonLd =
 <noscript>
   <style is:inline>
     .hero--full, .orb__stage, .orb__note, .spiral, .foot__band,
-    .about__divider, .opening__note { display: none !important; }
+    .opening__note { display: none !important; }
   </style>
 </noscript>
 

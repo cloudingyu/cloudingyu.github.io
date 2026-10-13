@@ -25,7 +25,6 @@ const yearSpan = years.length
 <BaseLayout
   page="archive"
   hero="compact"
-  scene="helix"
   title="归档"
   description={`全部 ${posts.length} 篇文章的完整归档，按年份排列，共 ${tags.length} 个标签。`}
 >
@@ -50,7 +49,6 @@ const yearSpan = years.length
     <section class="archive__section" aria-labelledby="tags-head">
       <h2 class="archive__head" id="tags-head">
         标签
-        <span class="mono-meta archive__head-note">按文章数排列</span>
       </h2>
       <ul class="archive__tags">
         {
@@ -67,20 +65,12 @@ const yearSpan = years.length
           ))
         }
       </ul>
-      {
-        featured.length > 0 && (
-          <p class="archive__hint mono-meta">
-            描线为靛蓝的是多篇文章共用的标签（{featured.map((t) => t.tag).join(' / ')}）
-          </p>
-        )
-      }
     </section>
 
     <!-- 时间线 -->
     <section class="archive__section" aria-labelledby="years-head">
       <h2 class="archive__head" id="years-head">
         全部文章
-        <span class="mono-meta archive__head-note">按时间倒序</span>
       </h2>
 
       {

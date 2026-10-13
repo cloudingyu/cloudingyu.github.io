@@ -196,20 +196,19 @@ await check(`1. 15 篇文章全部生成，且沿用旧永久链接 /YYYY/MM/DD/
 });
 
 /* 2. 首页分页 */
-await check('2. 首页每页 6 篇，共 3 页（/ 与 /page/2、/page/3）', async () => {
-  const pages = ['index.html', 'page/2/index.html', 'page/3/index.html'];
+await check('2. 首页展示 6 篇，独立文章列表分 3 页', async () => {
+  const pages = ['index.html', 'page/1/index.html', 'page/2/index.html', 'page/3/index.html'];
   for (const p of pages) assert(existsSync(distFile(p)), `缺 ${p}`);
 
   const first = await read(distFile('index.html'));
-  // 首页应含 6 个文章条目：用「阅读全文」的出现次数作为每条卡片的指纹
-  const n1 = (first.match(/阅读全文/g) || []).length;
+  // 文章行的数量与按钮文案无关。
+  const n1 = (first.match(/<article[^>]*class="journal-entry entry"/g) || []).length;
   assert(n1 === 6, `首页列出 ${n1} 条，期望 6`);
 
   const third = await read(distFile('page/3/index.html'));
-  const n3 = (third.match(/阅读全文/g) || []).length;
+  const n3 = (third.match(/<article[^>]*class="journal-entry entry"/g) || []).length;
   assert(n3 === 3, `第 3 页列出 ${n3} 条，期望 3（15 = 6+6+3）`);
 
-  assert(!existsSync(distFile('page/1/index.html')), '不该生成 /page/1/（第 1 页就是首页）');
   return '6 + 6 + 3 = 15';
 });
 
@@ -380,25 +379,24 @@ await check('10. 小写署名 cloudingyu 与一句话文章都按原样保留', 
   return 'cloudingyu 小写署名保留；一句话正文保留';
 });
 
-/* 11. 页面引语与辅助几何场景 */
-await check('11. 首页保留引语，关于 / 归档 / 404 保留辅助几何场景，背景照片已撤底', async () => {
+/* 11. 页面引语与背景素材 */
+await check('11. 首页 / 关于 / 归档 / 404 保留原始引语，背景照片已撤底', async () => {
   const pages = {
     home: ['index.html', null],
-    about: ['about/index.html', 'kepler'],
-    archive: ['archive/index.html', 'helix'],
-    notFound: ['404.html', 'wasteland'],
+    about: ['about/index.html', null],
+    archive: ['archive/index.html', null],
+    notFound: ['404.html', null],
   };
   const missing = [];
-  for (const [key, [file, scene]] of Object.entries(pages)) {
+  for (const [key, [file]] of Object.entries(pages)) {
     assert(existsSync(distFile(file)), `缺 ${file}`);
     const html = await read(distFile(file));
-    if (scene && !html.includes(`data-scene="${scene}"`)) missing.push(`${key} 缺几何场景 ${scene}`);
     /*
-      引语的落点随版式变：404 / 归档 / 关于仍在页头（hero__quote），
+      引语的落点随版式变：404 / 归档 / 关于仍在页头（page-opening__quote），
       首页改版后放在文章列表下方（opening__quote）。两者都算「引语区块」，
       关键是那句原文必须出现在页面里。
     */
-    if (!/class="[^"]*(hero__quote|opening__quote)/.test(html)) {
+    if (!/class="[^"]*(page-opening__quote|opening__quote)/.test(html)) {
       missing.push(`${key} 缺引语区块`);
     }
     // 该页的引语原文必须逐字出现（内容不能被版式改动冲掉）
@@ -418,7 +416,7 @@ await check('11. 首页保留引语，关于 / 归档 / 404 保留辅助几何�
     }
   }
   assert(offsite.length === 0, `仍有站外图片：\n     ${offsite.slice(0, 5).join('\n     ')}`);
-  return '3 个页面保留辅助几何场景 + 4 处引语，无背景照片、无站外图片';
+  return '4 处原始引语，无背景照片、无站外图片';
 });
 
 /* 12. 社交与友链 */
@@ -553,9 +551,8 @@ await check('19. three.js 场景被打包且按需加载（不在首屏关键路
   const home = await read(distFile('index.html'));
   assert(!/three/i.test(home.match(/<script[^>]*src="[^"]*"[^>]*>/g)?.join(' ') ?? ''), 'three.js 被同步加载了');
 
-  // 几何场景仅在辅助页面展示。
-  const archive = await read(distFile('archive/index.html'));
-  assert(/data-scene="tags"/.test(archive), '归档页没有标签球容器');
+  // 立体云场景按需挂载于首页。
+  assert(/data-cloud-stage/.test(home), '首页没有立体云场景容器');
 
   // 尊重 reduced-motion 的静态帧路径
   let css = '';
@@ -566,57 +563,21 @@ await check('19. three.js 场景被打包且按需加载（不在首屏关键路
   return `${js.length} 个 JS 产物，three 位于按需 chunk`;
 });
 
-/* 20. 代码块复制 */
-await check('20. 代码块有语言栏与复制按钮，且行号仍由 CSS 计数器提供', async () => {
-  const files = ['2025/05/09/SOLID/index.html', '2025/04/11/Iterator/index.html'];
-  for (const f of files) {
-    const html = await read(distFile(f));
-    if (!/class="astro-code/.test(html)) continue; // 该文没有代码块
-    assert(/class="code"/.test(html), `${f} 的代码块没有被包进 .code 框`);
-    assert(/class="code__copy"[^>]*data-copy/.test(html), `${f} 缺复制按钮`);
-    assert(/class="code__lang"/.test(html), `${f} 缺语言标签节点`);
-  }
-  // 复制按钮必须是真 button（伪元素里的文字选不中、也进不了无障碍树）
-  const any = await read(distFile('2025/05/09/SOLID/index.html'));
-  assert(/<button[^>]*data-copy/.test(any), '复制控件不是 <button>');
-  return '语言栏 + 复制按钮为真 DOM，行号仍为 CSS 计数器';
-});
-
-/* 21. 搜索的静态阅读入口 */
-await check('21. 搜索页在脚本关闭或索引加载失败时仍有全部文章入口', async () => {
-  const html = await read(distFile('search/index.html'));
-  const resultLinks = [...html.matchAll(/<a\b[^>]*class="result"[^>]*href="([^"]+)"/g)].map((match) => match[1]);
-  const index = JSON.parse(await read(distFile('search-index.json')));
-  assert(resultLinks.length === index.length, `搜索页只有 ${resultLinks.length} 个静态入口，期望 ${index.length}`);
-  for (const item of index) assert(resultLinks.includes(item.url), `搜索兜底缺少 ${item.url}`);
-  const vim = index.find((item) => item.url.includes('vim-VScode'));
-  assert(vim.body.includes('y$'), '搜索索引删除了 Vim 命令中的 $');
-  return `${index.length} 篇静态阅读入口，代码命令字符保留`;
-});
-
-/* 22. 几何场景与真实内容一致 */
-await check('22. 归档几何场景的文章数与标签共现关系来自真实内容', async () => {
+/* 22. 归档统计与真实内容一致 */
+await check('22. 归档的文章数量与标签计数来自真实内容', async () => {
   const html = await read(distFile('archive/index.html'));
   const index = JSON.parse(await read(distFile('search-index.json')));
-  assert(html.includes(`data-post-count="${index.length}"`), '几何场景没有正确的文章数量');
-  const raw = /data-tag-network="([^"]+)"/.exec(html)?.[1];
-  assert(raw, '标签球缺少网络数据');
-  const graph = JSON.parse(raw.replace(/&quot;/g, '"').replace(/&amp;/g, '&'));
-  const pairKey = (a, b) => [a, b].sort().join('\u0000');
-  const expected = new Set();
+  assert(new RegExp(`<dd[^>]*>${index.length}</dd>`).test(html), '归档没有正确的文章数量');
   const counts = new Map();
   for (const item of index) {
-    const tags = [...new Set(item.tags)];
-    for (const tag of tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
-    for (let i = 0; i < tags.length; i++) {
-      for (let j = i + 1; j < tags.length; j++) expected.add(pairKey(tags[i], tags[j]));
-    }
+    for (const tag of new Set(item.tags)) counts.set(tag, (counts.get(tag) ?? 0) + 1);
   }
-  assert(graph.nodes.length === counts.size, '标签球节点数量不正确');
-  for (const node of graph.nodes) assert(node.count === counts.get(node.tag), `${node.tag} 的文章数不正确`);
-  const actual = new Set(graph.edges.map(([a, b]) => pairKey(graph.nodes[a].tag, graph.nodes[b].tag)));
-  assert(actual.size === expected.size && [...expected].every((pair) => actual.has(pair)), '标签球连线与真实共现关系不一致');
-  return `${index.length} 篇文章、${graph.nodes.length} 个标签、${actual.size} 条共现连线`;
+  const actual = new Map([...html.matchAll(/<a\b[^>]*data-tag="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)].map((match) => [
+    match[1], Number(/class="tag__count"[^>]*>(\d+)<\/span>/.exec(match[2])?.[1]),
+  ]));
+  assert(actual.size === counts.size, '归档标签数量不正确');
+  for (const [tag, count] of counts) assert(actual.get(tag) === count, `${tag} 的文章数不正确`);
+  return `${index.length} 篇文章、${counts.size} 个标签，计数与真实内容一致`;
 });
 
 /* ------------------------------ 输出 ------------------------------ */

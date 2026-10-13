@@ -1,239 +1,176 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import PostCard from '../components/PostCard.astro';
+import ExperimentalLayout from '../layouts/ExperimentalLayout.astro';
 import Pagination from '../components/Pagination.astro';
-import Tag from '../components/Tag.astro';
-import { allPosts, paginate, groupByYear, tagCounts, formatDate, permalink, excerpt } from '../lib/posts';
+import PostPoster from '../components/PostPoster.astro';
+import { allPosts, paginate, tagCounts, formatDate, permalink } from '../lib/posts';
 import { SITE, POSTS_PER_PAGE, PAGES } from '../data/site';
 
 const posts = await allPosts();
 const [first] = paginate(posts, POSTS_PER_PAGE);
-const latest = first.items[0]!;
-const leaves = posts.slice(1, 4).reverse();
-const years = groupByYear(posts);
-const tags = tagCounts(posts).filter((tag) => tag.featured);
-const yearSpan = `${years[years.length - 1]!.year} — ${years[0]!.year}`;
+const latest = posts[0]!;
+const tags = tagCounts(posts);
+const homeQuote = PAGES.home.quote.replace(/^「|」$/g, '');
 ---
 
-<BaseLayout page="home" hero="bare" footerScene={false} description={`${SITE.seoTitle} —— ${SITE.tagline}`}>
-  <div class="home shell">
-    <section class="feature" data-article-stage aria-labelledby="feature-title">
-      <article class="feature__copy entry">
-        <div class="feature__meta">
-          <span class="feature__badge">最新发布</span>
-          <time class="mono-meta" datetime={latest.data.date.toISOString()}>{formatDate(latest.data.date)}</time>
-        </div>
-        <h1 id="feature-title"><a href={permalink(latest)}>{latest.data.title}</a></h1>
-        <p class="feature__summary">{latest.data.subtitle || excerpt(latest.body ?? '', 100)}</p>
-        <div class="feature__tags">{latest.data.tags.map((tag) => <Tag name={tag} href={`/tags/${encodeURIComponent(tag)}/`} />)}</div>
-        <div class="feature__actions">
-          <a class="feature__read" href={permalink(latest)} data-magnetic="0.12">阅读全文 <span aria-hidden="true">↗</span></a>
-          <a class="feature__archive" href="#index">继续浏览 <span aria-hidden="true">↓</span></a>
-        </div>
-      </article>
-
-      <div class="reading-stage" aria-label="更多文章">
-        <div class="reading-stage__aura" aria-hidden="true" />
-        <div class="reading-stage__float"><div class="reading-stage__deck">
-          {leaves.map((post, i) => (
-            <div class={`folio-slot folio-slot--${i}`} data-depth={i}>
-              <a class="folio" href={permalink(post)} draggable="false" aria-label={`阅读《${post.data.title}》`}>
-                <div class="folio__top">
-                  <span class="mono-meta">{formatDate(post.data.date)}</span>
-                  <span class="folio__arrow" aria-hidden="true">↗</span>
-                </div>
-                <p class="folio__category">{post.data.tags.slice(0, 2).join(' / ')}</p>
-                <h2>{post.data.title}</h2>
-                <p class="folio__summary">{post.data.subtitle || excerpt(post.body ?? '', 72)}</p>
-                <div class="folio__bottom"><span>{post.data.author}</span><span class="mono-meta">{String(leaves.length - i + 1).padStart(2, '0')}</span></div>
-                <span class="folio__shine" aria-hidden="true" />
-              </a>
-            </div>
-          ))}
-        </div></div>
-        <div class="reading-stage__caption mono-meta">
-          <span class="reading-stage__hint"><span class="stage-hint--static">{yearSpan}</span><span class="stage-hint--active">拖动切换</span></span>
-          <div class="stage-controls" aria-label="切换展台文章">
-            <button type="button" data-stage-prev aria-label="上一篇展台文章" disabled>←</button>
-            <span data-stage-position aria-live="polite" aria-atomic="true">01 / 03</span>
-            <button type="button" data-stage-next aria-label="下一篇展台文章" disabled>→</button>
-          </div>
-          <span>{posts.length} 篇文章</span>
-        </div>
-      </div>
-    </section>
-
-    <div class="home__columns">
-      <section class="index" id="index" aria-labelledby="index-head">
-        <div class="section-head"><h2 id="index-head">继续阅读</h2><a href="/archive/">全部 {posts.length} 篇 <span aria-hidden="true">→</span></a></div>
-        <div class="index__grid">{first.items.slice(1).map((post, i) => <PostCard post={post} index={i} headingLevel="h3" variant="compact" />)}</div>
-        <Pagination page={first} />
-      </section>
-      <aside class="home__sidebar" aria-label="文章分类">
-        <section class="sidebar-section" aria-labelledby="home-tags-head">
-          <h2 id="home-tags-head">常用标签</h2>
-          <ul class="home-tags">{tags.map(({ tag, count }) => <li><a href={`/tags/${encodeURIComponent(tag)}/`}><span>{tag}</span><span class="count">{count}</span></a></li>)}</ul>
-          <a class="sidebar-more" href="/archive/#tags-head">所有标签 <span aria-hidden="true">→</span></a>
-        </section>
-        <section class="sidebar-section" aria-labelledby="home-years-head">
-          <h2 id="home-years-head">归档</h2>
-          <ul class="home-years">{years.map(({ year, posts: items }) => <li><a href={`/archive/#year-${year}`}><span>{year}</span><span class="count">{items.length} 篇</span></a></li>)}</ul>
-        </section>
-      </aside>
+<ExperimentalLayout description={SITE.description}>
+  <section class="exp-hero" data-exp-hero aria-labelledby="hero-title">
+    <div class="hero-type">
+      <h1 id="hero-title"><span class="hero-line"><span>保持</span></span><span class="hero-line hero-line--acid"><span>好奇<span class="hero-period">。</span></span></span></h1>
+      <p>算法、设计与未完成的探索。</p>
+      <a class="hero-cta" href="#index" data-magnet data-cursor-label="探索"><span>进入文章</span><span aria-hidden="true">↘</span></a>
     </div>
-    <blockquote class="opening__quote">{PAGES.home.quote}</blockquote>
-  </div>
-  <script>
-    import '../scripts/article-stage.js';
-  </script>
-</BaseLayout>
+
+    <div class="cloud-stage" data-cloud-stage aria-hidden="true">
+      <div class="cloud-fallback" />
+      <div class="cloud-stage__halo" />
+    </div>
+    <a class="hero-orbit-tag hero-orbit-tag--one" href="/tags/机器学习/" data-cursor-label="探索">机器学习 <span aria-hidden="true">↗</span></a>
+    <a class="hero-orbit-tag hero-orbit-tag--two" href="/tags/设计模式/" data-cursor-label="探索">设计模式 <span aria-hidden="true">↗</span></a>
+    <button class="hero-morph" type="button" data-morph disabled><span aria-hidden="true">↻</span><span>换一朵云</span></button>
+
+    <a class="latest-dock" href={permalink(latest)} data-cursor-label="阅读">
+      <div><span class="latest-dock__badge">最新文章</span><time datetime={latest.data.date.toISOString()}>{formatDate(latest.data.date)}</time></div>
+      <h2>{latest.data.title}</h2><span class="latest-dock__arrow" aria-hidden="true">↗</span>
+    </a>
+  </section>
+
+  <div class="signal-band" aria-hidden="true"><div class="signal-band__offset"><div class="signal-band__track">{Array.from({ length: 4 }, () => <span>STAY CURIOUS <i>✳</i> MAKE SOMETHING <i>✳</i> KEEP EXPLORING <i>✳</i></span>)}</div></div></div>
+
+  <section class="exp-journal" id="index" aria-labelledby="journal-title">
+    <div class="journal-heading" data-exp-reveal><h2 id="journal-title">博客<span>与笔记</span></h2><a href="/page/1/">全部文章 <span aria-hidden="true">↗</span></a></div>
+    <div class="journal-list">
+      {first.items.map((post, i) => <PostPoster {post} index={i} headingLevel="h3" />)}
+    </div>
+    <Pagination page={first} />
+  </section>
+
+  <section class="exp-topics" aria-labelledby="topics-title">
+    <div class="topics-heading"><h2 id="topics-title" data-exp-reveal>按<span>主题</span>阅读</h2></div>
+    <div class="topic-flow"><div class="topic-flow__track">{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`} data-cursor-label="探索">{tag}<sup>{count}</sup><span aria-hidden="true">↗</span></a>)}{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`} aria-hidden="true" tabindex="-1">{tag}<sup>{count}</sup><span>↗</span></a>)}</div></div>
+    <blockquote class="opening__quote" data-exp-reveal>
+      <span class="quote-mark" aria-hidden="true">“</span>
+      {homeQuote}
+      <span class="quote-mark quote-mark--close" aria-hidden="true">”</span>
+    </blockquote>
+  </section>
+</ExperimentalLayout>
 
 <style>
-  .home { padding-top: 2rem; }
-  .feature {
-    --stage-x: 0; --stage-y: 0; --stage-scroll: 0; --light-x: 55%; --light-y: 35%;
-    position: relative; display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr);
-    gap: 1.5rem; align-items: center; min-height: 27rem;
-    border-bottom: 1px solid var(--line-strong); padding-bottom: 2rem;
-  }
-  .feature__copy { position: relative; z-index: 2; min-width: 0; border: 0; padding: 0; }
-  .feature__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-bottom: 1.3rem; }
-  .feature__badge { display: inline-flex; align-items: center; gap: 0.6rem; color: var(--accent); font-size: 0.75rem; }
-  .feature__badge::before { content: ''; width: 0.35rem; height: 0.35rem; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 9%, transparent); }
-  .feature h1 { max-width: 15em; font-size: clamp(1.8rem, 1rem + 1.65vw, 2.5rem); line-height: 1.45; font-weight: 600; letter-spacing: -0.035em; }
-  .feature h1 a:hover { color: var(--accent); }
-  .feature__summary { color: var(--ink-muted); font-size: 0.95rem; line-height: 1.9; margin: 1rem 0 1.2rem; max-width: 30em; }
-  .feature__tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-  .feature__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1.5rem; margin-top: 1.8rem; font-size: 0.85rem; }
-  .feature__read { display: inline-flex; align-items: center; gap: 1.5rem; color: var(--paper); background: var(--ink); border: 1px solid var(--ink); padding: 0.75rem 1.1rem; }
-  .feature__read span { transition: transform 0.3s var(--ease); }
-  .feature__read:hover { background: var(--accent); border-color: var(--accent); }
-  .feature__read:hover span { transform: translate(2px, -2px); }
-  .feature__archive { display: inline-flex; align-items: center; gap: 0.8rem; color: var(--ink-muted); }
-  .feature__archive:hover { color: var(--accent); }
-
-  .reading-stage { position: relative; min-width: 0; height: 26rem; perspective: 1200px; isolation: isolate; }
-  .reading-stage__aura { position: absolute; inset: 1rem -1rem; z-index: -1; border-radius: 50%; background: radial-gradient(ellipse at var(--light-x) var(--light-y), color-mix(in srgb, var(--accent-soft) 16%, transparent), transparent 65%); }
-  .reading-stage__float { position: absolute; inset: 0; transform-style: preserve-3d; }
-  .reading-stage__deck { position: absolute; inset: 0 0 2.5rem; transform-style: preserve-3d; transform: scale(var(--deck-scale, 1)) rotateX(calc(9deg + var(--stage-y) * -7deg)) rotateY(calc(-12deg + var(--stage-x) * 12deg)); }
-  .folio-slot { position: absolute; width: min(70%, 21rem); height: 17rem; left: 50%; top: 50%; transform-style: preserve-3d; transition: transform 0.65s var(--ease), filter 0.4s var(--ease); }
-  .folio-slot[data-depth='0'] { z-index: 1; transform: translate(-50%, -50%) translate3d(calc(2.3rem + var(--stage-scroll) * 4rem + var(--stage-x) * 12px), calc(-3.1rem - var(--stage-scroll) * 3rem), -70px) rotateZ(calc(14deg + var(--stage-scroll) * 14deg)); }
-  .folio-slot[data-depth='1'] { z-index: 2; transform: translate(-50%, -50%) translate3d(calc(-2rem - var(--stage-scroll) * 4rem + var(--stage-x) * 20px), calc(-0.9rem - var(--stage-scroll) * 0.7rem), -25px) rotateZ(calc(-12deg - var(--stage-scroll) * 14deg)); }
-  .folio-slot[data-depth='2'] { z-index: 3; transform: translate(-50%, -50%) translate3d(calc(0.6rem + var(--stage-x) * 28px + var(--stage-drag, 0) * 90px), calc(2.3rem + var(--stage-scroll) * 2rem + var(--stage-y) * 12px), 45px) rotateZ(calc(5deg + var(--stage-x) * 3deg + var(--stage-drag, 0) * 14deg)); }
-  .feature[data-stage-dragging] .folio-slot { transition: none; }
-  .feature[data-stage-dragging] .reading-stage__float { animation-play-state: paused; }
-  .feature[data-stage-ready] .reading-stage__deck { cursor: grab; touch-action: pan-y; }
-  .feature[data-stage-dragging] .reading-stage__deck { cursor: grabbing; }
-  .folio-slot:focus-within { z-index: 5; }
-  .folio { position: relative; display: flex; flex-direction: column; height: 100%; padding: 1.2rem 1.4rem; overflow: hidden; border: 1px solid var(--line-strong); border-radius: 3px; background: var(--panel); box-shadow: 0 2px 1px color-mix(in srgb, var(--ink) 8%, transparent), 0 18px 45px -18px color-mix(in srgb, var(--ink) 32%, transparent); transform-style: preserve-3d; transition: box-shadow 0.4s var(--ease), border-color 0.4s var(--ease), translate 0.4s var(--ease); }
-  .folio:hover, .folio:focus-visible { border-color: var(--accent-soft); translate: 0 -9px; box-shadow: 0 30px 65px -25px color-mix(in srgb, var(--ink) 40%, transparent); }
-  .folio__top { display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.8rem; border-bottom: 1px solid var(--line); }
-  .folio__top .mono-meta { font-size: 0.62rem; }
-  .folio__arrow { color: var(--accent); }
-  .folio__category { margin: 1.15rem 0 0.55rem; color: var(--accent); font-size: 0.63rem; }
-  .folio h2 { font-size: 1.2rem; line-height: 1.5; text-wrap: pretty; }
-  .folio__summary { margin: 0.8rem 0 0.6rem; font-size: 0.72rem; line-height: 1.8; color: var(--ink-muted); }
-  .folio__bottom { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 0.65rem; margin-top: auto; font-size: 0.63rem; color: var(--ink-muted); }
-  .folio__shine { position: absolute; inset: 0; pointer-events: none; overflow: hidden; background: radial-gradient(ellipse at var(--light-x) var(--light-y), color-mix(in srgb, var(--accent-soft) 14%, transparent), transparent 65%); }
-  .folio__shine::after { content: ''; position: absolute; inset: -20% -80%; background: linear-gradient(110deg, transparent 40%, color-mix(in srgb, var(--ink) 5%, transparent) 47%, color-mix(in srgb, var(--paper) 80%, transparent) 50%, transparent 57%); transform: translateX(-60%); }
-  .reading-stage__caption { position: absolute; bottom: -0.6rem; left: 1rem; right: 0; display: flex; justify-content: space-between; font-size: 0.65rem; }
-  .reading-stage__caption { align-items: center; gap: 0.5rem; }
-  .stage-controls { display: none; align-items: center; gap: 0.75rem; }
-  .feature[data-stage-ready] .stage-controls { display: flex; }
-  .stage-controls button { display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border: 1px solid var(--line-strong); border-radius: 50%; font-size: 0.85rem; transition: color 0.25s var(--ease), background 0.25s var(--ease), transform 0.25s var(--ease); }
-  .stage-controls button:hover { background: var(--ink); color: var(--paper); transform: scale(1.08); }
-  .stage-hint--active { display: none; }
-  .feature[data-stage-ready] .stage-hint--active { display: inline; }
-  .feature[data-stage-ready] .stage-hint--static { display: none; }
-  .feature h1 :global(.title-line) { display: block; overflow: clip; }
-  .feature h1 :global(.title-line__text) { display: block; }
-
-  .home__columns { display: grid; grid-template-columns: minmax(0, 1fr) 11rem; gap: 3.5rem; margin-top: 2rem; }
-  .index { min-width: 0; }
-  .index__grid :global(.entry) { isolation: isolate; }
-  .index__grid :global(.entry)::after { content: ''; position: absolute; inset: 0 -0.7rem; z-index: -1; background: radial-gradient(ellipse 20rem 10rem at var(--row-x, 50%) var(--row-y, 50%), color-mix(in srgb, var(--accent-soft) 10%, transparent), transparent 75%); opacity: 0; pointer-events: none; transition: opacity 0.4s var(--ease); }
-  .index__grid :global(.entry:hover)::after { opacity: 1; }
-  .index__grid :global(.entry__title) { transition: translate 0.35s var(--ease); }
-  .index__grid :global(.entry:hover .entry__title) { translate: 0.35rem 0; }
-  .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding-bottom: 1rem; }
-  .section-head h2 { font-family: var(--font-sans); font-size: 1rem; font-weight: 600; }
-  .section-head > a { font-size: 0.8rem; color: var(--ink-muted); white-space: nowrap; }
-  .section-head > a:hover { color: var(--accent); }
-  .home__sidebar { min-width: 0; display: flex; flex-direction: column; gap: 2rem; padding-top: 0.1rem; }
-  .sidebar-section h2 { font-family: var(--font-sans); font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem; }
-  .home-tags, .home-years { list-style: none; padding: 0; margin: 0; }
-  .home-tags a, .home-years a { display: flex; justify-content: space-between; gap: 0.75rem; align-items: baseline; padding-block: 0.4rem; font-size: 0.8rem; color: var(--ink-soft); }
-  .home-tags a > span:first-child { overflow-wrap: anywhere; }
-  .home-tags a:hover, .home-years a:hover { color: var(--accent); }
-  .count { flex-shrink: 0; color: var(--ink-faint); font-size: 0.72rem; font-variant-numeric: tabular-nums; }
-  .sidebar-more { display: inline-block; margin-top: 0.7rem; font-size: 0.75rem; color: var(--ink-muted); }
-  .sidebar-more:hover { color: var(--accent); }
-  .opening__quote { margin: 3rem 0 0; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: 0.8rem; line-height: 1.9; color: var(--ink-muted); }
-
+  .exp-hero { --hero-progress: 0; position: relative; min-height: 48rem; height: calc(100svh - 6.5rem); max-height: 65rem; padding: 2rem var(--exp-space) 5rem; isolation: isolate; overflow: clip; }
+  .exp-hero::before { content: ''; position: absolute; inset: 0; z-index: -2; background: radial-gradient(ellipse at 74% 44%, color-mix(in srgb, var(--exp-purple) 9%, transparent), transparent 48%); }
+  .hero-type { position: relative; z-index: 3; width: 54%; margin-top: calc(clamp(2rem, 5vh, 4rem) + 3.5rem); pointer-events: none; transform: translateY(calc(var(--hero-progress) * -100px)); opacity: max(0, calc(1 - var(--hero-progress) * 1.1)); }
+  .hero-line:first-child { translate: calc(var(--hero-progress) * -45px) 0; }
+  .hero-line--acid { translate: calc(var(--hero-progress) * 75px) 0; }
+  .hero-type h1 { font-size: clamp(5rem, 11.3vw, 11rem); font-weight: 900; line-height: 1.1; letter-spacing: -.08em; font-family: var(--font-sans); }
+  .hero-line { display: block; overflow: clip; padding: .03em .08em .06em 0; margin-bottom: -.05em; }
+  .hero-line > span { display: block; }
+  .hero-line--acid { color: var(--accent); }
+  .hero-period { display: inline-block; width: .5em; color: var(--exp-purple); margin-left: .12em; letter-spacing: 0; }
+  .hero-type p { font-size: .9rem; line-height: 1.9; margin: 1.5rem 0; color: var(--ink-soft); letter-spacing: .02em; }
+  .hero-type p > span { color: var(--ink-muted); }
+  .hero-cta { pointer-events: auto; display: inline-flex; align-items: center; justify-content: space-between; gap: 2.8rem; background: var(--accent); color: var(--paper); font-size: .85rem; font-weight: 700; padding: 1rem 1.4rem; border-radius: 3rem; translate: var(--mag-x, 0px) var(--mag-y, 0px); transition: scale .3s var(--exp-ease); }
+  .hero-cta > span:last-child { font-size: 1.4rem; line-height: 1; }
+  .hero-cta:hover { scale: 1.04; }
+  .cloud-stage { position: absolute; z-index: 1; top: -4%; right: -1%; width: 65%; height: 100%; pointer-events: none; translate: calc(var(--hero-progress) * 45px) calc(var(--hero-progress) * -90px); scale: calc(1 + var(--hero-progress) * .18); rotate: calc(var(--hero-progress) * 5deg); opacity: max(0, calc(1 - var(--hero-progress) * .8)); }
+  .cloud-stage :global(canvas) { position: absolute; width: 100%; height: 100%; inset: 0; z-index: 1; }
+  :global([data-theme='light']) .cloud-stage :global(canvas) { filter: drop-shadow(0 22px 24px #303c7628); }
+  :global([data-theme='light']) .cloud-fallback { filter: brightness(.85) drop-shadow(0 22px 24px #303c7628); }
+  .cloud-stage__halo { position: absolute; inset: 22% 5%; border-radius: 50%; background: radial-gradient(ellipse, color-mix(in srgb, var(--exp-purple) 9%, transparent), transparent 66%); filter: blur(1rem); }
+  .cloud-fallback { position: absolute; width: 88%; height: 46%; top: 26%; left: 6%; background: radial-gradient(ellipse at 58% 39%, #f8f9ff 0 22%, transparent 23%), radial-gradient(ellipse at 33% 48%, #e4e8f7 0 22%, transparent 23%), radial-gradient(ellipse at 76% 62%, #c2c8dc 0 21%, transparent 22%), radial-gradient(ellipse at 21% 67%, #d7dcec 0 16%, transparent 17%), radial-gradient(ellipse at 49% 72%, #abb3ce 0 32%, transparent 33%); filter: drop-shadow(0 20px 28px #888bbf24); transform: rotate(-5deg); }
+  .cloud-stage[data-canvas-ready] .cloud-fallback { opacity: 0; }
+  .hero-orbit-tag { position: absolute; z-index: 2; display: flex; gap: 1.8rem; border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent); padding: .65rem 1rem; border-radius: 3rem; background: color-mix(in srgb, var(--panel) 65%, transparent); backdrop-filter: blur(14px); font-size: .85rem; }
+  .hero-orbit-tag:hover { color: var(--accent); border-color: var(--accent); }
+  .hero-orbit-tag span { color: var(--accent); }
+  .hero-orbit-tag--one { top: 25%; right: 6%; rotate: 9deg; transform: translateY(calc(var(--hero-progress) * -140px)); }
+  .hero-orbit-tag--two { top: 61%; right: 38%; rotate: -10deg; transform: translate(calc(var(--hero-progress) * -40px), calc(var(--hero-progress) * -70px)); }
+  .hero-morph { position: absolute; z-index: 5; right: 10%; top: 58%; display: flex; align-items: center; gap: .7rem; font-size: .85rem; color: var(--ink); transform: translateY(calc(var(--hero-progress) * -75px)); padding: .45rem .8rem .45rem .45rem; border: 1px solid var(--line-strong); border-radius: 3rem; background: color-mix(in srgb, var(--paper) 75%, transparent); backdrop-filter: blur(12px); }
+  .hero-morph > span:first-child { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border: 1px solid var(--line-strong); border-radius: 50%; font-size: 1.4rem; transition: rotate .6s var(--exp-ease), background .3s; }
+  .hero-morph:hover > span:first-child { rotate: 180deg; background: var(--accent); color: var(--paper); }
+  .hero-morph:disabled { display: none; }
+  .latest-dock { position: absolute; z-index: 5; bottom: 5.2rem; right: var(--exp-space); width: min(38%, 28rem); padding: 1.25rem 3.7rem 1.25rem 0; border: 0; border-top: 1px solid var(--line-strong); background: transparent; translate: calc(var(--hero-progress) * -25px) calc(var(--hero-progress) * -50px); transition: border-color .3s; }
+  .latest-dock:hover { border-color: var(--accent); color: var(--accent); }
+  .latest-dock > div { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; font: .8rem var(--font-sans); color: var(--ink-muted); margin-bottom: .7rem; }
+  .latest-dock__badge { color: var(--accent); }
+  .latest-dock h2 { font-size: .95rem; font-weight: 500; line-height: 1.6; letter-spacing: 0; }
+  .latest-dock__arrow { position: absolute; right: 1.4rem; bottom: 1.5rem; color: var(--accent); font-size: 1.5rem; }
+  .signal-band { position: relative; overflow: hidden; padding-block: 1.15rem; background: #d0ff45; color: #10120b; }
+  .signal-band__offset { transform: translateX(calc(var(--signal-offset, 0) * -1px)); width: max-content; }
+  .signal-band__track { display: flex; width: max-content; font-family: 'Arial Black', var(--font-sans); font-size: clamp(1.1rem, 2.7vw, 2.5rem); font-weight: 900; letter-spacing: -.04em; }
+  .signal-band__track > span { display: flex; align-items: center; gap: 2rem; padding-right: 2rem; }
+  .signal-band i { font-style: normal; font-size: 1.4em; }
+  .exp-journal { padding: 6rem var(--exp-space) 5rem; }
+  .journal-heading { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 2.8rem; }
+  .journal-heading h2 { font-size: clamp(2.75rem, 6vw, 6rem); font-weight: 800; letter-spacing: -.065em; }
+  .journal-heading h2 span { color: var(--accent); }
+  .journal-heading > a { flex-shrink: 0; padding-bottom: .6rem; font-size: .9rem; }
+  .journal-heading > a span { margin-left: 2rem; color: var(--accent); }
+  .journal-list { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .exp-journal :global(.pager) { margin-top: 2.5rem; }
+  .exp-topics { padding: 4rem 0 5rem; overflow: hidden; }
+  .topics-heading { padding-inline: var(--exp-space); margin-bottom: 2rem; }
+  .topics-heading h2 { font-size: clamp(2.7rem, 6vw, 6rem); line-height: 1.1; font-weight: 800; letter-spacing: -.06em; }
+  .topics-heading h2 span { color: var(--exp-purple); }
+  .topic-flow { overflow: hidden; padding-block: .75rem; }
+  .topic-flow__track { display: flex; width: max-content; gap: 1rem; padding-right: 1rem; }
+  .topic-flow a { display: flex; align-items: center; gap: 2rem; flex-shrink: 0; border: 1px solid var(--line-strong); border-radius: 5rem; padding: 1.1rem 2rem; font-size: clamp(1.2rem, 2.8vw, 2.5rem); font-weight: 600; transition: background .3s, color .3s, rotate .4s var(--exp-ease); }
+  .topic-flow a sup { align-self: start; color: var(--ink-muted); font: .7rem var(--font-mono); margin-top: .25rem; }
+  .topic-flow a > span { color: var(--accent); font-size: 1.2rem; }
+  .topic-flow a:hover { background: var(--accent); color: var(--paper); rotate: -3deg; }
+  .topic-flow a:hover :is(sup, span) { color: inherit; }
+  .opening__quote { position: relative; margin: 5rem var(--exp-space) 0; max-width: 55rem; font-size: clamp(1.3rem, 2.7vw, 2.7rem); font-weight: 500; line-height: 1.8; letter-spacing: -.03em; }
+  .quote-mark { display: block; font-family: Georgia, serif; color: var(--exp-purple); font-size: 6rem; line-height: .7; margin-bottom: 1rem; }
+  .quote-mark--close { text-align: right; margin-top: 1.5rem; margin-bottom: 0; }
   @media (prefers-reduced-motion: no-preference) {
-    .feature__meta, .feature h1, .feature__summary, .feature__tags, .feature__actions { animation: feature-arrive 0.9s var(--ease) both; }
-    .feature h1 { animation-delay: 80ms; }
-    .feature__summary { animation-delay: 160ms; }
-    .feature__tags { animation-delay: 220ms; }
-    .feature__actions { animation-delay: 280ms; }
-    .folio { animation: folio-arrive 1.4s var(--ease) both; }
-    .folio-slot--0 .folio { animation-delay: 120ms; }
-    .folio-slot--1 .folio { animation-delay: 260ms; }
-    .folio-slot--2 .folio { animation-delay: 400ms; }
-    .reading-stage__aura { animation: light-drift 9s ease-in-out infinite alternate; }
-    .reading-stage__float { animation: page-float 6s ease-in-out infinite alternate; }
-    .folio__shine::after { animation: paper-sweep 7s ease-in-out infinite; }
-    .folio-slot--1 .folio__shine::after { animation-delay: 1s; }
-    .folio-slot--0 .folio__shine::after { animation-delay: 2s; }
-    .feature[data-stage-ready]:not([data-stage-visible]) :is(.reading-stage__aura, .reading-stage__float), .feature[data-stage-ready]:not([data-stage-visible]) .folio__shine::after { animation-play-state: paused; }
-    .feature[data-stage-ready] .reading-stage__deck { will-change: transform; }
-    .feature h1[data-title-lines] { animation: none; }
-    .feature h1 :global(.title-line__text) { animation: title-rise 1s var(--ease) both; animation-delay: calc(120ms + var(--title-line, 0) * 110ms); }
-    .feature h1[data-title-settled] :global(.title-line__text) { animation: none; }
+    .hero-line > span { animation: giant-rise 1.3s var(--exp-ease) both; }
+    .hero-line--acid > span { animation-delay: .15s; }
+    .hero-cta { animation-delay: .5s; }
+    .latest-dock { animation-delay: .7s; }
+    .cloud-stage { animation: sculpture-arrive 1.7s var(--exp-ease) both; }
+    .hero-orbit-tag--one { animation: orbit-float 5s ease-in-out infinite alternate; }
+    .hero-orbit-tag--two { animation: orbit-float 7s ease-in-out infinite alternate-reverse; }
+    .signal-band__track { animation: signal-run 28s linear infinite; }
+    .topic-flow__track { animation: topics-run 80s linear infinite; }
+    .topic-flow:hover .topic-flow__track, .topic-flow:focus-within .topic-flow__track { animation-play-state: paused; }
+    .exp-hero[data-offscreen] .hero-orbit-tag { animation-play-state: paused; }
   }
-  @keyframes feature-arrive { from { opacity: 0; transform: translateY(20px); clip-path: inset(0 0 100% 0); } to { opacity: 1; transform: none; clip-path: inset(0); } }
-  @keyframes folio-arrive { from { opacity: 0; transform: translate3d(0, 90px, -160px) rotateX(45deg) rotateZ(-10deg); } to { opacity: 1; transform: none; } }
-  @keyframes light-drift { from { transform: translate(-8px, 6px) scale(0.95); opacity: 0.65; } to { transform: translate(12px, -12px) scale(1.08); opacity: 1; } }
-  @keyframes page-float { from { transform: translateY(-7px) rotateZ(-1deg); } to { transform: translateY(7px) rotateZ(1deg); } }
-  @keyframes paper-sweep { 0%, 15% { transform: translateX(-60%); } 55%, 100% { transform: translateX(60%); } }
-  @keyframes title-rise { from { opacity: 0; transform: translateY(115%) rotateZ(2deg); } to { opacity: 1; transform: none; } }
-  @media (max-width: 62rem) {
-    .feature { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.8rem; }
-    .folio-slot { width: 76%; height: 16rem; }
-    .folio { padding: 1rem; }
-    .folio h2 { font-size: 1rem; }
-    .folio__summary { font-size: 0.65rem; }
+  @keyframes giant-rise { from { transform: translateY(115%) rotate(4deg); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes details-rise { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes sculpture-arrive { from { transform: translate(15%, 10%) scale(.7) rotate(20deg); } to { transform: none; } }
+  @keyframes orbit-float { from { translate: 0 -8px; } to { translate: 0 12px; } }
+  @keyframes scroll-pulse { 0%, 100% { translate: 0 -3px; } 50% { translate: 0 4px; } }
+  @keyframes signal-run { to { transform: translateX(-25%); } }
+  @keyframes topics-run { to { transform: translateX(-50%); } }
+  @media (max-width: 64rem) {
+    .exp-hero { min-height: 44rem; }
+    .hero-type h1 { font-size: clamp(5rem, 12vw, 8rem); }
+    .hero-orbit-tag--two { right: 32%; }
   }
   @media (max-width: 48rem) {
-    .feature { grid-template-columns: minmax(0, 1fr); gap: 0.8rem; }
-    .feature h1 { max-width: 25em; }
-    .reading-stage { height: 22rem; max-width: 32rem; width: 100%; margin-inline: auto; }
-    .folio-slot { width: 65%; height: 15rem; }
-    .feature__summary { max-width: none; }
-    .home__columns { grid-template-columns: minmax(0, 1fr); gap: 2.5rem; }
-    .home__sidebar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+    .exp-hero { height: auto; min-height: 51rem; padding-top: 1.5rem; }
+    .hero-type { width: 70%; margin-top: 3.75rem; }
+    .hero-type h1 { font-size: clamp(4.5rem, 18vw, 7rem); }
+    .hero-type p { font-size: .75rem; margin-top: 1rem; text-shadow: 0 1px 8px var(--paper), 0 0 18px var(--paper); }
+    .hero-cta { padding: .85rem 1.2rem; gap: 2rem; font-size: .75rem; }
+    .cloud-stage { width: 110%; height: 36rem; top: 7rem; right: -5%; }
+    .hero-orbit-tag--one { top: 24rem; right: 3%; font-size: .75rem; padding: .5rem .75rem; gap: 1rem; }
+    .hero-orbit-tag--two { top: 30rem; right: 48%; font-size: .75rem; padding: .5rem .75rem; gap: 1rem; }
+    .hero-morph { top: 32rem; right: 6%; font-size: .75rem; }
+    .hero-morph > span:first-child { width: 2.1rem; height: 2.1rem; font-size: 1.2rem; }
+    .latest-dock { width: auto; left: var(--exp-space); bottom: 5rem; right: var(--exp-space); padding: 1rem 3.5rem 1rem 0; }
+    .latest-dock h2 { font-size: .85rem; }
+    .signal-band { padding-block: .7rem; }
+    .signal-band__track > span { gap: 1rem; padding-right: 1rem; }
+    .exp-journal { padding-top: 3.5rem; padding-bottom: 3.5rem; }
+    .journal-heading { margin-bottom: 1.5rem; gap: 1rem; }
+    .journal-heading > a { font-size: .75rem; }
+    .journal-heading > a span { margin-left: .75rem; }
+    .opening__quote { margin-top: 3rem; }
+    .exp-topics { padding-block: 3rem; }
   }
-  @media (max-width: 36rem) {
-    .home { padding-top: 1.6rem; }
-    .feature { padding-bottom: 1.4rem; }
-    .feature h1 { font-size: 1.75rem; line-height: 1.55; }
-    .feature__meta { margin-bottom: 0.85rem; }
-    .feature__summary { font-size: 0.85rem; margin-top: 0.8rem; }
-    .feature__actions { margin-top: 1.2rem; }
-    .reading-stage { height: 20rem; }
-    .reading-stage__deck { --deck-scale: 0.9; }
-    .folio-slot { width: 72%; height: 14rem; }
-    .folio__category { margin-top: 0.8rem; }
-    .folio h2 { font-size: 0.95rem; }
-    .folio__summary { display: none; }
-    .folio__bottom { font-size: 0.6rem; }
-    .opening__quote { margin-top: 2rem; }
-  }
-  @media (max-width: 22rem) { .reading-stage__deck { --deck-scale: 0.8; } }
   @media (prefers-reduced-motion: reduce) {
-    .reading-stage__deck { transform: scale(var(--deck-scale, 1)) rotateX(9deg) rotateY(-12deg); }
-    .folio:hover { translate: none; }
-    .folio-slot { transition: none; }
-    .index__grid :global(.entry:hover .entry__title) { translate: none; }
+    .hero-type { transform: none; }
+    .topic-flow { overflow-x: auto; }
+    .topic-flow__track { width: max-content; }
+    .topic-flow a[aria-hidden] { display: none; }
   }
 </style>

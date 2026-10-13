@@ -83,7 +83,7 @@ export interface Page<T> {
   next?: number;
 }
 
-/** 分页：每页 6 篇。第 1 页为 /，第 2 页起为 /page/N/。 */
+/** 文章列表统一使用 /page/N/，首页单独展示最新一页。 */
 export function paginate<T>(items: T[], perPage = POSTS_PER_PAGE): Page<T>[] {
   const total = Math.max(1, Math.ceil(items.length / perPage));
   const pages: Page<T>[] = [];
@@ -100,7 +100,7 @@ export function paginate<T>(items: T[], perPage = POSTS_PER_PAGE): Page<T>[] {
 }
 
 export function pageUrl(n: number): string {
-  return n <= 1 ? '/' : `/page/${n}/`;
+  return `/page/${Math.max(1, n)}/`;
 }
 
 export interface Neighbors {
@@ -108,10 +108,11 @@ export interface Neighbors {
   next?: Post;
 }
 
-/** 文章详情页的上/下一篇，按时间顺序（更早为「上一篇」）。 */
+/** 按文章列表的日期倒序：左侧上一篇更新，右侧下一篇更早。 */
 export function neighbors(posts: Post[], current: Post): Neighbors {
   const i = posts.findIndex((p) => p.id === current.id);
-  return { prev: posts[i + 1], next: posts[i - 1] };
+  if (i < 0) return {};
+  return { prev: posts[i - 1], next: posts[i + 1] };
 }
 
 export function formatDate(d: Date, style: 'slash' | 'dash' | 'cjk' = 'slash'): string {

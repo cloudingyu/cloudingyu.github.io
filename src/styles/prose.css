@@ -31,9 +31,7 @@
 .prose h2 {
   font-size: 1.5rem;
   margin: var(--s8) 0 var(--s4);
-  padding-top: var(--s4);
-  /* 章节线：让长文有清晰的分段落脚点 */
-  border-top: 1px solid var(--line);
+
 }
 
 .prose h3 {
@@ -135,17 +133,28 @@
   word-break: break-word;
 }
 
-/* --- 代码块：语言栏 + 复制按钮 + 行号 ----------------------------------- */
+/* --- 代码块：语法高亮与行号 --- */
+.experimental .prose :is(.code, pre) {
+  --code-bg: #f2f3ec;
+  --code-line: #ced2c7;
+  --code-ink: #22272e;
+  --code-muted: #657063;
+  --code-accent: #5941bf;
+  color-scheme: light;
+  color: var(--code-ink);
+}
+[data-theme='light'] .experimental .prose :is(.code, pre) {
+  --code-bg: #171b22;
+  --code-line: #363e49;
+  --code-ink: #e5e9ef;
+  --code-muted: #a0a8b4;
+  --code-accent: #d0ff45;
+  color-scheme: dark;
+}
+.code ::selection { background: color-mix(in srgb, var(--code-accent) 22%, transparent); }
 
-/*
-   结构来自 src/lib/rehype-code-frame.mjs：
-     figure.code
-       ├ figcaption.code__bar   ← 语言名 + 复制按钮
-       └ pre.astro-code
-   语言名与按钮是真 DOM（不再是伪元素），所以文字可选、按钮可点、
-   屏幕阅读器读得到。
-*/
 .code {
+  position: relative;
   margin: var(--s5) 0;
   border: 1px solid var(--line);
   border-radius: 3px;
@@ -153,87 +162,24 @@
   overflow: hidden;
 }
 
-.code__bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s3);
-  padding: 0.35rem 0.5rem 0.35rem 0.85rem;
-  border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--ink) 3%, transparent);
+.code-copy {
+  position: absolute;
+  z-index: 2;
+  top: .5rem;
+  right: .5rem;
+  min-width: 3.25rem;
+  padding: .25rem .5rem;
+  border: 1px solid var(--code-line);
+  border-radius: .4rem;
+  background: var(--code-bg);
+  color: var(--code-muted, var(--ink-muted));
+  font: 500 .75rem/1.5 var(--font-sans);
+  transition: color .2s, border-color .2s;
 }
-
-.code__lang {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.05em;
-  color: var(--ink-faint);
-}
-
-.code__copy {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.2rem 0.5rem;
-  border: 1px solid transparent;
-  border-radius: 2px;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.04em;
-  color: var(--ink-faint);
-  cursor: pointer;
-  transition:
-    color 0.22s var(--ease),
-    border-color 0.22s var(--ease),
-    background-color 0.22s var(--ease);
-}
-.code:hover .code__copy,
-.code__copy:focus-visible { opacity: 1; }
-.code__copy:hover {
-  color: var(--ink);
-  border-color: var(--line-strong);
-  background: var(--panel);
-}
-.code__copy svg {
-  width: 0.85rem;
-  height: 0.85rem;
-}
-/* 图标由 CSS 提供（伪元素里画 SVG 不如直接遮罩一张图省事，但这里是纯 CSS 图形） */
-.code__copy-icon {
-  width: 0.8rem;
-  height: 0.8rem;
-  background: currentColor;
-  -webkit-mask: var(--copy-mask) center / contain no-repeat;
-  mask: var(--copy-mask) center / contain no-repeat;
-  --copy-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7'%3E%3Crect x='9' y='9' width='11' height='11' rx='1.5'/%3E%3Cpath d='M15 5.5A1.5 1.5 0 0 0 13.5 4H5.5A1.5 1.5 0 0 0 4 5.5v8A1.5 1.5 0 0 0 5.5 15'/%3E%3C/svg%3E");
-  /* 复制按钮在未悬停时收着，悬停才亮 —— 一屏多块代码时不至于布满按钮 */
-  opacity: 0.55;
-  transition: opacity 0.24s var(--ease), color 0.22s var(--ease), border-color 0.22s var(--ease), background-color 0.22s var(--ease);
-}
-
-.code__copy.is-done {
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-}
-.code__copy.is-done .code__copy-icon {
-  --copy-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2'%3E%3Cpath d='m4.5 12.5 5 5 10-11'/%3E%3C/svg%3E");
-  animation: copy-pop 0.42s var(--ease);
-}
-.code__copy.is-fail {
-  color: var(--mark);
-  border-color: color-mix(in srgb, var(--mark) 40%, transparent);
-}
-
-@keyframes copy-pop {
-  0% { transform: scale(0.6); }
-  55% { transform: scale(1.18); }
-  100% { transform: scale(1); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .code__copy.is-done .code__copy-icon { animation: none; }
-}
+.code-copy:hover { color: var(--code-accent, var(--accent)); border-color: var(--code-accent, var(--accent)); }
+.code-copy:focus-visible { outline-color: var(--code-accent, var(--accent)); }
+.code-copy:disabled { opacity: .6; }
+.code pre code .line:nth-child(-n+2) { padding-right: 4.5rem; }
 
 .prose pre,
 .code pre {
@@ -286,7 +232,7 @@
   width: 2.4rem;
   padding-right: 0.7rem;
   text-align: right;
-  color: var(--ink-faint);
+  color: var(--code-muted, var(--ink-faint));
   font-variant-numeric: tabular-nums;
   user-select: none;
   /* 行号与代码之间的一道细线，像题解的样例栏 */
@@ -296,11 +242,11 @@
 /* 高亮行（Shiki 的 highlight transformer 会加 .highlighted） */
 .prose pre code .line.highlighted,
 .code pre code .line.highlighted {
-  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  background: color-mix(in srgb, var(--code-accent, var(--accent)) 9%, transparent);
 }
 .prose pre code .line.highlighted::before,
 .code pre code .line.highlighted::before {
-  color: var(--accent);
+  color: var(--code-accent, var(--accent));
   font-weight: 600;
 }
 
@@ -310,7 +256,7 @@
 /* --- Shiki 双主题：明暗切换纯 CSS --------------------------------------- */
 /*
    shikiConfig.defaultColor = false 时，每个 token 会同时带
-   --shiki-light / --shiki-dark 两个变量，由这里选择用哪个。
+   --shiki-light / --shiki-dark 两个变量：深色页面用浅色代码，浅色页面用深色代码。
    好处：切换主题不需要重新渲染，也没有两份 HTML。
 */
 
@@ -319,8 +265,8 @@
   color: var(--shiki-light);
   background-color: var(--shiki-light-bg);
 }
-[data-theme='dark'] .prose .astro-code,
-[data-theme='dark'] .prose pre.astro-code {
+[data-theme='light'] .prose .astro-code,
+[data-theme='light'] .prose pre.astro-code {
   color: var(--shiki-dark);
   background-color: var(--shiki-dark-bg);
 }
@@ -329,12 +275,12 @@
 .prose pre.astro-code span {
   color: var(--shiki-light);
 }
-[data-theme='dark'] .prose .astro-code span,
-[data-theme='dark'] .prose pre.astro-code span {
+[data-theme='light'] .prose .astro-code span,
+[data-theme='light'] .prose pre.astro-code span {
   color: var(--shiki-dark);
 }
 
-/* 代码块背景直接用我们自己的 token，不跟随 shiki 主题，保证与纸面协调 */
+/* 代码框背景使用独立配色，与页面形成明暗对比。 */
 .prose .astro-code,
 .prose pre.astro-code {
   background-color: var(--code-bg) !important;
@@ -393,8 +339,7 @@
 
 .prose hr {
   border: 0;
-  height: 1px;
-  background: var(--line);
+  height: 0;
   margin: var(--s7) 0;
 }
 

@@ -38,16 +38,14 @@ const cover = coverUrl(post);
 const posts = await allPosts();
 const { prev, next } = neighbors(posts, post);
 
-// 目录只取 h2/h3，且至少有 2 条才值得显示
-const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+// 展示三级正文标题，缩进与文章的标题层级一致。
+const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
 const showToc = toc.length >= 2;
 ---
 
 <BaseLayout
   page="home"
   hero="bare"
-  seal
-  seed={slugOf(post)}
   type="article"
   {title}
   {author}
@@ -58,10 +56,6 @@ const showToc = toc.length >= 2;
 >
   <article class="post" data-article>
     <header class="shell post__head">
-      <div class="post__seal" data-seal aria-hidden="true">
-        <div class="scene" data-scene="seal" data-seed={slugOf(post)} />
-      </div>
-
       <div class="post__crumbs mono-meta">
         <a href="/">首页</a>
         <span aria-hidden="true">/</span>
@@ -70,7 +64,7 @@ const showToc = toc.length >= 2;
         <span>{date.getUTCFullYear()}</span>
       </div>
 
-      <h1 class="post__title depth">{title}</h1>
+      <h1 class="post__title">{title}</h1>
 
       {subtitle && <p class="post__subtitle">{subtitle}</p>}
 
@@ -104,26 +98,27 @@ const showToc = toc.length >= 2;
       )
     }
 
-    <div class="rule" />
 
     <div class="shell post__body">
+      <div class="post__opening-rule" aria-hidden="true" />
       <div class:list={['post__grid', showToc && 'post__grid--with-toc']}>
         {
           showToc && (
             <aside class="post__toc" aria-label="本文目录">
-              <p class="mono-meta post__toc-head">目录</p>
+              <details class="post__toc-panel" open>
+              <summary class="post__toc-head">本文目录 <span><span data-reading-progress>0%</span><i aria-hidden="true">⌄</i></span></summary>
               <nav>
                 <ul>
                   {toc.map((h) => (
                     <li class:list={[`depth-${h.depth}`]}>
                       <a href={`#${h.slug}`}>
-                        <span class="post__toc-rule" aria-hidden="true" />
                         <span>{h.text}</span>
                       </a>
                     </li>
                   ))}
                 </ul>
               </nav>
+              </details>
             </aside>
           )
         }
@@ -135,7 +130,6 @@ const showToc = toc.length >= 2;
     </div>
 
     <footer class="shell post__foot">
-      <div class="rule" />
       <nav class="post__nav" aria-label="上下篇">
         {
           prev ? (
@@ -167,23 +161,6 @@ const showToc = toc.length >= 2;
     position: relative;
     padding-top: var(--s7);
     padding-bottom: var(--s5);
-  }
-
-  /* 右上角的印章：几何体由 WebGL 画，这里只负责占位与淡出 */
-  .post__seal {
-    position: absolute;
-    top: var(--s7);
-    right: var(--gutter);
-    width: clamp(5.5rem, 11vw, 8.5rem);
-    aspect-ratio: 1;
-    pointer-events: none;
-    opacity: 0.9;
-    mask-image: radial-gradient(58% 58% at 50% 50%, #000 60%, transparent 100%);
-    -webkit-mask-image: radial-gradient(58% 58% at 50% 50%, #000 60%, transparent 100%);
-  }
-  /* 窄屏没有余地，撤掉 */
-  @media (max-width: 52rem) {
-    .post__seal { display: none; }
   }
 
   .post__crumbs {
@@ -354,24 +331,6 @@ const showToc = toc.length >= 2;
   }
   .post__toc a:hover { color: var(--ink); }
   .post__toc a.is-current { color: var(--accent); font-weight: 600; }
-  .post__toc a.is-current .post__toc-rule { background: var(--accent); width: 1.1rem; }
-
-  /* 一道会随悬停延展的短横线 —— 图纸上被标注的条目 */
-  .post__toc-rule {
-    flex: none;
-    width: 0.7rem;
-    height: 1px;
-    background: var(--line-strong);
-    transform: translateY(-0.28em);
-    transition: width 0.3s var(--ease), background-color 0.3s var(--ease);
-  }
-  .post__toc a:hover .post__toc-rule {
-    width: 1.1rem;
-    background: var(--accent);
-  }
-
-  .post__toc li.depth-3 a { padding-left: 0.5rem; font-size: 0.8rem; }
-
   .post__prose { min-width: 0; }
 
   .post__foot {
@@ -414,6 +373,6 @@ const showToc = toc.length >= 2;
 
   @media (prefers-reduced-motion: reduce) {
     .post__title { animation: none; }
-    .post__toc-rule, .post__nav-item, .post__nav-title { transition: none; }
+    .post__nav-item, .post__nav-title { transition: none; }
   }
 </style>

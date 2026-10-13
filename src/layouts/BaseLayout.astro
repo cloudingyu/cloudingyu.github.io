@@ -1,21 +1,9 @@
 ---
-/**
- * 全站骨架：页头（品牌 + 导航 + 主题切换）、页头几何场景、页脚、阅读进度条。
- *
- * 页头视觉：WebGL 线框几何（src/scripts/geo/），每页一场，随主题取色。
- * 四张背景照片已经撤掉 —— 页头的空间感交给真的 3D，而不是一张静态图。
- * 各页的引言（SITE_DATA.md 第 7 节）是内容，原样保留。
- */
-import Head from '../components/Head.astro';
-import { SITE, AUTHOR, SOCIALS, FRIENDS, NAV, PAGES } from '../data/site';
-// 类型单独一行导入：Astro 7.3.6 的编译器对句内 `type` 修饰符的解析不稳，
-// 混写时会报 Expected } but found : 这类指向别处的错。
-import type { PageKey, SceneKind } from '../data/site';
-import { assetUrl, allPosts, tagGraph } from '../lib/posts';
-import '../styles/global.css';
-import '../styles/layout.css';
-import '../styles/scene.css';
+import ExperimentalLayout from './ExperimentalLayout.astro';
+import { SITE, PAGES } from '../data/site';
+import type { PageKey } from '../data/site';
 import '../styles/prose.css';
+import '../styles/interior.css';
 
 interface Props {
   title?: string;
@@ -26,241 +14,24 @@ interface Props {
   image?: string;
   noindex?: boolean;
   author?: string;
-  /** 使用哪个页面的引言与场景 */
   page?: PageKey;
-  /** 覆盖该页默认的几何场景 */
-  scene?: SceneKind;
-  /**
-   * 页头形态：
-   *   full    整屏开场，几何体放大到溢出画布（首页用）
-   *   tall    高页头
-   *   compact 紧凑页头（列表/归档）
-   *   bare    无页头（文章页，标题本身就是开场）
-   */
   hero?: 'full' | 'tall' | 'compact' | 'bare';
-  /** 页头是否显示该页的引言；默认跟随 hero（bare 的页面不显示） */
   showQuote?: boolean;
-  /** 场景种子的附加串（文章页传 slug，让每篇的印记不同） */
-  seed?: string;
-  /** 在正文顶部放一枚印章（文章页用） */
-  seal?: boolean;
-  /** 是否显示页脚装饰场景。 */
-  footerScene?: boolean;
 }
-
-const {
-  title,
-  description,
-  type = 'website',
-  published,
-  tags,
-  image,
-  noindex,
-  author,
-  page = 'home',
-  scene: sceneOverride,
-  hero = 'compact',
-  // 四个页面在 SITE_DATA.md 第 7 节里各有一句专属文案，那是内容、不是装饰，
-  // 所以默认就显示；只有 hero="bare" 的页面（文章页，标题本身就是开场）才关掉，
-  // 调用方仍可显式覆盖。
-  showQuote = hero !== 'bare',
-  seed = '',
-  seal = false,
-  footerScene = true,
-} = Astro.props;
-
-const bg = PAGES[page];
-const sceneKind: SceneKind = sceneOverride ?? bg.scene;
-const scenePosts = hero === 'bare' ? [] : await allPosts();
-const sceneSeed = `${page}-${seed || title || ''}`.trim();
-const current = Astro.url.pathname;
-const isActive = (href: string) =>
-  href === '/' ? current === '/' || current.startsWith('/page/') : current.startsWith(href);
+const { title, page = 'home', hero = 'compact', showQuote = hero !== 'bare', ...meta } = Astro.props;
 ---
 
-<!doctype html>
-<html lang={SITE.lang}>
-  <head>
-    <Head {title} {description} {type} {published} {tags} {image} {noindex} {author} />
-    <slot name="head" />
-  </head>
-  <body>
-    <a class="skip-link" href="#main">跳到正文</a>
-
-    <!-- 阅读进度：文章页才有意义，由 motion.js 与目录高亮共用同一帧更新 -->
-    <div class="progress" aria-hidden="true"><i id="progress-bar"></i></div>
-
-    <header class="masthead">
-      <div class="shell masthead__inner">
-        <a class="brand" href="/" aria-label={`${SITE.title} 首页`} data-magnetic="0.12">
-          <img
-            class="brand__mark"
-            src={assetUrl(AUTHOR.avatar)}
-            alt=""
-            width="36"
-            height="36"
-            loading="eager"
-          />
-          <span class="brand__text">
-            <span class="brand__name">{SITE.title}</span>
-            <span class="brand__tag mono-meta">{SITE.tagline}</span>
-          </span>
-        </a>
-
-        <nav class="nav" aria-label="主导航">
-          {
-            NAV.map((item) => (
-              <a
-                class:list={['nav__link', { 'is-active': isActive(item.href) }]}
-                href={item.href}
-                aria-current={isActive(item.href) ? 'page' : undefined}
-                data-magnetic="0.18"
-              >
-                {item.label}
-              </a>
-            ))
-          }
-          <a class="nav__link nav__search" href="/search/" aria-label="搜索文章" data-magnetic="0.18">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-            <span class="nav__search-label">搜索</span>
-          </a>
-          <button class="theme-toggle" id="theme-toggle" type="button" disabled aria-live="polite" data-magnetic="0.18">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-              <path class="tt-sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m0-11.32L4.93 4.93m14.14 14.14-1.41-1.41" />
-              <circle cx="12" cy="12" r="4.2" />
-            </svg>
-            <span id="theme-label">主题</span>
-          </button>
-        </nav>
+<ExperimentalLayout {title} {...meta}>
+  <slot name="head" slot="head" />
+  {hero !== 'bare' && (
+    <section class:list={['page-opening', { 'page-opening--404': page === 'notFound', 'page-opening--about': page === 'about', 'page-opening--collection': page === 'home' }]} aria-labelledby="page-title">
+      <div class="page-opening__type">
+        <h1 id="page-title">{title || SITE.title}<span aria-hidden="true">.</span></h1>
+        {showQuote && <blockquote class="page-opening__quote">{PAGES[page].quote}</blockquote>}
       </div>
-    </header>
-
-    {
-      hero !== 'bare' && (
-        <section class:list={['hero', `hero--${hero}`, 'hero--scene']}>
-          {/*
-            溢出层：几何体故意比容器大，向画布外「破开」——
-            这是刻意的版式主张，被裁掉的部分反而让画面显得更大。
-            scale 传给场景，几何体按它放大到超出可视范围。
-          */}
-          <div
-            class="scene scene--bleed"
-            data-scene={sceneKind}
-            data-post-count={scenePosts.length}
-            data-tag-network={sceneKind === 'tags' ? JSON.stringify(tagGraph(scenePosts)) : undefined}
-            data-seed={sceneSeed}
-            data-scene-scroll="on"
-            data-scene-scale={hero === 'full' ? '1.55' : '1.12'}
-            aria-hidden="true"
-          />
-          <div class="hero__veil" aria-hidden="true" />
-          <div class="shell hero__inner">
-            {title && (
-              <p class="hero__eyebrow mono-meta stage-text" style="--stage-i:0">
-                {SITE.url.replace(/^https?:\/\//, '')}
-              </p>
-            )}
-            {hero !== 'full' && <h1 class="hero__title stage-text depth" style="--stage-i:1">
-              {title || SITE.title}
-            </h1>}
-            {showQuote && (
-              <blockquote class="hero__quote stage-text" style="--stage-i:2">
-                {bg.quote}
-              </blockquote>
-            )}
-          </div>
-          <div class="hero__rule rule stage-rule" />
-        </section>
-      )
-    }
-
-    <main id="main">
-      <slot />
-    </main>
-
-    <footer class="foot">
-      <div class="shell">
-        <div class="foot__grid">
-          <div class="foot__brand">
-            <p class="foot__name">{AUTHOR.name}</p>
-            <p class="foot__bio">{AUTHOR.bio}</p>
-            <a class="foot__mail mono-meta" href={`mailto:${SITE.email}`} data-magnetic="0.2">{SITE.email}</a>
-          </div>
-
-          <div class="foot__col">
-            <p class="foot__head mono-meta">找到我</p>
-            <ul class="foot__list">
-              {
-                SOCIALS.map((s) => (
-                  <li>
-                    <a href={s.url} rel="me noopener noreferrer" target="_blank" data-magnetic="0.16">
-                      {s.name}
-                    </a>
-                  </li>
-                ))
-              }
-              <li>
-                <a href="/search/" data-magnetic="0.16">站内搜索</a>
-              </li>
-            </ul>
-          </div>
-
-          <div class="foot__col">
-            <p class="foot__head mono-meta">朋友们</p>
-            <ul class="foot__list">
-              {
-                FRIENDS.map((f) => (
-                  <li>
-                    <a href={f.url} rel="noopener noreferrer" target="_blank" data-magnetic="0.16">
-                      {f.name}
-                    </a>
-                  </li>
-                ))
-              }
-            </ul>
-          </div>
-
-          <div class="foot__col">
-            <p class="foot__head mono-meta">栏目</p>
-            <ul class="foot__list">
-              {NAV.map((n) => (
-                <li>
-                  <a href={n.href} data-magnetic="0.16">{n.label}</a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div class="foot__base">
-          <span class="mono-meta">
-            © {new Date().getFullYear()} {AUTHOR.name} · 保留所有权利
-          </span>
-          <span class="mono-meta foot__built">
-            Astro + three.js 构建 · 部署于 GitHub Pages
-          </span>
-        </div>
-      </div>
-
-      <!-- 页脚上方的几何带：把「本站的体量」画成一张网 -->
-      {
-        footerScene && seal === false && (
-          <div class="foot__band">
-            <div class="scene scene--band" data-scene="seal" data-seed={`foot-${page}`} aria-hidden="true" />
-          </div>
-        )
-      }
-    </footer>
-
-    <script>
-      // 动效总控：WebGL 场景 + 磁力光标 + 复制 + 揭示 + 目录高亮。
-      // 走一个入口是为了让 ClientRouter 换页后能整体重绑（见 motion.js 的 bind）。
-      import '../scripts/motion.js';
-    </script>
-
-    <slot name="scripts" />
-  </body>
-</html>
+      {page !== 'about' && <div class="page-opening__seal" aria-hidden="true"><div /><span>CY</span></div>}
+    </section>
+  )}
+  <slot />
+  <slot name="scripts" slot="scripts" />
+</ExperimentalLayout>

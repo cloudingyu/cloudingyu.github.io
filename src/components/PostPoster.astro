@@ -1,0 +1,49 @@
+---
+import { formatDate, permalink, excerpt } from '../lib/posts';
+import type { Post } from '../lib/posts';
+interface Props { post: Post; index?: number; headingLevel?: 'h2' | 'h3'; }
+const { post, index = 0, headingLevel = 'h2' } = Astro.props;
+const Heading = headingLevel;
+---
+<article class="journal-entry entry" data-exp-reveal>
+  <a class="journal-entry__link" href={permalink(post)} data-cursor-label="阅读">
+    <span class="journal-entry__number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+    <div class="journal-entry__content">
+      <div class="journal-entry__meta"><time datetime={post.data.date.toISOString()}>{formatDate(post.data.date, 'dash')}</time><span>{post.data.tags[0] || '记录'}</span></div>
+      <Heading>{post.data.title}</Heading>
+      <p>{post.data.subtitle || excerpt(post.body ?? '', 74)}</p>
+    </div>
+    <span class="journal-entry__action" aria-hidden="true"><i>↗</i></span>
+  </a>
+</article>
+<style>
+  .journal-entry { position: relative; min-width: 0; border-bottom: 1px solid var(--line); }
+  .journal-entry:last-child { border-bottom: 0; }
+  .journal-entry__link { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) 6rem; gap: 2rem; align-items: start; padding: 1.5rem 0; }
+  .journal-entry__number { font: 650 clamp(2.5rem, 4vw, 4rem)/1 Arial, sans-serif; letter-spacing: -.07em; color: var(--ink-faint); transition: color .4s; }
+  .journal-entry__meta { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; color: var(--ink-muted); font-size: .85rem; margin-bottom: .85rem; }
+  .journal-entry__meta time { font-variant-numeric: tabular-nums; }
+  .journal-entry__meta > span { color: var(--exp-purple); }
+  .journal-entry__content { min-width: 0; }
+  .journal-entry__content :is(h2, h3) { font-size: clamp(1.35rem, 2.25vw, 2.3rem); font-weight: 700; line-height: 1.5; letter-spacing: -.035em; overflow-wrap: anywhere; transition: color .4s, translate .5s var(--exp-ease); }
+  .journal-entry__content p { margin-top: .9rem; max-width: 55rem; font-size: .83rem; line-height: 1.85; color: var(--ink-muted); }
+  .journal-entry__action { display: flex; flex-direction: column; align-items: end; align-self: center; gap: .7rem; color: var(--ink-muted); font-size: .65rem; white-space: nowrap; }
+  .journal-entry__action i { font: 300 3rem/1 Arial, sans-serif; color: var(--ink); transition: color .4s, translate .5s var(--exp-ease); }
+  .journal-entry:has(a:hover, a:focus-visible) .journal-entry__number { color: var(--exp-purple); }
+  .journal-entry:has(a:hover, a:focus-visible) :is(h2, h3) { color: var(--accent); translate: .4rem 0; }
+  .journal-entry:has(a:hover, a:focus-visible) .journal-entry__action i { color: var(--accent); translate: .3rem -.3rem; }
+  @media (max-width: 48rem) {
+    .journal-entry__link { grid-template-columns: 2rem minmax(0, 1fr) 1.5rem; gap: .8rem; padding: 1.1rem 0; }
+    .journal-entry__number { font-size: 1.4rem; margin-top: .1rem; }
+    .journal-entry__meta { font-size: .75rem; gap: .6rem; margin-bottom: .65rem; }
+    .journal-entry__content :is(h2, h3) { font-size: 1.25rem; }
+    .journal-entry__content p { font-size: .73rem; margin-top: .7rem; }
+    .journal-entry__action { align-self: start; }
+    .journal-entry__action i { font-size: 1.5rem; }
+    .journal-entry__action > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .journal-entry * { transition: none; }
+    .journal-entry:has(a:hover, a:focus-visible) :is(h2, h3, .journal-entry__action i) { translate: none; }
+  }
+</style>

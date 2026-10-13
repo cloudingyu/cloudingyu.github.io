@@ -1,6 +1,6 @@
 # 站点数据（唯一事实来源）
 
-本文件包含重建博客所需的**全部个人信息与站点结构**。所有值均从原站点的配置文件、页面与模板中提取，未经改写。
+本文件包含重建博客所需的**全部个人信息与站点结构**。所有值均从原站点的配置文件、页面与模板中提取，并按作者最新要求更新。
 
 > 原站点使用 Jekyll + SCSS，**本包不包含任何样式、布局、脚本或模板**。新站点可自由选择技术栈（Next.js / Astro / Hugo / 纯静态均可），但下列内容必须原样保留。
 
@@ -12,7 +12,7 @@
 | --- | --- |
 | 站点标题（页头品牌） | `CloudingYu的博客` |
 | SEO 标题 | `小鱼儿clouding的博客 \| CY's Blog` |
-| 站点描述 / 副标语 | `技术宅拯救世界真的很酷！` |
+| 站点内容描述 | `CloudingYu 的技术笔记，记录算法、机器学习与软件设计。` |
 | 首页导语 | `「好奇心仅是引领我们启程的火种。它点燃了我们对未知的渴望，却不足以照亮整个旅程。」` |
 | 邮箱 | `cloudingyu@gmail.com` |
 | 站点 URL | `http://cloudingyu.github.io` |
@@ -56,6 +56,7 @@
 | 路由 | 页面 | 说明 |
 | --- | --- | --- |
 | `/` | 首页 | 文章列表，**每页 6 篇**，带「更新 / 更早」翻页 |
+| `/page/1/`、`/page/2/`、`/page/3/` | 独立文章列表 | 每页 6 篇，统一分页；首页展示最新 6 篇 |
 | `/about/` | About | 关于页，展示头像与个人简介 |
 | `/archive/` | Archive | 归档页，按 **年份分组** + 标签云筛选；标签按文章数降序排列 |
 | `/404.html` | 404 | 隐藏于导航 |
@@ -70,7 +71,7 @@
 
 ## 6. About 页正文
 
-以下为 About 页的完整内容，需在重建时保留（原始为 Markdown，含外链 Badge 图片）。
+以下为 About 页的当前内容，已按作者要求更新个人简介并删去技术栈与 GitHub 统计区块。
 
 ```markdown
 # 你好, 我是 CloudingYu 👋
@@ -78,7 +79,7 @@
 ## 🚀 关于我
 
 - 💡 喜欢用优雅的代码简化复杂问题并解决实际问题
-- 🎮 业余游戏 ~~开发者~~ 玩家
+- 🖥️ FDUSC 队员，正在学习 AI Infra 相关知识
 - 📚 终身学习者，始终保持好奇心
 - 🎓 复旦大学本科生
 
@@ -86,16 +87,10 @@
 
 <div align="center"><em>"Curiosity is the spark that lights the flame of our journey, but it is not enough to illuminate the entire path"</em></div>
 
-## 💻 技术栈
 
-![Python](https://img.shields.io/badge/-Python-3776AB?style=flat-square&logo=python&logoColor=white) ![C++](https://img.shields.io/badge/-C++-00599C?style=flat-square&logo=cplusplus&logoColor=white) ![Java](https://img.shields.io/badge/-Java-007396?style=flat-square&logo=java&logoColor=white) ![JavaScript](https://img.shields.io/badge/-JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black) ![Vue](https://img.shields.io/badge/-Vue.js-4FC08D?style=flat-square&logo=vue.js&logoColor=white)
-
-## 📊 我的 GitHub 统计
-
-![CodeTime Badge](https://img.shields.io/endpoint?style=flat-square&color=41B883&url=https%3A%2F%2Fapi.codetime.dev%2Fshield%3Fid%3D31966%26project%3D%26in=0) [![GitHub followers](https://img.shields.io/github/followers/cloudingyu?label=Followers&style=social)](https://github.com/cloudingyu?tab=followers) [![GitHub stars](https://img.shields.io/github/stars/cloudingyu?style=social)](https://github.com/cloudingyu?tab=stars) ![Last Commit](https://img.shields.io/github/last-commit/cloudingyu/cloudingyu)
 ```
 
-> 注意：上述 Badge 与 GIF 均为**外部 CDN 图片**，不在本包内，重建时保留原始直链即可。
+关于页已按作者要求移除技术栈与 GitHub 统计区块。
 
 ## 7. 各页面的背景图与描述文案
 

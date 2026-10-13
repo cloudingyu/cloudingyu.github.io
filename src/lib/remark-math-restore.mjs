@@ -31,6 +31,19 @@ import { isMathMisfire } from './remark-guard-currency.mjs';
 /** 把 tex 里被 kramdown 转义过的定界符折回正常写法 */
 const unescapeDollars = (s) => s.replace(/\\\$/g, '$');
 
+// 手动创建的数学节点也要携带 remark-math 的 HTML 标记，供 rehype-katex 识别。
+function mathNode(value, display = false) {
+  const children = [{ type: 'text', value }];
+  const properties = { className: ['language-math', display ? 'math-display' : 'math-inline'] };
+  return {
+    type: display ? 'math' : 'inlineMath',
+    value,
+    data: display
+      ? { hName: 'pre', hChildren: [{ type: 'element', tagName: 'code', properties, children }] }
+      : { hName: 'code', hProperties: properties, hChildren: children },
+  };
+}
+
 /**
  * 把一个纯文本字符串按公式定界符切成节点数组。
  * 先认 `$$…$$`（块级），再认 `$…$`（行内），避免长定界符被短定界符抢断。
@@ -54,7 +67,7 @@ function splitMath(value) {
     if (!isBlock && isMathMisfire(tex)) continue;
 
     pushText(value.slice(last, m.index));
-    out.push(isBlock ? { type: 'math', value: tex } : { type: 'inlineMath', value: tex });
+    out.push(mathNode(tex, isBlock));
     last = m.index + m[0].length;
   }
 
@@ -62,17 +75,13 @@ function splitMath(value) {
   return out;
 }
 
-/** 单个 html 块恰好是一对定界符包着一个公式：拆成 html + math + html */
+/** HTML 块只含一条公式时，直接转为显示公式，避免无效的段落嵌套。 */
 function splitHtmlMath(value) {
-  const m = /^(<(?:p|div)\b[^>]*>)\s*\$([^$\n]+)\$\s*(<\/(?:p|div)>)\s*$/i.exec(value);
+  const m = /^<(p|div)\b[^>]*>\s*(\${1,2})([^$]+)\2\s*<\/\1>\s*$/i.exec(value);
   if (!m) return null;
-  const [, open, tex, close] = m;
+  const tex = m[3].trim();
   if (isMathMisfire(tex)) return null;
-  return [
-    { type: 'html', value: open },
-    { type: 'inlineMath', value: tex },
-    { type: 'html', value: close },
-  ];
+  return [mathNode(tex, true)];
 }
 
 /** 递归替换：把 text 节点里残留的公式语法劈成 math 节点 */

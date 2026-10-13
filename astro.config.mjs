@@ -20,7 +20,7 @@ import { rehypeCodeFrame } from './src/lib/rehype-code-frame.mjs';
  *   rehypeKatex         → 渲染成 KaTeX
  *   rehypeMathHeadings  → 排在 Astro 收集 heading 之前，把标题里的数学拍平成纯文本，
  *                         否则目录会漏出 \\mathrm{Vim} 这种注解源码
- *   rehypeCodeFrame     → 最后给代码块套上「语言栏 + 复制按钮」的框
+ *   rehypeCodeFrame     → 最后给代码块套上滚动与行号的容器
  *                         （rehypePlugins 整体排在 Shiki 之后，所以这一步拿得到已着色的 pre）
  */
 const markdownProcessor = unified({

@@ -8,8 +8,8 @@ export const SITE = {
   title: 'CloudingYu的博客',
   /** SEO <title> */
   seoTitle: "小鱼儿clouding的博客 | CY's Blog",
-  /** 站点描述 / 副标语 */
-  tagline: '技术宅拯救世界真的很酷！',
+  /** 站点内容描述 */
+  description: 'CloudingYu 的技术笔记，记录算法、机器学习与软件设计。',
   url: 'https://cloudingyu.github.io',
   email: 'cloudingyu@gmail.com',
   lang: 'zh-CN',

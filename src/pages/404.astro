@@ -16,29 +16,22 @@ const recent = (await allPosts()).slice(0, 3);
 
 <BaseLayout page="notFound" hero="tall" title="404">
   <div class="shell notfound">
-    <p class="notfound__num mono-meta">404 · Not Found</p>
-
-    <div class="rule" />
 
     <nav class="notfound__paths" aria-label="可能的去处">
       <a class="notfound__path" href="/">
         <span class="notfound__path-name">首页</span>
-        <span class="mono-meta notfound__path-note">最新的文章</span>
       </a>
       <a class="notfound__path" href="/archive/">
         <span class="notfound__path-name">归档</span>
-        <span class="mono-meta notfound__path-note">全部 15 篇，按年份</span>
       </a>
       <a class="notfound__path" href="/about/">
         <span class="notfound__path-name">关于</span>
-        <span class="mono-meta notfound__path-note">这个博客与作者</span>
       </a>
     </nav>
 
-    <div class="rule" />
 
     <section class="notfound__recent" aria-labelledby="nf-recent">
-      <h2 class="mono-meta notfound__recent-head" id="nf-recent">或者从这里开始</h2>
+      <h2 class="notfound__recent-head" id="nf-recent">最近文章</h2>
       <ul>
         {
           recent.map((p) => (

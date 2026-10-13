@@ -1,0 +1,166 @@
+---
+import Head from '../components/Head.astro';
+import { SITE, AUTHOR, SOCIALS, FRIENDS } from '../data/site';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  type?: 'website' | 'article';
+  published?: Date;
+  tags?: string[];
+  image?: string;
+  noindex?: boolean;
+  author?: string;
+}
+const { title, description, type, published, tags, image, noindex, author } = Astro.props;
+const current = Astro.url.pathname;
+const articleList = '/page/1/';
+const active = (path: string) => current.startsWith(path);
+const [emailName, emailDomain] = SITE.email.split('@');
+---
+
+<!doctype html>
+<html lang={SITE.lang}>
+  <head>
+    <Head {title} {description} {type} {published} {tags} {image} {noindex} {author} />
+    <script is:inline>
+      try { if (!localStorage.getItem('cy-theme')) document.documentElement.dataset.theme = 'dark'; }
+      catch { document.documentElement.dataset.theme = 'dark'; }
+    </script>
+    <slot name="head" />
+  </head>
+  <body class="experimental">
+    <a class="skip-link" href="#main">跳到正文</a>
+    {type === 'article' && <div class="reading-progress" aria-hidden="true"><i id="progress-bar" /></div>}
+    <header class="exp-nav">
+      <a class="exp-brand" href="/" aria-label="小鱼儿clouding的博客 首页"><span class="exp-brand__name">小鱼儿<span class="exp-brand__accent">clouding</span>的博客</span></a>
+      <nav aria-label="主导航"><a href={articleList} aria-current={current.startsWith('/page/') ? 'page' : undefined}>文章</a><a href="/about/" aria-current={active('/about/') ? 'page' : undefined}>关于</a><a href="/archive/" aria-current={active('/archive/') || active('/tags/') ? 'page' : undefined}>归档</a><a href="/search/" aria-label="搜索文章" aria-current={active('/search/') ? 'page' : undefined}>搜索 ↗</a></nav>
+      <button class="exp-theme" type="button" data-exp-theme aria-label="切换明暗主题" disabled><span aria-hidden="true">◐</span></button>
+    </header>
+    <main id="main"><slot /></main>
+    <footer class="exp-footer">
+      <div class="exp-footer__lead" data-exp-reveal>
+        <p>KEEP THE<br /><span>CURIOSITY.</span></p>
+        <a class="footer-email" href={`mailto:${SITE.email}`} data-cursor-label="联系" aria-label={`发送邮件至 ${SITE.email}`}>
+          <span class="footer-email__address"><span class="footer-email__name">{emailName}</span><span class="footer-email__at">@</span><span class="footer-email__domain">{emailDomain}</span></span>
+          <span class="footer-email__arrow" aria-hidden="true">↗</span>
+        </a>
+      </div>
+      <div class="exp-footer__links">
+        <section class="footer-directory" aria-labelledby="footer-social" data-exp-reveal>
+          <h2 id="footer-social">找到我<span aria-hidden="true">↗</span></h2>
+          {SOCIALS.map((s) => <a href={s.url} target="_blank" rel="me noopener noreferrer"><span>{s.name}</span><i aria-hidden="true">↗</i></a>)}
+        </section>
+        <section class="footer-directory" aria-labelledby="footer-friends" data-exp-reveal>
+          <h2 id="footer-friends">朋友们<span aria-hidden="true">↗</span></h2>
+          {FRIENDS.map((f) => <a href={f.url} target="_blank" rel="noopener noreferrer"><span>{f.name}</span><i aria-hidden="true">↗</i></a>)}
+        </section>
+        <section class="footer-directory" aria-labelledby="footer-records" data-exp-reveal>
+          <h2 id="footer-records">更多记录<span aria-hidden="true">↗</span></h2>
+          <a href="/archive/"><span>文章归档</span><i aria-hidden="true">↗</i></a>
+          <a href="/search/"><span>站内搜索</span><i aria-hidden="true">↗</i></a>
+          <a href="/about/"><span>关于我</span><i aria-hidden="true">↗</i></a>
+        </section>
+      </div>
+      <div class="exp-footer__base"><span>© {new Date().getFullYear()} {AUTHOR.name}</span><a href="#main">回到顶部 ↑</a></div>
+    </footer>
+    <div class="exp-cursor" aria-hidden="true"><span>↗</span></div>
+    <script>import '../scripts/experimental-home.js';</script>
+    <slot name="scripts" />
+  </body>
+</html>
+
+<style is:global>
+  .experimental {
+    --paper: #090a0c; --panel: #14161a; --panel-sunk: #1c1e24;
+    --ink: #f0f1e9; --ink-soft: #c6c8bf; --ink-muted: #9c9f96; --ink-faint: #999e93;
+    --line: #30332e; --line-strong: #51564a; --accent: #d0ff45; --accent-soft: #b3dc3b;
+    --font-serif: var(--font-sans); --exp-space: clamp(1.25rem, 5vw, 5rem);
+    --exp-purple: #bfa9ff; --exp-ease: cubic-bezier(.16, 1, .3, 1);
+    --brand-accent: #c4b5e5; --exp-nav-height: 6.5rem;
+    --mark: #bfa9ff; --mark-wash: #242031; --code-bg: #111318; --code-line: #30323d;
+    color: var(--ink); background: var(--paper); font-family: var(--font-sans);
+  }
+  [data-theme='light'] .experimental {
+    --brand-accent: #65577d;
+    --paper: #eeefe7; --panel: #f9faf4; --panel-sunk: #dfe1d6;
+    --ink: #15170f; --ink-soft: #363b2a; --ink-muted: #626756; --ink-faint: #666a5d;
+    --line: #c9ccbd; --line-strong: #9b9f8c; --accent: #5941bf; --accent-soft: #7660d0;
+    --mark: #5941bf; --mark-wash: #e2dbee; --code-bg: #e3e5dc; --code-line: #c9ccbd;
+  }
+  .experimental :is(a, button) { -webkit-tap-highlight-color: transparent; }
+  .experimental :focus-visible { outline-color: var(--accent); outline-offset: 5px; }
+  .exp-nav { position: relative; z-index: 20; display: flex; align-items: center; gap: 2rem; justify-content: space-between; margin-inline: var(--exp-space); height: 6.5rem; border-bottom: 1px solid var(--line); }
+  .exp-brand { display: flex; align-items: center; gap: 1rem; }
+  .exp-brand__name { color: var(--ink); font-size: clamp(1rem, 1.5vw, 1.3rem); line-height: 1.5; font-weight: 700; white-space: nowrap; }
+  .exp-brand__accent { color: var(--brand-accent); font-weight: inherit; margin-inline: .15em; }
+  .exp-nav nav { display: flex; gap: clamp(1rem, 3vw, 3rem); font-size: 0.8rem; margin-left: auto; }
+  .exp-nav nav a { position: relative; }
+  .exp-nav nav a::after { content: ''; position: absolute; left: 0; right: 0; bottom: -0.25rem; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: right; transition: transform 0.35s var(--exp-ease); }
+  .exp-nav nav a:hover::after { transform: scaleX(1); transform-origin: left; }
+  .exp-nav nav a[aria-current='page'] { color: var(--accent); }
+  .exp-nav nav a[aria-current='page']::after { transform: scaleX(1); }
+  .reading-progress { position: fixed; inset: 0 0 auto; height: 3px; z-index: 80; pointer-events: none; }
+  .reading-progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--exp-purple), var(--accent)); transform: scaleX(0); transform-origin: left; }
+  @view-transition { navigation: auto; }
+  @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+  .exp-theme { display: grid; place-items: center; flex: 0 0 2.5rem; width: 2.5rem; height: 2.5rem; border: 1px solid var(--line-strong); border-radius: 50%; font-size: 1.3rem; transition: rotate .5s var(--exp-ease), background .3s; }
+  .exp-theme:hover { rotate: 180deg; background: var(--panel-sunk); }
+  .exp-theme:disabled { opacity: .5; cursor: default; }
+  .exp-footer { padding: 5rem var(--exp-space) 1.5rem; }
+  .exp-footer__lead { display: flex; align-items: end; justify-content: space-between; gap: 2rem; }
+  .exp-footer__lead p { font-family: 'Arial Black', var(--font-sans); font-size: clamp(2.5rem, 7vw, 7rem); line-height: .95; font-weight: 900; letter-spacing: -.06em; margin: 0; }
+  .exp-footer__lead p > span { color: var(--accent); }
+  .footer-email { display: inline-flex; align-items: center; gap: 1.2rem; max-width: 100%; padding-block: .5rem; font: 400 clamp(1.1rem, 1.6vw, 1.65rem)/1.5 'Segoe UI', 'Helvetica Neue', sans-serif; letter-spacing: .01em; }
+  .footer-email__address { min-width: 0; overflow-wrap: anywhere; }
+  .footer-email__name { font-weight: 600; }
+  .footer-email__at { color: var(--accent); margin-inline: .06em; }
+  .footer-email__domain { color: var(--ink-muted); transition: color .3s; }
+  .footer-email__arrow { display: grid; place-items: center; flex: 0 0 2.6rem; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: var(--accent); color: var(--paper); font-size: 1.35rem; transition: transform .3s var(--exp-ease); }
+  .footer-email:hover .footer-email__domain { color: var(--ink); }
+  .footer-email:hover .footer-email__arrow { transform: rotate(45deg); }
+  .exp-footer__links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(2rem, 5vw, 5rem); margin-top: 5rem; }
+  .footer-directory { min-width: 0; padding-top: 1.25rem; }
+  .footer-directory h2 { position: relative; font-size: clamp(1.4rem, 2.5vw, 2.2rem); font-weight: 700; letter-spacing: -.04em; margin-bottom: 1.5rem; }
+  .footer-directory h2 > span { position: absolute; right: 0; bottom: 0; color: var(--exp-purple); font-weight: 300; }
+  .footer-directory a { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: .8rem 0; font-size: .9rem; color: var(--ink-soft); }
+  .footer-directory a > span { transition: translate .4s var(--exp-ease), color .3s; }
+  .footer-directory a i { font-style: normal; color: var(--ink-faint); transition: translate .4s var(--exp-ease), color .3s; }
+  .footer-directory a:hover > span { translate: .3rem 0; color: var(--accent); }
+  .footer-directory a:hover i { translate: .15rem -.15rem; color: var(--accent); }
+  .exp-footer__base { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--line); font-size: .8rem; color: var(--ink-muted); }
+  .exp-cursor { display: none; position: fixed; top: 0; left: 0; z-index: 100; width: 2.25rem; height: 2.25rem; border: 1px solid #d0ff45; border-radius: 50%; pointer-events: none; align-items: center; justify-content: center; color: #d0ff45; mix-blend-mode: difference; opacity: 0; transition: width .3s var(--exp-ease), height .3s var(--exp-ease), opacity .2s, background .3s; }
+  .exp-cursor span { opacity: 0; font-size: .8rem; }
+  .exp-cursor.is-link { width: 4rem; height: 4rem; background: #d0ff45; color: #090a0c; }
+  .exp-cursor.is-link span { opacity: 1; }
+  @media (hover: hover) and (pointer: fine) {
+    .experimental[data-cursor-ready] .exp-cursor { display: flex; }
+    .experimental[data-cursor-ready], .experimental[data-cursor-ready] :is(a, button) { cursor: none; }
+  }
+  .experimental[data-page-hidden] *, .experimental[data-page-hidden] *::before, .experimental[data-page-hidden] *::after { animation-play-state: paused !important; }
+  html[data-exp-theme-transition]::view-transition-old(root) { animation: none; }
+  html[data-exp-theme-transition]::view-transition-new(root) { animation: exp-theme-iris .65s cubic-bezier(.16,1,.3,1) both; mix-blend-mode: normal; }
+  @keyframes exp-theme-iris { from { clip-path: circle(0 at var(--theme-x) var(--theme-y)); } to { clip-path: circle(160vmax at var(--theme-x) var(--theme-y)); } }
+  @media (max-width: 48rem) {
+    .experimental { --exp-nav-height: 6.2rem; }
+    .exp-nav { display: grid; grid-template-columns: minmax(0, 1fr) auto; height: auto; padding-block: 1rem; gap: 1rem; }
+    .exp-brand__name { font-size: 1.05rem; }
+    .exp-nav nav { grid-row: 2; grid-column: 1 / -1; justify-content: space-between; gap: 1rem; font-size: .8rem; line-height: 1.5; margin-left: 0; }
+    .exp-theme { grid-row: 1; grid-column: 2; }
+    .exp-theme { width: 2rem; height: 2rem; flex-basis: 2rem; font-size: 1rem; }
+    .exp-footer { padding-top: 3rem; }
+    .exp-footer__lead { align-items: start; flex-direction: column; }
+    .exp-footer__links { grid-template-columns: minmax(0, 1fr); gap: 2rem; margin-top: 3rem; }
+    .footer-directory h2 { font-size: 1.65rem; margin-bottom: .75rem; }
+    .footer-directory a { padding-block: .65rem; }
+    .exp-footer__base { margin-top: 2.5rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .exp-cursor { display: none !important; }
+    .footer-email__arrow, .footer-email__domain { transition: none; }
+    .footer-email:hover .footer-email__arrow { transform: none; }
+    .footer-directory a :is(span, i) { transition: none; }
+    .footer-directory a:hover :is(span, i) { translate: none; }
+  }
+</style>

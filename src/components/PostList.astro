@@ -2,7 +2,7 @@
 /**
  * 文章列表本体（首页与分页页共用），避免两处重复渲染逻辑。
  */
-import PostCard from './PostCard.astro';
+import PostCard from './PostPoster.astro';
 import Pagination from './Pagination.astro';
 import { POSTS_PER_PAGE } from '../data/site';
 import type { Page } from '../lib/posts';
@@ -17,14 +17,9 @@ const { page, total } = Astro.props;
 ---
 
 <section class="shell home">
-  <div class="home__lead">
-    <p class="home__count mono-meta">
-      共 {total} 篇 · 每页 {POSTS_PER_PAGE} 篇
-    </p>
-  </div>
 
   <div class="home__list">
-    {page.items.map((post, i) => <PostCard post={post} index={i} />)}
+    {page.items.map((post, i) => <PostCard post={post} index={(page.current - 1) * POSTS_PER_PAGE + i} />)}
   </div>
 
   <Pagination page={page} />
@@ -54,8 +49,4 @@ const { page, total } = Astro.props;
 
   .home__list { margin-top: var(--s2); }
 
-  /* 最后一条也补上下边界线，列表才收得住 */
-  .home__list > :last-child {
-    border-bottom: 1px solid var(--line);
-  }
 </style>
