@@ -32,8 +32,10 @@
 .experimental #main .post__head { padding-top: 2rem; padding-bottom: 1.25rem; }
 .experimental #main .post__crumbs { font: .85rem var(--font-sans); margin-bottom: 2.5rem; }
 .experimental #main .post__title { max-width: 18em; font-size: clamp(2.05rem, 4.5vw, 4.5rem); line-height: 1.25; letter-spacing: -.045em; font-weight: 850; text-wrap: balance; }
-.experimental #main .post__subtitle { max-width: 55rem; font-size: 1rem; margin-top: 1.3rem; color: var(--ink-muted); }
+.experimental #main .post__subtitle { max-width: 55rem; font-size: 1.05rem; margin-top: 1.3rem; color: var(--ink-muted); }
 .experimental #main .post__byline { margin-top: 2rem; padding-top: 0; border: 0; }
+.experimental #main .post__author { font-size: 1rem; }
+.experimental #main .post__avatar img { width: 2.4rem; height: 2.4rem; }
 .experimental #main .post__cover { margin-bottom: 2rem; }
 .experimental #main .post__cover img { border-radius: .8rem; max-height: 28rem; object-fit: cover; }
 .experimental #main .post__body { width: calc(100% - var(--exp-space) * 2); max-width: 76rem; margin-inline: auto; padding-top: .75rem; }
@@ -41,26 +43,30 @@
 .experimental #main .post__prose { width: 100%; max-width: 50rem; margin-inline: auto; }
 .experimental #main .post__grid:not(.post__grid--with-toc) .post__prose { margin-inline: 0; }
 .experimental #main .post__prose > :first-child { margin-top: 0; }
-.experimental #main .prose { font-family: var(--font-sans); font-size: 1rem; line-height: 1.95; }
-.experimental #main .prose h2 { font-size: 1.65rem; font-weight: 750; padding-top: 0; border: 0; margin-top: 3.5rem; }
-.experimental #main .prose h3 { font-weight: 700; }
+.experimental #main .prose { font-family: var(--font-sans); font-size: 1.125rem; line-height: 1.9; }
+.experimental #main .prose h2 { font-size: 1.8rem; font-weight: 750; padding-top: 0; border: 0; margin-top: 3.5rem; }
+.experimental #main .prose h3 { font-size: 1.2em; font-weight: 700; }
+.experimental #main .prose h4 { font-size: 1.06em; }
 .experimental #main .prose blockquote { border-radius: 0 .65rem .65rem 0; padding: 1.2rem 1.5rem; }
+.experimental #main .prose blockquote p { font-size: inherit; }
+.experimental #main .prose table { font-size: .94em; }
+.experimental #main .prose pre { font-size: .88em; }
 .experimental #main .code { border-radius: .65rem; border-color: var(--code-line); }
 .experimental #main .prose .katex-display { padding: .75rem 0; background: transparent; border: 0; border-radius: 0; }
 .experimental #main .post__toc { padding: 0 0 .3rem 1.5rem; border: 0; border-left: 2px solid var(--line); border-radius: 0; background: transparent; }
-.experimental #main .post__toc-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: 0; margin-bottom: 1.2rem; border: 0; color: var(--ink); font: 750 1.4rem/1.5 var(--font-sans); letter-spacing: -.03em; }
+.experimental #main .post__toc-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: 0; margin-bottom: 1.2rem; border: 0; color: var(--ink); font: 750 1.5rem/1.5 var(--font-sans); letter-spacing: -.03em; }
 .post__toc-head > span { color: var(--accent); display: flex; align-items: center; gap: .7rem; font: .65rem var(--font-sans); letter-spacing: 0; }
 .post__toc-head i { font-style: normal; color: var(--ink-muted); transition: rotate .3s; }
 .post__toc-panel > summary { cursor: pointer; list-style: none; }
 .post__toc-panel > summary::-webkit-details-marker { display: none; }
 .post__toc-panel[open] .post__toc-head i { rotate: 180deg; }
 .experimental #main .post__toc-panel:not([open]) .post__toc-head { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
-.experimental #main .post__toc a { position: relative; display: block; font-size: .83rem; padding: .4rem 0; line-height: 1.65; overflow-wrap: anywhere; }
+.experimental #main .post__toc a { position: relative; display: block; font-size: .9rem; padding: .4rem 0; line-height: 1.65; overflow-wrap: anywhere; }
 .experimental #main .post__toc li.depth-2 { margin-top: .8rem; }
 .experimental #main .post__toc li.depth-2:first-child { margin-top: 0; }
 .experimental #main .post__toc li.depth-2 a { color: var(--ink-soft); font-weight: 650; }
-.experimental #main .post__toc li.depth-3 a { padding-left: 1.35rem; font-size: .78rem; }
-.experimental #main .post__toc li.depth-4 a { padding-left: 2.7rem; font-size: .73rem; }
+.experimental #main .post__toc li.depth-3 a { padding-left: 1.35rem; font-size: .85rem; }
+.experimental #main .post__toc li.depth-4 a { padding-left: 2.7rem; font-size: .8rem; }
 .experimental #main .post__toc li:is(.depth-3, .depth-4) a::before { content: ''; position: absolute; left: .45rem; top: 1.05em; width: .25rem; height: .25rem; border-radius: 50%; background: var(--ink-faint); opacity: .6; }
 .experimental #main .post__toc li.depth-4 a::before { left: 1.8rem; }
 .experimental #main .post__toc a.is-current { color: var(--accent); }
@@ -140,12 +146,12 @@
   .experimental #main .post__head { padding-top: 1.5rem; padding-bottom: 1rem; }
   .experimental #main .post__crumbs { margin-bottom: 2rem; }
   .experimental #main .post__title { font-size: clamp(1.9rem, 7.6vw, 3rem); }
-  .experimental #main .post__subtitle { font-size: .88rem; }
+  .experimental #main .post__subtitle { font-size: .95rem; }
   .experimental #main .post__tags { width: 100%; }
   .experimental #main .post__toc { padding: 1rem; }
   .experimental #main .post__body { padding-top: .5rem; }
-  .experimental #main .prose { font-size: .96rem; }
-  .experimental #main .prose h2 { font-size: 1.4rem; }
+  .experimental #main .prose { font-size: 1.0625rem; }
+  .experimental #main .prose h2 { font-size: 1.5rem; }
   .experimental #main .post__nav-item--next { text-align: left; }
   .experimental #main .post__nav-item--next .post__nav-title { margin-left: 0; }
   .experimental #main .about__grid { padding-top: .75rem; gap: 1.5rem; }
@@ -154,6 +160,7 @@
 }
 
 .experimental #main :is(.archive__stats dt, .year__count, .item__date, .item__tags, .post__byline time) { font: .85rem/1.6 var(--font-sans); }
+.experimental #main .post__byline time { font-size: .9rem; }
 .experimental #main .archive__stats dt { font-size: 1.3rem; font-weight: 700; }
 .experimental #main .post__nav-item > .mono-meta { font: .9rem var(--font-sans); }
 .experimental #main .notfound__recent-head { font: 700 1.5rem var(--font-sans); }

@@ -543,14 +543,15 @@ await check('18. 永久链接大小写与旧站逐一相符（Linux 上路径敏
   return `${mixed.length} 篇带大小写的 slug 全部原样保留（luogu-P1007 / vim-VScode / UML / MLInit …）`;
 });
 
-/* 19. 轻量 WebGL 云朵 */
-await check('19. 云朵独立打包、按需加载且保持轻量', async () => {
+/* 19. Three.js 体积云按需加载 */
+await check('19. 云朵独立打包并按需加载', async () => {
   const js = allFiles.filter((f) => f.endsWith('.js'));
   const clouds = js.filter((f) => /^cloud-sculpture\..+\.js$/.test(path.basename(f)));
   assert(clouds.length === 1, '缺少独立的云朵脚本产物');
   const cloudName = path.basename(clouds[0]);
   const cloudBytes = Buffer.byteLength(await read(clouds[0]), 'utf8');
-  assert(cloudBytes < 50 * 1024, `云朵脚本过大：${cloudBytes} 字节`);
+  // 恢复 Three.js 渲染后，体积预算包含渲染库。
+  assert(cloudBytes < 650 * 1024, `云朵脚本过大：${cloudBytes} 字节`);
   const loaders = await Promise.all(js.filter((f) => f !== clouds[0]).map(read));
   assert(loaders.some((src) => src.includes(cloudName) && /\bimport\s*\(/.test(src)), '云朵脚本没有通过动态 import 加载');
 
