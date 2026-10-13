@@ -9,6 +9,7 @@ import { remarkMathRestore } from './src/lib/remark-math-restore.mjs';
 import { rehypeMathHeadings } from './src/lib/rehype-math-headings.mjs';
 import { rehypeCodeFrame } from './src/lib/rehype-code-frame.mjs';
 import { rehypeLazyImages } from './src/lib/rehype-lazy-images.mjs';
+import { NOTEBOOK_PATH } from './src/data/notebook-config.mjs';
 
 /**
  * Astro 7 起 Markdown 插件要经由 @astrojs/markdown-remark 的 unified() 传入，
@@ -52,7 +53,7 @@ export default defineConfig({
       wrap: false,
     },
   },
-  integrations: [sitemap()],
+  integrations: [sitemap({ filter: (page) => !new URL(page).pathname.startsWith(`${NOTEBOOK_PATH}/`) && new URL(page).pathname !== NOTEBOOK_PATH })],
   vite: {
     build: {
       // 图片一律走独立文件，便于逐张校验 50 张素材是否都在

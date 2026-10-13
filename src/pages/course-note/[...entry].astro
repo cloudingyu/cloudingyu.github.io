@@ -1,0 +1,88 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Arrow from '../../components/Arrow.astro';
+import { NOTEBOOK_PATH, NOTEBOOK_SEMESTER } from '../../data/notebook-config.mjs';
+import { loadNotebook, renderSemesterNote, courseUrl, noteUrl, noteDate } from '../../lib/notebook';
+import type { CourseNotes, SemesterNote } from '../../lib/notebook';
+import '../../styles/notebook.css';
+import '../../styles/notebook-reading.css';
+
+export async function getStaticPaths() {
+  const courses = await loadNotebook();
+  return [
+    { params: { entry: undefined }, props: { courses } },
+    ...courses.flatMap((course) => [
+      { params: { entry: course.id }, props: { courses, course } },
+      ...course.notes.map((note) => ({
+        params: { entry: `${course.id}/${note.date}` },
+        props: { courses, course, note },
+      })),
+    ]),
+  ];
+}
+
+interface Props { courses: CourseNotes[]; course?: CourseNotes; note?: SemesterNote }
+const { courses, course, note } = Astro.props;
+const rendered = note ? await renderSemesterNote(note) : undefined;
+const index = note && course ? course.notes.findIndex((item) => item.date === note.date) : -1;
+const newer = course && index > 0 ? course.notes[index - 1] : undefined;
+const older = course && index >= 0 ? course.notes[index + 1] : undefined;
+const title = note && course ? `${course.name} · ${noteDate(note.date)}` : course?.name || '这学期的笔记';
+---
+
+<BaseLayout hero="bare" title={title} type={note ? 'article' : 'website'} published={note ? new Date(note.date) : undefined} description="课堂笔记与学习记录。" noindex>
+  <Fragment slot="head">
+    <meta name="referrer" content="same-origin" />
+  </Fragment>
+  <div class:list={['notebook', { 'notebook--reading': !!note }]}>
+    <header class="notebook__head">
+      <div class="notebook__topline">
+        {note && course ? <a href={courseUrl(course)}><Arrow direction="left" /> {course.name}</a> : course ? <a href={NOTEBOOK_PATH + '/'}><Arrow direction="left" /> 学期笔记</a> : <span>{NOTEBOOK_SEMESTER}</span>}
+      </div>
+      <h1 class:list={{ 'post__title': !!note }}>{note ? <time datetime={note.date}>{note.date.slice(0, 4)} 年 {noteDate(note.date)}</time> : <>{course?.name || '这学期的笔记'}<span aria-hidden="true">.</span></>}</h1>
+      {!note && <p class="notebook__subtitle">{course ? course.description : '课堂上的记录，慢慢整理，慢慢理解。'}</p>}
+    </header>
+
+    {!course && (
+      <div class="notebook__courses">
+        {courses.map((item, i) => (
+          <a class="notebook-course" href={courseUrl(item)}>
+            <span class="notebook-course__number" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <div><h2>{item.name}</h2><p>{item.description}</p></div>
+            <span class="notebook-course__arrow" aria-hidden="true"><Arrow /></span>
+          </a>
+        ))}
+      </div>
+    )}
+
+    {course && !note && (
+      <nav class="notebook__tabs" aria-label="选择课程">
+        {courses.map((item) => <a href={courseUrl(item)} aria-current={item.id === course.id ? 'page' : undefined}>{item.shortName}</a>)}
+      </nav>
+    )}
+
+    {course && !note && (
+      <ol class="notebook__notes">
+        {course.notes.map((item) => (
+          <li><a class="notebook-note" href={noteUrl(item)}>
+            <h2><time datetime={item.date}>{item.date.replaceAll('-', '.')}</time></h2>
+            <span aria-hidden="true"><Arrow /></span>
+          </a></li>
+        ))}
+      </ol>
+    )}
+
+    {note && rendered && course && (
+      <article class="notebook-reader">
+        <div class="post__opening-rule" aria-hidden="true" />
+        <div class="post__grid">
+          <div class="prose post__prose" set:html={rendered.code} />
+        </div>
+        <nav class="notebook-reader__neighbors" aria-label="前后课堂笔记">
+          {newer ? <a href={noteUrl(newer)}><Arrow direction="left" /><span>较新笔记<strong>{noteDate(newer.date)}</strong></span></a> : <span />}
+          {older ? <a href={noteUrl(older)}><span>较早笔记<strong>{noteDate(older.date)}</strong></span><Arrow direction="right" /></a> : <span />}
+        </nav>
+      </article>
+    )}
+  </div>
+</BaseLayout>

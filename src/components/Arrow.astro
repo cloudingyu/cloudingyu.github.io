@@ -1,11 +1,13 @@
 ---
-interface Props { direction?: 'up-right' | 'down-right' | 'up' | 'down' | 'refresh'; }
+interface Props { direction?: 'up-right' | 'down-right' | 'up' | 'down' | 'left' | 'right' | 'refresh'; }
 const { direction = 'up-right' } = Astro.props;
 const paths = {
   'up-right': 'M5 19 19 5M5 5h14v14',
   'down-right': 'M5 5 19 19M5 19h14V5',
   up: 'M12 20V4M5 11l7-7 7 7',
   down: 'm6 9 6 6 6-6',
+  left: 'M20 12H4m7-7-7 7 7 7',
+  right: 'M4 12h16m-7-7 7 7-7 7',
   refresh: 'M19 12a7 7 0 1 1-7-7M9 2l3 3-3 3',
 };
 ---
