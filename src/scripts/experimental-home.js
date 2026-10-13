@@ -197,8 +197,12 @@ function bindExperiment() {
   const loadArt = async () => {
     if (disposed || motion.matches || hero.hasAttribute('data-offscreen')) { artLoading = false; return; }
     try {
+      // Let the preview finish its entrance before parsing three.js or starting GPU work.
+      const entrance = host.getAnimations().filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity);
+      await Promise.all(entrance.map(animation => animation.finished.catch(() => {})));
+      if (disposed || motion.matches || hero.hasAttribute('data-offscreen')) return;
       const { mountCloud } = await import('./cloud-sculpture.js');
-      if (disposed) return;
+      if (disposed || motion.matches || hero.hasAttribute('data-offscreen')) return;
       const mounted = await mountCloud(host, input, { signal: artController.signal });
       if (disposed) { mounted.dispose(); return; }
       art = mounted;

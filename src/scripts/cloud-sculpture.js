@@ -1,4 +1,4 @@
-import { Scene, Camera, PerspectiveCamera, WebGLRenderer, WebGLRenderTarget, WebGL3DRenderTarget, BoxGeometry, PlaneGeometry, ShaderMaterial, Mesh, Color, Vector3, Vector4, BackSide, NoBlending, RedFormat, LinearFilter, HalfFloatType, UnsignedByteType, ACESFilmicToneMapping } from 'three';
+import { Scene, Camera, PerspectiveCamera, WebGLRenderer, WebGLRenderTarget, Data3DTexture, BoxGeometry, PlaneGeometry, ShaderMaterial, Mesh, Color, Vector3, Vector4, BackSide, NoBlending, RedFormat, LinearFilter, HalfFloatType, UnsignedByteType, ACESFilmicToneMapping } from 'three';
 
 const hashShader = `
   float hash(vec3 p) {
@@ -182,22 +182,32 @@ const presentFragment = `
     #include <colorspace_fragment>
   }
 `;
-const noiseFragment = `
-  uniform float uLayer;
-  ${hashShader}
-  void main() {
-    float value = hash(vec3(floor(gl_FragCoord.xy) - 32.0, uLayer - 32.0));
-    gl_FragColor = vec4(value, 0.0, 0.0, 1.0);
-  }
-`;
+const loadNoise = (signal) => new Promise((resolve, reject) => {
+  const worker = new Worker(new URL('./cloud-noise-worker.js', import.meta.url), { type: 'module' });
+  const finish = (error, data) => {
+    worker.terminate();
+    signal?.removeEventListener('abort', abort);
+    if (error) reject(error); else resolve(data);
+  };
+  const abort = () => finish(new DOMException('Cloud initialization cancelled', 'AbortError'));
+  worker.onmessage = ({ data }) => finish(null, data);
+  worker.onerror = () => finish(new Error('Cloud noise worker failed'));
+  signal?.addEventListener('abort', abort, { once: true });
+  if (signal?.aborted) abort();
+});
 
 export async function mountCloud(host, input, { signal } = {}) {
   const checkAbort = () => { if (signal?.aborted) throw new DOMException('Cloud initialization cancelled', 'AbortError'); };
   checkAbort();
+  const noiseData = await loadNoise(signal);
+  checkAbort();
   const renderer = new WebGLRenderer({ alpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'high-performance' });
   const gl = renderer.getContext();
   const hdr = !!(gl.getExtension('EXT_color_buffer_float') || gl.getExtension('EXT_color_buffer_half_float'));
-  const noiseTarget = new WebGL3DRenderTarget(128, 128, 128, { format: RedFormat, minFilter: LinearFilter, magFilter: LinearFilter, depthBuffer: false, stencilBuffer: false });
+  const noiseTexture = new Data3DTexture(noiseData, 128, 128, 128);
+  noiseTexture.format = RedFormat;
+  noiseTexture.minFilter = noiseTexture.magFilter = LinearFilter;
+  noiseTexture.needsUpdate = true;
   renderer.setClearAlpha(0);
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.1;
@@ -209,7 +219,7 @@ export async function mountCloud(host, input, { signal } = {}) {
   camera.position.z = 11.5;
   const geometry = new BoxGeometry(8, 5, 5);
   const uniforms = { uDrift: { value: new Vector3() }, uShape: { value: new Vector4(0, 1, 0, .42) }, uBreathing: { value: 0 }, uAcid: { value: new Color('#d0ff45') }, uPurple: { value: new Color('#bfa9ff') }, uDay: { value: 0 }, uCamera: { value: new Vector3() }, uSteps: { value: 48 } };
-  uniforms.uNoise = { value: noiseTarget.texture };
+  uniforms.uNoise = { value: noiseTexture };
   uniforms.uEncoded = { value: hdr ? 0 : 1 };
   const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader, blending: NoBlending, depthTest: false, depthWrite: false, side: BackSide });
   const sculpture = new Mesh(geometry, material);
@@ -231,11 +241,6 @@ export async function mountCloud(host, input, { signal } = {}) {
   const screen = new Mesh(presentGeometry, presentMaterial);
   screen.frustumCulled = false;
   presentScene.add(screen);
-  const noiseScene = new Scene();
-  const noiseMaterial = new ShaderMaterial({ uniforms: { uLayer: { value: 0 } }, vertexShader: presentVertex, fragmentShader: noiseFragment, blending: NoBlending, depthTest: false, depthWrite: false, toneMapped: false });
-  const noiseScreen = new Mesh(presentGeometry, noiseMaterial);
-  noiseScreen.frustumCulled = false;
-  noiseScene.add(noiseScreen);
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let visible = false;
@@ -251,10 +256,11 @@ export async function mountCloud(host, input, { signal } = {}) {
   let scrolling = false;
   let interacting = false;
   let dirty = true;
-  let quality = 1;
+  // Start within a small GPU budget, before any performance samples are available.
+  let quality = .35;
   let width = 0;
   let height = 0;
-  let lastQualityChange = performance.now();
+  let lastQualityChange = 0;
   let lastFrame = 0;
   let frameCost = 16.7;
   let gpuCost = 0;
@@ -266,6 +272,7 @@ export async function mountCloud(host, input, { signal } = {}) {
   let submittedAt = 0;
   const timer = gl.getExtension('EXT_disjoint_timer_query_webgl2');
   let query = null;
+  let queryScale = 1;
   const smooth = (value) => { const t = Math.max(0, Math.min(1, value)); return t * t * (3 - 2 * t); };
   const sizeFor = (budget) => {
     const ratio = Math.min(devicePixelRatio || 1, 1.5, Math.sqrt(budget / (width * height)));
@@ -284,7 +291,7 @@ export async function mountCloud(host, input, { signal } = {}) {
     uniforms.uSteps.value = interacting ? (mobile ? 28 : 32) : (mobile ? 36 : 48);
   };
   const adaptQuality = (cost, now, measuredGPU) => {
-    if (reduced.matches || scrolling || !interacting || now - lastQualityChange < 500) return;
+    if (reduced.matches || scrolling || now - lastQualityChange < 500) return;
     const slow = cost > (measuredGPU ? 6 : 24);
     const fast = measuredGPU && cost < 3 && now - lastQualityChange > 8000;
     const next = slow ? Math.max(.1, quality * Math.min(.85, (measuredGPU ? 6 : 24) / cost)) : fast ? Math.min(1, quality + .05) : quality;
@@ -309,19 +316,23 @@ export async function mountCloud(host, input, { signal } = {}) {
     return true;
   };
 
-  const render = () => {
-    if (disposed || gl.isContextLost()) return;
-    const now = performance.now();
+  const collectTiming = (now) => {
     if (query && gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE)) {
       if (!gl.getParameter(timer.GPU_DISJOINT_EXT)) {
-        const cost = gl.getQueryParameter(query, gl.QUERY_RESULT) / 1e6;
+        // Compare settled detail draws against the same interaction budget.
+        const cost = gl.getQueryParameter(query, gl.QUERY_RESULT) / 1e6 * queryScale;
         gpuCost = gpuSamples ? gpuCost * .6 + cost * .4 : cost;
         gpuSamples += 1;
-        if (gpuSamples >= 3) adaptQuality(gpuCost, now, true);
+        adaptQuality(gpuCost, now, true);
       } else { gpuCost = 0; gpuSamples = 0; }
       gl.deleteQuery(query);
       query = null;
     }
+  };
+  const render = () => {
+    if (disposed || gl.isContextLost()) return;
+    const now = performance.now();
+    collectTiming(now);
     const amount = morph - Math.floor(morph);
     const id = Math.floor(morph) % 3;
     const position = morph % 3;
@@ -332,9 +343,12 @@ export async function mountCloud(host, input, { signal } = {}) {
     sculpture.updateMatrixWorld();
     uniforms.uCamera.value.copy(camera.position);
     sculpture.worldToLocal(uniforms.uCamera.value);
-    const measure = timer && !query && renderCount++ % 4 === 0 && interacting && !reduced.matches;
-    if (measure) { query = gl.createQuery(); gl.beginQuery(timer.TIME_ELAPSED_EXT, query); }
+    const measure = timer && !query && (renderCount++ % 4 === 0 || !interacting) && !reduced.matches;
     const target = interacting ? interactionTarget : detailTarget;
+    if (measure) {
+      queryScale = interacting ? 1 : (interactionTarget.width * interactionTarget.height * (innerWidth < 768 ? 28 : 32)) / (target.width * target.height * uniforms.uSteps.value);
+      query = gl.createQuery(); gl.beginQuery(timer.TIME_ELAPSED_EXT, query);
+    }
     renderer.setRenderTarget(target);
     try { renderer.render(scene, camera); }
     finally { if (measure) gl.endQuery(timer.TIME_ELAPSED_EXT); }
@@ -434,7 +448,7 @@ export async function mountCloud(host, input, { signal } = {}) {
     if (query) gl.deleteQuery(query);
     if (gpuFence) gl.deleteSync(gpuFence);
     detailTarget.dispose(); interactionTarget.dispose();
-    noiseTarget.dispose(); noiseMaterial.dispose();
+    noiseTexture.dispose();
     presentGeometry.dispose(); presentMaterial.dispose();
     geometry.dispose(); material.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
   };
@@ -443,22 +457,22 @@ export async function mountCloud(host, input, { signal } = {}) {
     resize(); palette();
     renderer.initRenderTarget(detailTarget);
     renderer.initRenderTarget(interactionTarget);
-    renderer.setRenderTarget(noiseTarget);
-    await renderer.compileAsync(noiseScene, presentCamera);
-    for (let layer = 0; layer < 128; layer++) {
-      checkAbort();
-      noiseMaterial.uniforms.uLayer.value = layer;
-      renderer.setRenderTarget(noiseTarget, layer);
-      renderer.render(noiseScene, presentCamera);
-      if (layer % 16 === 15) await new Promise(resolve => setTimeout(resolve, 0));
-    }
     renderer.setRenderTarget(detailTarget);
     await renderer.compileAsync(scene, camera);
+    checkAbort();
     renderer.setRenderTarget(null);
     await renderer.compileAsync(presentScene, presentCamera);
     checkAbort();
+    setInteracting(true);
     render(); dirty = false;
-    noiseMaterial.dispose();
+    // Keep the preview until the first low-cost draw has actually completed.
+    // Poll the fence without blocking the main thread or building a GPU queue.
+    while (!gpuReady()) {
+      await new Promise(resolve => setTimeout(resolve, 16));
+      checkAbort();
+    }
+    checkAbort();
+    collectTiming(performance.now());
   }
   catch (error) {
     release();
