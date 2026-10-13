@@ -1,4 +1,12 @@
-import { Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, ShaderMaterial, Mesh, Color, Vector3, Vector4, BackSide, ACESFilmicToneMapping } from 'three';
+import { Scene, Camera, PerspectiveCamera, WebGLRenderer, WebGLRenderTarget, WebGL3DRenderTarget, BoxGeometry, PlaneGeometry, ShaderMaterial, Mesh, Color, Vector3, Vector4, BackSide, NoBlending, RedFormat, LinearFilter, HalfFloatType, UnsignedByteType, ACESFilmicToneMapping } from 'three';
+
+const hashShader = `
+  float hash(vec3 p) {
+    p = fract(p * .1031);
+    p += dot(p, p.yzx + 33.33);
+    return fract((p.x + p.y) * p.z);
+  }
+`;
 
 // A density field is sampled through a volume, giving the cloud depth and soft edges.
 const vertexShader = `
@@ -18,16 +26,19 @@ const fragmentShader = `
   uniform float uBreathing;
   uniform float uDay;
   uniform int uSteps;
+  uniform highp sampler3D uNoise;
+  uniform float uEncoded;
   varying vec3 vLocal;
 
-  float hash(vec3 p) {
-    p = fract(p * .1031);
-    p += dot(p, p.yzx + 33.33);
-    return fract((p.x + p.y) * p.z);
-  }
+  ${hashShader}
   float noise(vec3 p) {
     vec3 i = floor(p), f = fract(p);
     f = f * f * (3.0 - 2.0 * f);
+    // The common range uses cached lattice values and hardware interpolation.
+    // Outside the cache, keep the original noise rather than repeating its pattern.
+    if (all(greaterThanEqual(i, vec3(-32.0))) && all(lessThan(i, vec3(95.0)))) {
+      return texture(uNoise, (i + 32.0 + f + .5) / 128.0).r;
+    }
     return mix(mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
                    mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
                mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
@@ -147,8 +158,36 @@ const fragmentShader = `
     }
     if (sum.a < .008) discard;
     gl_FragColor = vec4(sum.rgb / max(sum.a, .001), sum.a);
+    if (uEncoded > .5) gl_FragColor.rgb /= 1.0 + gl_FragColor.rgb;
+    // Filter premultiplied colour to keep transparent cloud edges clean.
+    gl_FragColor.rgb *= gl_FragColor.a;
+  }
+`;
+
+// Keep the visible canvas fixed; only the volume texture changes during interaction.
+// Apply the original tone mapping once, after upscaling the linear cloud colour.
+const presentVertex = `
+  varying vec2 vUv;
+  void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
+`;
+const presentFragment = `
+  uniform sampler2D uCloud;
+  uniform float uEncoded;
+  varying vec2 vUv;
+  void main() {
+    gl_FragColor = texture2D(uCloud, vUv);
+    gl_FragColor.rgb /= max(gl_FragColor.a, .00001);
+    if (uEncoded > .5) gl_FragColor.rgb /= max(vec3(.001), 1.0 - gl_FragColor.rgb);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
+  }
+`;
+const noiseFragment = `
+  uniform float uLayer;
+  ${hashShader}
+  void main() {
+    float value = hash(vec3(floor(gl_FragCoord.xy) - 32.0, uLayer - 32.0));
+    gl_FragColor = vec4(value, 0.0, 0.0, 1.0);
   }
 `;
 
@@ -156,6 +195,9 @@ export async function mountCloud(host, input, { signal } = {}) {
   const checkAbort = () => { if (signal?.aborted) throw new DOMException('Cloud initialization cancelled', 'AbortError'); };
   checkAbort();
   const renderer = new WebGLRenderer({ alpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'high-performance' });
+  const gl = renderer.getContext();
+  const hdr = !!(gl.getExtension('EXT_color_buffer_float') || gl.getExtension('EXT_color_buffer_half_float'));
+  const noiseTarget = new WebGL3DRenderTarget(128, 128, 128, { format: RedFormat, minFilter: LinearFilter, magFilter: LinearFilter, depthBuffer: false, stencilBuffer: false });
   renderer.setClearAlpha(0);
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.1;
@@ -167,10 +209,33 @@ export async function mountCloud(host, input, { signal } = {}) {
   camera.position.z = 11.5;
   const geometry = new BoxGeometry(8, 5, 5);
   const uniforms = { uDrift: { value: new Vector3() }, uShape: { value: new Vector4(0, 1, 0, .42) }, uBreathing: { value: 0 }, uAcid: { value: new Color('#d0ff45') }, uPurple: { value: new Color('#bfa9ff') }, uDay: { value: 0 }, uCamera: { value: new Vector3() }, uSteps: { value: 48 } };
-  const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader, transparent: true, depthWrite: false, side: BackSide });
+  uniforms.uNoise = { value: noiseTarget.texture };
+  uniforms.uEncoded = { value: hdr ? 0 : 1 };
+  const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader, blending: NoBlending, depthTest: false, depthWrite: false, side: BackSide });
   const sculpture = new Mesh(geometry, material);
   scene.add(sculpture);
   sculpture.rotation.set(.08, -.12, -.05);
+
+  // Byte targets keep WebGL2 devices without float colour buffers interactive.
+  const targetOptions = { type: hdr ? HalfFloatType : UnsignedByteType, depthBuffer: false, stencilBuffer: false };
+  const detailTarget = new WebGLRenderTarget(1, 1, targetOptions);
+  const interactionTarget = new WebGLRenderTarget(1, 1, targetOptions);
+  const presentScene = new Scene();
+  const presentCamera = new Camera();
+  const presentGeometry = new PlaneGeometry(2, 2);
+  const presentMaterial = new ShaderMaterial({
+    uniforms: { uCloud: { value: detailTarget.texture }, uEncoded: { value: hdr ? 0 : 1 } },
+    vertexShader: presentVertex, fragmentShader: presentFragment,
+    transparent: true, depthTest: false, depthWrite: false,
+  });
+  const screen = new Mesh(presentGeometry, presentMaterial);
+  screen.frustumCulled = false;
+  presentScene.add(screen);
+  const noiseScene = new Scene();
+  const noiseMaterial = new ShaderMaterial({ uniforms: { uLayer: { value: 0 } }, vertexShader: presentVertex, fragmentShader: noiseFragment, blending: NoBlending, depthTest: false, depthWrite: false, toneMapped: false });
+  const noiseScreen = new Mesh(presentGeometry, noiseMaterial);
+  noiseScreen.frustumCulled = false;
+  noiseScene.add(noiseScreen);
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let visible = false;
@@ -195,31 +260,53 @@ export async function mountCloud(host, input, { signal } = {}) {
   let gpuCost = 0;
   let gpuSamples = 0;
   let renderCount = 0;
-  const gl = renderer.getContext();
+  let refreshInterval = 1000 / 60;
+  let cadenceFrame = 0;
+  let gpuFence = null;
+  let submittedAt = 0;
   const timer = gl.getExtension('EXT_disjoint_timer_query_webgl2');
   let query = null;
   const smooth = (value) => { const t = Math.max(0, Math.min(1, value)); return t * t * (3 - 2 * t); };
+  const sizeFor = (budget) => {
+    const ratio = Math.min(devicePixelRatio || 1, 1.5, Math.sqrt(budget / (width * height)));
+    return [Math.max(1, Math.floor(width * ratio)), Math.max(1, Math.floor(height * ratio))];
+  };
   const setResolution = () => {
-    // Render a smaller volume while turning, then refine the settled image once.
     const mobile = innerWidth < 768;
-    const budget = interacting ? (mobile ? 65000 : 100000) * quality : (mobile ? 120000 : 280000);
-    uniforms.uSteps.value = interacting ? (mobile ? 28 : 32) : (mobile ? 36 : 48);
-    renderer.setDrawingBufferSize(width, height, Math.min(devicePixelRatio || 1, 1.5, Math.sqrt(budget / (width * height))));
+    const [w, h] = sizeFor((mobile ? 65000 : 100000) * quality);
+    interactionTarget.setSize(w, h);
+    const [dw, dh] = sizeFor((mobile ? 120000 : 280000) * quality);
+    detailTarget.setSize(dw, dh);
   };
   const setInteracting = (value) => {
-    if (interacting === value) return;
     interacting = value;
-    if (width && height) setResolution();
+    const mobile = innerWidth < 768;
+    uniforms.uSteps.value = interacting ? (mobile ? 28 : 32) : (mobile ? 36 : 48);
   };
   const adaptQuality = (cost, now, measuredGPU) => {
-    if (reduced.matches || scrolling || !interacting || now - lastQualityChange < 2000) return;
+    if (reduced.matches || scrolling || !interacting || now - lastQualityChange < 500) return;
     const slow = cost > (measuredGPU ? 6 : 24);
     const fast = measuredGPU && cost < 3 && now - lastQualityChange > 8000;
-    const next = slow ? Math.max(.25, quality * .8) : fast ? Math.min(1, quality + .1) : quality;
+    const next = slow ? Math.max(.1, quality * Math.min(.85, (measuredGPU ? 6 : 24) / cost)) : fast ? Math.min(1, quality + .05) : quality;
     if (next === quality) return;
     quality = next;
     lastQualityChange = now;
     setResolution();
+  };
+
+  const gpuReady = () => {
+    if (!gpuFence) return true;
+    // A zero timeout polls without blocking the UI or queuing stale pointer poses.
+    const status = gl.clientWaitSync(gpuFence, 0, 0);
+    if (status === gl.TIMEOUT_EXPIRED) return false;
+    if (!timer && submittedAt) {
+      const now = performance.now();
+      // Privacy settings can disable GPU timers; fence completion still bounds work.
+      adaptQuality(Math.max(refreshInterval, now - submittedAt - refreshInterval), now, false);
+    }
+    gl.deleteSync(gpuFence);
+    gpuFence = null;
+    return true;
   };
 
   const render = () => {
@@ -245,20 +332,35 @@ export async function mountCloud(host, input, { signal } = {}) {
     sculpture.updateMatrixWorld();
     uniforms.uCamera.value.copy(camera.position);
     sculpture.worldToLocal(uniforms.uCamera.value);
-    const measure = timer && !query && renderCount++ % 8 === 0 && interacting && !reduced.matches;
+    const measure = timer && !query && renderCount++ % 4 === 0 && interacting && !reduced.matches;
     if (measure) { query = gl.createQuery(); gl.beginQuery(timer.TIME_ELAPSED_EXT, query); }
+    const target = interacting ? interactionTarget : detailTarget;
+    renderer.setRenderTarget(target);
     try { renderer.render(scene, camera); }
     finally { if (measure) gl.endQuery(timer.TIME_ELAPSED_EXT); }
+    renderer.setRenderTarget(null);
+    presentMaterial.uniforms.uCloud.value = target.texture;
+    renderer.render(presentScene, presentCamera);
+    if (gpuFence) gl.deleteSync(gpuFence);
+    gpuFence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    submittedAt = performance.now();
+    gl.flush();
   };
   const tick = (now) => {
     frame = 0;
     if (disposed || !visible || document.hidden || reduced.matches || scrolling) return;
     if (lastFrame) {
-      frameCost = frameCost * .95 + Math.min(now - lastFrame, 100) * .05;
+      const interval = now - lastFrame;
+      if (interval > 3) refreshInterval = Math.min(refreshInterval, interval);
+      frameCost = frameCost * .95 + Math.min(interval, 100) * .05;
       if (!timer || gpuSamples === 0) adaptQuality(frameCost, now, false);
     }
     lastFrame = now;
-    if (now - previous < 1000 / 60 - 1) { frame = requestAnimationFrame(tick); return; }
+    // Use whole display frames (e.g. every second frame at 165 Hz), avoiding drift.
+    const cadence = Math.max(1, Math.ceil((1000 / 90 - .5) / refreshInterval));
+    cadenceFrame += 1;
+    if (cadenceFrame < cadence || !gpuReady()) { frame = requestAnimationFrame(tick); return; }
+    cadenceFrame = 0;
     const dt = Math.min((now - previous) / 1000, .08);
     previous = now;
     elapsed += dt;
@@ -286,6 +388,7 @@ export async function mountCloud(host, input, { signal } = {}) {
     setInteracting(true);
     previous = performance.now();
     lastFrame = 0;
+    cadenceFrame = 0;
     frame = requestAnimationFrame(tick);
   };
   const wake = () => { dirty = true; start(); };
@@ -294,7 +397,10 @@ export async function mountCloud(host, input, { signal } = {}) {
     const w = host.clientWidth, h = host.clientHeight;
     if (!w || !h || disposed || (width === w && height === h)) return;
     width = w; height = h;
+    const [detailWidth, detailHeight] = sizeFor(innerWidth < 768 ? 120000 : 280000);
+    renderer.setDrawingBufferSize(detailWidth, detailHeight, 1);
     setResolution();
+    setInteracting(interacting);
     camera.position.z = Math.max(5.4, 7.1 / (w / h)) / (2 * Math.tan(Math.PI / 10));
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
@@ -324,14 +430,38 @@ export async function mountCloud(host, input, { signal } = {}) {
   });
   const ro = new ResizeObserver(resize);
   const theme = new MutationObserver(palette);
+  const release = () => {
+    if (query) gl.deleteQuery(query);
+    if (gpuFence) gl.deleteSync(gpuFence);
+    detailTarget.dispose(); interactionTarget.dispose();
+    noiseTarget.dispose(); noiseMaterial.dispose();
+    presentGeometry.dispose(); presentMaterial.dispose();
+    geometry.dispose(); material.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
+  };
 
   try {
+    resize(); palette();
+    renderer.initRenderTarget(detailTarget);
+    renderer.initRenderTarget(interactionTarget);
+    renderer.setRenderTarget(noiseTarget);
+    await renderer.compileAsync(noiseScene, presentCamera);
+    for (let layer = 0; layer < 128; layer++) {
+      checkAbort();
+      noiseMaterial.uniforms.uLayer.value = layer;
+      renderer.setRenderTarget(noiseTarget, layer);
+      renderer.render(noiseScene, presentCamera);
+      if (layer % 16 === 15) await new Promise(resolve => setTimeout(resolve, 0));
+    }
+    renderer.setRenderTarget(detailTarget);
     await renderer.compileAsync(scene, camera);
+    renderer.setRenderTarget(null);
+    await renderer.compileAsync(presentScene, presentCamera);
     checkAbort();
-    resize(); palette(); render(); dirty = false;
+    render(); dirty = false;
+    noiseMaterial.dispose();
   }
   catch (error) {
-    geometry.dispose(); material.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
+    release();
     throw error;
   }
   host.setAttribute('data-canvas-ready', '');
@@ -358,8 +488,7 @@ export async function mountCloud(host, input, { signal } = {}) {
       stop(); io.disconnect(); ro.disconnect(); theme.disconnect();
       reduced.removeEventListener('change', onPreference);
       document.removeEventListener('visibilitychange', onVisibility);
-      if (query) gl.deleteQuery(query);
-      geometry.dispose(); material.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
+      release();
       host.removeAttribute('data-canvas-ready');
     },
   };

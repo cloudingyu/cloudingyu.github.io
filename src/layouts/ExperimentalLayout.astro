@@ -121,11 +121,11 @@ const [emailName, emailDomain] = SITE.email.split('@');
   .footer-directory a:hover > span { translate: .3rem 0; color: var(--accent); }
   .footer-directory a:hover i { translate: .15rem -.15rem; color: var(--accent); }
   .exp-footer__base { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--line); font-size: .8rem; color: var(--ink-muted); }
-  .exp-cursor { display: none; position: fixed; top: 0; left: 0; z-index: 100; width: 2.25rem; height: 2.25rem; border: 1px solid #d0ff45; border-radius: 50%; pointer-events: none; align-items: center; justify-content: center; color: #d0ff45; mix-blend-mode: difference; opacity: 0; transition: width .3s var(--exp-ease), height .3s var(--exp-ease), opacity .2s, background .3s; }
+  .exp-cursor { display: none; position: fixed; top: 0; left: 0; z-index: 100; width: 2.25rem; height: 2.25rem; border: 1px solid var(--accent); border-radius: 50%; pointer-events: none; align-items: center; justify-content: center; color: var(--accent); will-change: transform; opacity: 0; transition: width .3s var(--exp-ease), height .3s var(--exp-ease), opacity .2s, background .3s; }
   .exp-cursor span { opacity: 0; font-size: .8rem; }
   .exp-cursor b { font-weight: inherit; }
   .exp-cursor.has-label .ui-arrow, .exp-cursor:not(.has-label) b { display: none; }
-  .exp-cursor.is-link { width: 4rem; height: 4rem; background: #d0ff45; color: #090a0c; }
+  .exp-cursor.is-link { width: 4rem; height: 4rem; background: var(--accent); color: var(--paper); }
   .exp-cursor.is-link span { opacity: 1; }
   @media (hover: hover) and (pointer: fine) {
     .experimental[data-cursor-ready] .exp-cursor { display: flex; }

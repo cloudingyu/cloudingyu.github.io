@@ -57,13 +57,6 @@ const showToc = toc.length >= 2;
 >
   <article class="post" data-article>
     <header class="shell post__head">
-      <div class="post__crumbs mono-meta">
-        <a href="/">首页</a>
-        <span aria-hidden="true">/</span>
-        <a href="/archive/">归档</a>
-        <span aria-hidden="true">/</span>
-        <span>{date.getUTCFullYear()}</span>
-      </div>
 
       <h1 class="post__title">{title}</h1>
 
@@ -163,19 +156,6 @@ const showToc = toc.length >= 2;
     padding-top: var(--s7);
     padding-bottom: var(--s5);
   }
-
-  .post__crumbs {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    color: var(--ink-faint);
-    margin-bottom: var(--s5);
-  }
-  .post__crumbs a {
-    color: var(--ink-muted);
-    transition: color 0.22s var(--ease);
-  }
-  .post__crumbs a:hover { color: var(--accent); }
 
   .post__title {
     font-size: clamp(1.85rem, 1.2rem + 2.4vw, 2.85rem);
