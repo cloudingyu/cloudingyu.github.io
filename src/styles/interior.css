@@ -49,9 +49,13 @@
 .experimental #main .post__grid:not(.post__grid--with-toc) .post__prose { margin-inline: 0; }
 .experimental #main .post__prose > :first-child { margin-top: 0; }
 .experimental #main .prose { font-family: var(--font-sans); font-size: 1.25rem; line-height: 1.9; }
-.experimental #main .prose h2 { font-size: 2rem; font-weight: 750; padding-top: 0; border: 0; margin-top: 3.5rem; }
-.experimental #main .prose h3 { font-size: 1.2em; font-weight: 700; }
-.experimental #main .prose h4 { font-size: 1.06em; }
+.experimental #main .post__prose h1 { font-size: 2.1em; margin: 3.5rem 0 1rem; }
+.experimental #main .prose h2 { font-size: 1.8em; font-weight: 750; padding-top: 0; border: 0; margin-top: 3.5rem; }
+.experimental #main .prose h3 { font-size: 1.5em; font-weight: 700; }
+.experimental #main .prose h4 { font-size: 1.3em; font-weight: 700; }
+.experimental #main .post__prose :is(h5, h6) { margin: 2rem 0 .75rem; font-weight: 650; }
+.experimental #main .post__prose h5 { font-size: 1.2em; }
+.experimental #main .post__prose h6 { font-size: 1.1em; }
 .experimental #main .prose blockquote { border-radius: 0 .65rem .65rem 0; padding: 1.2rem 1.5rem; }
 .experimental #main .prose blockquote p { font-size: inherit; }
 .experimental #main .prose table { font-size: .94em; }
@@ -170,7 +174,6 @@
   .experimental #main .post__toc { padding: 1rem; }
   .experimental #main .post__body { padding-top: .5rem; }
   .experimental #main .prose { font-size: 1.125rem; }
-  .experimental #main .prose h2 { font-size: 1.6875rem; }
   .experimental #main .post__nav-item--next { text-align: left; }
   .experimental #main .post__nav-item--next .post__nav-title { margin-left: 0; }
   .experimental #main .about__grid { padding-top: .75rem; gap: 1.5rem; }

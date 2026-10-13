@@ -48,7 +48,7 @@ const tags = tagCounts(posts);
 
   <section class="exp-topics" aria-labelledby="topics-title">
     <div class="topics-heading"><h2 id="topics-title" data-exp-reveal>按<span>主题</span>阅读</h2></div>
-    <div class="topic-flow"><div class="topic-flow__track">{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`} data-cursor-label="探索">{tag}<sup>{count}</sup><span aria-hidden="true"><Arrow /></span></a>)}{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`} aria-hidden="true" tabindex="-1">{tag}<sup>{count}</sup><span><Arrow /></span></a>)}</div></div>
+    <div class="topic-flow"><div class="topic-flow__track">{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`} data-cursor-label="探索"><span class="topic-flow__label">{tag}<sup>{count}</sup></span><span class="topic-flow__arrow" aria-hidden="true"><Arrow /></span></a>)}{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`} aria-hidden="true" tabindex="-1"><span class="topic-flow__label">{tag}<sup>{count}</sup></span><span class="topic-flow__arrow"><Arrow /></span></a>)}</div></div>
     <p class="home-manifesto" data-exp-reveal>{PAGES.home.quote}</p>
   </section>
 </ExperimentalLayout>
@@ -113,8 +113,9 @@ const tags = tagCounts(posts);
   .topic-flow { overflow: hidden; padding-block: .75rem; }
   .topic-flow__track { display: flex; width: max-content; gap: 1rem; padding-right: 1rem; }
   .topic-flow a { display: flex; align-items: center; gap: 2rem; flex-shrink: 0; border: 1px solid var(--line-strong); border-radius: 5rem; padding: 1.1rem 2rem; font-size: clamp(1.2rem, 2.8vw, 2.5rem); font-weight: 600; transition: background .3s, color .3s, rotate .4s var(--exp-ease); }
+  .topic-flow__label { display: inline-flex; align-items: start; gap: .18em; }
   .topic-flow a sup { align-self: start; color: var(--ink-muted); font: 600 1.25rem/1.3 var(--font-sans); font-variant-numeric: tabular-nums; letter-spacing: 0; margin-top: .15em; }
-  .topic-flow a > span { color: var(--accent); font-size: 1.2rem; }
+  .topic-flow__arrow { color: var(--accent); font-size: 1.2rem; }
   .topic-flow a:hover { background: var(--accent); color: var(--paper); rotate: -3deg; }
   .topic-flow a:hover :is(sup, span) { color: inherit; }
   .home-manifesto { margin: 4rem var(--exp-space) 0; font: 750 clamp(1.4rem, 3.5vw, 3.5rem)/1.3 var(--font-sans); letter-spacing: -.035em; color: var(--exp-purple); }
