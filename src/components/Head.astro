@@ -17,6 +17,7 @@ interface Props {
   /** og:image 绝对地址（文章封面），没有就退回头像 */
   image?: string;
   noindex?: boolean;
+  author?: string;
 }
 
 const {
@@ -27,6 +28,7 @@ const {
   tags = [],
   image,
   noindex = false,
+  author = AUTHOR.name,
 } = Astro.props;
 
 // 首页用 SEO 标题（SITE_DATA.md 指定的精确写法），其余页面用「标题 | 站点名」
@@ -42,7 +44,7 @@ const jsonLd =
         headline: title,
         datePublished: published?.toISOString(),
         keywords: tags.join(','),
-        author: { '@type': 'Person', name: AUTHOR.name },
+        author: { '@type': 'Person', name: author },
         publisher: { '@type': 'Person', name: AUTHOR.name },
         mainEntityOfPage: canonical,
       }
@@ -65,7 +67,7 @@ const jsonLd =
 {noindex && <meta name="robots" content="noindex" />}
 
 <!-- 站点作者与语言 -->
-<meta name="author" content={AUTHOR.name} />
+<meta name="author" content={author} />
 <meta name="theme-color" content="#F6F7F5" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#0D1113" media="(prefers-color-scheme: dark)" />
 
@@ -103,5 +105,12 @@ const jsonLd =
     document.documentElement.dataset.theme = theme;
   })();
 </script>
+
+<noscript>
+  <style is:inline>
+    .hero--full, .orb__stage, .orb__note, .spiral, .foot__band,
+    .about__divider, .opening__note { display: none !important; }
+  </style>
+</noscript>
 
 <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

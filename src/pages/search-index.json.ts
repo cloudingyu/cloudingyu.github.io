@@ -15,11 +15,14 @@ import { allPosts, permalink, formatDate } from '../lib/posts';
 
 /** 把 markdown 正文粗洗成可检索的纯文本。 */
 function plain(md: string): string {
-  return md
-    // 代码围栏的标记行去掉，保留代码本身
-    .replace(/^```.*$/gm, ' ')
-    // 行内代码的反引号去掉，保留内容
-    .replace(/`([^`]*)`/g, '$1')
+  const code: string[] = [];
+  // 先保护代码，避免 <T>、比较运算符和 Vim 的 y$ 被当作 HTML 或公式删除。
+  const text = md.replace(/```[^\n]*\n([\s\S]*?)```|`([^`\n]*)`/g, (_, block, inline) => {
+    code.push(block ?? inline);
+    return `\u0000${code.length - 1}\u0000`;
+  });
+  return text
+    .replace(/<!--[\s\S]*?-->/g, ' ')
     // 图片只留 alt，链接只留文字
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
@@ -29,13 +32,15 @@ function plain(md: string): string {
     // HTML 标签（正文里的 <div align=...> 之类）
     .replace(/<[^>]+>/g, ' ')
     // 标题井号、引用符号、列表符号
-    .replace(/^[#>\-*+]\s*/gm, ' ')
+    .replace(/^\s{0,3}#{1,6}\s+/gm, ' ')
+    .replace(/^[>\-*+]\s+/gm, ' ')
+    .replace(/(\*\*|__)([^\n]*?)\1/g, '$2')
+    .replace(/~~([^\n]*?)~~/g, '$1')
     // 表格分隔行
     .replace(/^\|?[\s:-]+\|[\s:|-]*$/gm, ' ')
-    // 兜底：行内代码是「保留内容」的，所以代码里的 $ 会活到这一步 ——
-    // 比如 vim 的 `y$`（复制到行尾）。公式语法已经在上一步整段剔除了，
-    // 走到这里还剩下的 $ 一定是代码或残留定界符，对检索毫无用处，抹掉。
+    // 去掉正文残留的公式定界符，再还原代码中的所有字符。
     .replace(/\$/g, ' ')
+    .replace(/\u0000(\d+)\u0000/g, (_, index) => code[Number(index)]!)
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{2,}/g, '\n')
     .trim();

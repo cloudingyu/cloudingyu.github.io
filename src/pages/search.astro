@@ -11,7 +11,7 @@
  * 也不会出现拼错一个字就搜不到中文标题的情况。
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { allPosts } from '../lib/posts';
+import { allPosts, excerpt, formatDate, permalink } from '../lib/posts';
 
 const posts = await allPosts();
 ---
@@ -49,11 +49,24 @@ const posts = await allPosts();
         </button>
       </div>
       <p class="mono-meta search__status" id="search-status" role="status" aria-live="polite"></p>
+      <button class="search__retry" id="search-retry" type="button" hidden>重新加载搜索</button>
     </form>
 
     <div class="rule" />
 
-    <div class="search__results" id="search-results"></div>
+    <div class="search__results" id="search-results">
+      {posts.map((post) => (
+        <a class="result" href={permalink(post)}>
+          <div class="result__meta mono-meta">
+            <span>{formatDate(post.data.date, 'dash')}</span>
+            <span>{post.data.author}</span>
+          </div>
+          <div class="result__title">{post.data.title}</div>
+          <p class="result__snippet">{excerpt(post.body ?? '', 130)}</p>
+          <ul class="result__tags">{post.data.tags.map((tag) => <li>{tag}</li>)}</ul>
+        </a>
+      ))}
+    </div>
 
     <!-- 无 JS 与首屏未执行时的兜底：把全部文章列出来，搜索框失效也仍可阅读 -->
     <noscript>
@@ -65,7 +78,7 @@ const posts = await allPosts();
   </section>
 </BaseLayout>
 
-<style>
+<style is:global>
   .search {
     padding-top: var(--s7);
     padding-bottom: var(--s8);
@@ -140,6 +153,13 @@ const posts = await allPosts();
     color: var(--ink-faint);
   }
 
+  .search__retry {
+    margin-top: var(--s3);
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--line-strong);
+    color: var(--accent);
+  }
+
   .search__fallback-note { color: var(--ink-muted); }
 
   /* --- 结果 --- */
@@ -196,13 +216,13 @@ const posts = await allPosts();
   }
 
   /* 命中词：用氧化红的浅底标出，与正文里的 marks 同一套语言 */
-  mark {
+  .search mark {
     background: var(--mark-wash);
     color: var(--mark);
     padding: 0.05em 0.2em;
     border-radius: 1px;
   }
-  :global([data-theme='dark']) mark {
+  [data-theme='dark'] .search mark {
     background: color-mix(in srgb, var(--mark) 28%, transparent);
     color: var(--ink);
   }
@@ -247,10 +267,13 @@ const posts = await allPosts();
   const clearBtn = document.getElementById('search-clear') as HTMLButtonElement | null;
   const status = document.getElementById('search-status');
   const results = document.getElementById('search-results');
+  const retryBtn = document.getElementById('search-retry') as HTMLButtonElement | null;
 
   if (form && input && status && results) {
     let items: Item[] | null = null;
     let loading: Promise<Item[]> | null = null;
+    let requestVersion = 0;
+    const fallbackHtml = results.innerHTML;
 
     const load = (): Promise<Item[]> => {
       if (!items) {
@@ -262,6 +285,10 @@ const posts = await allPosts();
           .then((data) => {
             items = data;
             return data;
+          })
+          .catch((error) => {
+            loading = null;
+            throw error;
           });
         return loading;
       }
@@ -271,12 +298,19 @@ const posts = await allPosts();
     const escapeHtml = (s: string) =>
       s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
-    /** 把命中的子串包进 <mark>，输入已经转义过、大小写不敏感。 */
-    const highlight = (text: string, term: string) => {
-      const safe = escapeHtml(text);
-      if (!term) return safe;
-      const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      return safe.replace(new RegExp(escaped, 'gi'), (m) => `<mark>${m}</mark>`);
+    /** 先在原文匹配，再分别转义，避免把 &amp; 等 HTML 实体拆坏。 */
+    const highlight = (text: string, terms: string[]) => {
+      if (!terms.length) return escapeHtml(text);
+      const pattern = [...terms].sort((a, b) => b.length - a.length)
+        .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+      let html = '';
+      let end = 0;
+      for (const match of text.matchAll(new RegExp(pattern, 'gi'))) {
+        const at = match.index!;
+        html += escapeHtml(text.slice(end, at)) + `<mark>${escapeHtml(match[0])}</mark>`;
+        end = at + match[0].length;
+      }
+      return html + escapeHtml(text.slice(end));
     };
 
     /** 取命中词周围的一段上下文，让读者知道「为什么这篇被搜到」。 */
@@ -312,12 +346,12 @@ const posts = await allPosts();
       return s;
     };
 
-    const render = (list: Item[], term: string) => {
+    const render = (list: Item[], terms: string[], query = terms.join(' ')) => {
       if (!list.length) {
         const tags = Array.from(new Set((items ?? []).flatMap((i) => i.tags))).slice(0, 8);
         results.innerHTML =
           `<div class="search__empty">
-             <p>没有匹配 <strong>${escapeHtml(term)}</strong> 的文章。换一个词试试，
+             <p>没有匹配 <strong>${escapeHtml(query)}</strong> 的文章。换一个词试试，
              或者从这些标签进去看看：</p>
              <ul>${tags.map((t) => `<li><a href="/tags/${encodeURIComponent(t)}/">${escapeHtml(t)}</a></li>`).join('')}</ul>
            </div>`;
@@ -332,8 +366,8 @@ const posts = await allPosts();
               <span>${escapeHtml(item.date)}</span>
               <span>${escapeHtml(item.author)}</span>
             </div>
-            <div class="result__title">${highlight(item.title, term)}</div>
-            <p class="result__snippet">${highlight(snippet(item.body, term), term)}</p>
+            <div class="result__title">${highlight(item.title, terms)}</div>
+            <p class="result__snippet">${highlight(snippet(item.body, terms.find((t) => item.body.toLowerCase().includes(t.toLowerCase())) ?? ''), terms)}</p>
             ${
               item.tags.length
                 ? `<ul class="result__tags">${item.tags.map((t) => `<li>${escapeHtml(t)}</li>`).join('')}</ul>`
@@ -345,14 +379,26 @@ const posts = await allPosts();
     };
 
     const run = async (raw: string) => {
+      const version = ++requestVersion;
       const term = raw.trim();
       clearBtn!.hidden = term.length === 0;
-
+      if (retryBtn) retryBtn.hidden = true;
+      if (!items) status.textContent = '正在加载搜索索引…';
+      let data: Item[];
+      try {
+        data = await load();
+      } catch {
+        if (version !== requestVersion) return;
+        status.textContent = '搜索暂时不可用，下面列出全部文章。你可以重新加载，或前往归档。';
+        results.innerHTML = fallbackHtml;
+        if (retryBtn) retryBtn.hidden = false;
+        return;
+      }
+      if (version !== requestVersion) return;
       // 空查询：把全部文章按时间列出，页面不至于是空白
-      const data = await load();
       if (!term) {
         status.textContent = `共 ${data.length} 篇文章 · 输入关键词开始筛选`;
-        render(data, '');
+        render(data, []);
         return;
       }
 
@@ -373,47 +419,70 @@ const posts = await allPosts();
       status.textContent = found.length
         ? `找到 ${found.length} 篇匹配「${term}」的文章`
         : `没有找到匹配「${term}」的文章`;
-      render(found, terms[0]!);
+      render(found, terms, term);
     };
 
     // --- 事件 ---
     let timer: number | undefined;
-    input.addEventListener('input', () => {
+    let composing = false;
+    const updateUrl = (value: string) => {
+      const url = new URL(location.href);
+      if (value.trim()) url.searchParams.set('q', value);
+      else url.searchParams.delete('q');
+      history.replaceState(history.state, '', url);
+    };
+    const searchNow = () => {
       window.clearTimeout(timer);
+      updateUrl(input.value);
+      void run(input.value);
+    };
+    const schedule = () => {
+      window.clearTimeout(timer);
+      requestVersion++;
       // 轻微防抖：索引已在内存，这里只是为了不在每次按键都重排 DOM
-      timer = window.setTimeout(() => {
-        const v = input.value;
-        const url = new URL(location.href);
-        if (v.trim()) url.searchParams.set('q', v);
-        else url.searchParams.delete('q');
-        history.replaceState(null, '', url);
-        void run(v);
-      }, 90);
+      timer = window.setTimeout(searchNow, 90);
+    };
+    input.addEventListener('compositionstart', () => {
+      composing = true;
+      window.clearTimeout(timer);
+      requestVersion++;
+    });
+    input.addEventListener('compositionend', () => {
+      composing = false;
+      schedule();
+    });
+    input.addEventListener('input', (e) => {
+      if (!composing && !e.isComposing) schedule();
     });
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      void run(input.value);
+      if (composing) return;
+      searchNow();
       input.focus();
     });
 
     clearBtn?.addEventListener('click', () => {
       input.value = '';
-      const url = new URL(location.href);
-      url.searchParams.delete('q');
-      history.replaceState(null, '', url);
-      void run('');
+      searchNow();
       input.focus();
     });
 
     // 斜杠键聚焦搜索框 —— 技术读者习惯的快捷键
     document.addEventListener('keydown', (e) => {
       const el = document.activeElement;
-      const typing = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement;
-      if (e.key === '/' && !typing) {
+      const typing = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement
+        || (el instanceof HTMLElement && el.isContentEditable);
+      if (e.key === '/' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         input.focus();
       }
+    });
+    retryBtn?.addEventListener('click', searchNow);
+    window.addEventListener('popstate', () => {
+      window.clearTimeout(timer);
+      input.value = new URL(location.href).searchParams.get('q') ?? '';
+      void run(input.value);
     });
 
     // 首屏：读 URL 里的 q，让链接可分享

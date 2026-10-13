@@ -11,17 +11,27 @@
     "start": "npm run prepare-content && astro dev",
     "build": "npm run prepare-content && astro build",
     "preview": "astro preview",
-    "check": "astro check",
+    "check": "npm run prepare-content && astro check",
     "verify": "node scripts/verify.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.3.2",
     "@astrojs/sitemap": "^3.7.4",
     "astro": "^7.3.6",
-    "katex": "^0.16.22",
+    "katex": "^0.18.2",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "three": "^0.186.1",
     "unist-util-visit": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "overrides": {
+    "katex": "$katex"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "typescript": "^6.0.3"
   }
 }

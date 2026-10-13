@@ -27,7 +27,7 @@ export function permalink(post: Post): string {
  */
 export async function allPosts(): Promise<Post[]> {
   const posts = await getCollection('posts');
-  return posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+  return posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime() || a.id.localeCompare(b.id, 'en'));
 }
 
 export interface TagCount {
@@ -46,6 +46,20 @@ export function tagCounts(posts: Post[]): TagCount[] {
   return [...counts.entries()]
     .map(([tag, count]) => ({ tag, count, featured: count > 1 }))
     .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, 'zh-Hans-CN'));
+}
+
+/** 标签球使用真实的共现关系；两个标签同属至少一篇文章时连线。 */
+export function tagGraph(posts: Post[]) {
+  const nodes = tagCounts(posts).map(({ tag, count }) => ({ tag, count }));
+  const indices = new Map(nodes.map((node, i) => [node.tag, i]));
+  const pairs = new Set<string>();
+  for (const post of posts) {
+    const tags = [...new Set(post.data.tags)].map((tag) => indices.get(tag)!).sort((a, b) => a - b);
+    for (let i = 0; i < tags.length; i++) {
+      for (let j = i + 1; j < tags.length; j++) pairs.add(`${tags[i]},${tags[j]}`);
+    }
+  }
+  return { nodes, edges: [...pairs].map((pair) => pair.split(',').map(Number)) };
 }
 
 /** 归档页按年份分组（含年份内文章数）。 */

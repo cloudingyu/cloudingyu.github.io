@@ -53,55 +53,34 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
     整个视口宽度 —— 整屏开场就是靠这一层把画面撑满的。
     纵向步距 2.6、四层，跨度约 8 个世界单位，正好覆盖整屏可视区。
   */
-  const defs = [];
-  const LEVELS = 4;
-  // 取景分档：整屏宽屏 / 整屏窄屏 / 普通页头宽屏 / 普通页头窄屏
-  const wide = host.clientWidth >= 900;
-  const nk = wide ? 'wide' : 'narrow';
-  const build = () => {
-    const insert = (depth, x, z, span) => {
-      defs.push({ depth, x, y: 4.9 - depth * 2.35, z, span });
-      if (depth + 1 >= LEVELS) return;
-      /*
-        子节点偏移 = span/4，下一层的 span = span/2 —— 两者是同一个比例，
-        所以第 k 层最外侧节点落在 ±span0/4 × (1 + 1/2 + 1/4 + …) ≈ ±span0/2。
-        早先写成「偏移 span/2、下一层 span/2」，宽度每层不收敛，
-        最外侧会跑到 ±span0，整棵树横跨屏幕两倍宽（实测 ±11.9 世界单位）。
-      */
-      const half = span / 4;
-      const next = span / 2;
-      // 每侧都有小概率缺枝：完全不缺就是一棵完美平衡树，反而不像数据结构
-      if (rnd() > 0.12) insert(depth + 1, x - half, z + (rnd() - 0.5) * half * 0.5, next);
-      if (rnd() > 0.12) insert(depth + 1, x + half, z + (rnd() - 0.5) * half * 0.5, next);
+  const count = Number(host.dataset.postCount ?? 15);
+  const LEVELS = Math.max(1, Math.ceil(Math.log2(count + 1)));
+  // 按时间倒序逐层分配文章，记录真实父节点，避免随机缺枝及串错连线。
+  const defs = Array.from({ length: count }, (_, index) => {
+    const depth = Math.floor(Math.log2(index + 1));
+    const width = 2 ** depth;
+    const slot = index + 1 - width;
+    return {
+      index, depth,
+      parent: index === 0 ? null : Math.floor((index - 1) / 2),
+      x: (slot - (width - 1) / 2) * (13.6 / width),
+      y: 4.9 - depth * 2.35,
+      z: (rnd() - 0.5) * 0.35,
     };
-    /*
-      span 是这一层「子节点的展开宽度」。递归衰减后最外侧节点落在 ±span/2：
-      span=13.6 → ±6.8 世界单位，而 1440×900 下的可视半宽约 7.7，
-      所以最外层留在画面内，只让枝尖轻轻碰到边缘。
-    */
-    // 窄屏的可视半宽只有 ±2.6（390×844，aspect 0.46），跨度必须单独收窄
-    insert(0, 0, 0, nk === 'narrow' ? 5.4 : 13.6);
-  };
-  build();
+  });
 
   const edges = [];
   const nodes = [];
   const nodeMats = [];
-  let rootNode = null;
-
-  for (const d of defs) {
-    // 子节点 = 下一层里横向距离约等于 span/4 的那些（二叉分支的父子关系）
-    const offset = d.span / 4;
-    const kids = defs.filter(
-      (k) => k.depth === d.depth + 1 && Math.abs(Math.abs(k.x - d.x) - offset) < offset * 0.5,
-    );
-    for (const k of kids) {
+  for (const k of defs) {
+    if (k.parent !== null) {
+      const d = defs[k.parent];
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.Float32BufferAttribute([d.x, d.y, d.z, k.x, k.y, k.z], 3));
       const mat = new THREE.LineBasicMaterial({ color: colors.line, transparent: true, opacity: 0, depthWrite: false });
       const line = new THREE.Line(geo, mat);
       root.add(line);
-      edges.push({ line, mat, appear: 0.04 + d.depth * 0.17, depth: d.depth });
+      edges.push({ line, mat, from: d, to: k, appear: 0.04 + d.depth * 0.17 });
     }
   }
 
@@ -131,7 +110,6 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
       base: d.x,
     };
     nodes.push(node);
-    if (isRoot) rootNode = node;
   }
 
   // 竖直轴线：树是「长出来」的，需要一根时间轴
@@ -164,31 +142,22 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
     窄屏：收回中间并等比缩小。
   */
   const full = viewScale >= 1.35;
-  if (full && !wide) {
-    /*
-      整屏 + 窄屏：可视半宽只有 ±2.6、半高 4.82 × (844/900 比例下仍约 4.8)。
-      所以树要缩到 0.5 上下并整体上移，把叶子留在标题上方。
-    */
-    root.position.set(0, 1.0, 0);
-    root.scale.setScalar(0.5 * viewScale);
-  } else if (full && wide) {
-    /*
-      纵向对齐：视口可视半高 4.82，树顶在 4.9、树底在 -2.15（局部坐标）。
-      缩放 1.05 后要把「树顶」压到 4.3 以内才会完整落在屏内，
-      所以基准位取 -0.85 —— 根节点贴着页头上沿，叶层压到标题区上方。
-    */
-    root.position.set(0, -0.85, 0);
-    root.scale.setScalar(0.68 * viewScale);
-  } else if (wide) {
-    root.position.set(7.2 * viewScale, -2.6 * viewScale, 0);
-    root.scale.setScalar(0.92 * viewScale);
-  } else {
-    root.position.set(0, 1.15 * viewScale, 0);
-    root.scale.setScalar(0.4 * viewScale);
-  }
-  // 记下基准位，滚动时在基准附近漂移（见 update）
-  const basePos = root.position.clone();
-  const baseScale = root.scale.x;
+  const basePos = new THREE.Vector3();
+  let baseScale = 1;
+  let horizontalSpread = 1;
+  const fit = (w, h, camera) => {
+    const halfHeight = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+    const halfWidth = halfHeight * camera.aspect;
+    horizontalSpread = Math.min(2.5, Math.max(0.55, camera.aspect * 0.7));
+    const treeHeight = (LEVELS - 1) * 2.35 + 2.5;
+    const wide = w / h > 2;
+    const widthBudget = full || !wide ? 1.65 : 0.75;
+    baseScale = Math.min(halfHeight * 1.55 / treeHeight, halfWidth * widthBudget / (15.1 * horizontalSpread));
+    const centerY = 4.9 - (LEVELS - 1) * 2.35 / 2;
+    basePos.set(!full && wide ? halfWidth * 0.42 : 0, -centerY * baseScale - 0.2, 0);
+    root.position.copy(basePos);
+    root.scale.setScalar(baseScale);
+  };
 
   /* 状态：全部由 input 推导 */
   let grow = 0;        // 实际生长度
@@ -197,6 +166,7 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
   const waves = [];    // 正在扩散的自检波
 
   return {
+    onResize: fit,
     update(t, dt, { reduced: isReduced }) {
       const act = input.activity;
 
@@ -207,15 +177,21 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
       */
       const driven = clamp01(input.scroll * 1.15 + 0.12);
       const idle = isReduced ? 0 : Math.sin(t * 0.35) * 0.012 * (1 - act);
-      grow = follow(grow, clamp01(driven + idle), 7, dt);
+      grow = isReduced ? 1 : follow(grow, clamp01(driven + idle), 7, dt);
 
       const g = easeOut(grow);
 
       for (const e of edges) {
         const p = clamp01((g - e.appear) / 0.3);
         e.mat.opacity = p * 0.85;
-        // 从父端长出：以起点为缩放原点
-        e.line.scale.y = Math.max(0.001, p);
+        // 只推进连线的终点，起点始终留在父节点上。
+        const position = e.line.geometry.attributes.position;
+        position.setXYZ(0, e.from.x * horizontalSpread, e.from.y, e.from.z);
+        position.setXYZ(1,
+          (e.from.x + (e.to.x - e.from.x) * p) * horizontalSpread,
+          e.from.y + (e.to.y - e.from.y) * p,
+          e.from.z + (e.to.z - e.from.z) * p);
+        position.needsUpdate = true;
       }
 
       /*
@@ -259,7 +235,7 @@ export function rbTreeScene({ THREE, scene, colors, reduced, lowPower, seed, hos
         }
         n.oct.scale.multiplyScalar(1 + pulse * 0.5);
         n.mat.opacity = easeOut(g) * (0.85 + pulse * 0.15);
-        n.g.position.x = n.base + Math.sin(t * 0.7 + n.appear * 4) * 0.02 * (0.3 + act);
+        n.g.position.x = n.base * horizontalSpread;
       }
 
       for (const m of nodeMats) m.opacity = easeOut(g);
@@ -297,7 +273,7 @@ export function helixScene({ THREE, scene, colors, reduced, lowPower, seed, host
   group.rotation.x = -0.09;
   scene.add(group);
 
-  const COUNT = 15;
+  const COUNT = Number(host.dataset.postCount ?? 15);
   const plates = [];
   const plateGeo = new THREE.BoxGeometry(2.15, 0.95, 0.06);
   const plateEdges = new THREE.EdgesGeometry(plateGeo);
@@ -361,7 +337,7 @@ export function helixScene({ THREE, scene, colors, reduced, lowPower, seed, host
     自己留白 —— 留白比裁切好。
   */
   const wide = host.clientWidth >= 700;
-  const baseScale = (wide ? 0.86 : 0.6) * viewScale;
+  let baseScale = (wide ? 0.86 : 0.6) * viewScale;
   // 纵向偏移：螺旋缩放后跨度约 4.0，重心落在视口中心偏下一点
   group.position.set(wide ? 1.4 * viewScale : 0, -1.45, 0);
   group.scale.setScalar(baseScale);
@@ -374,6 +350,12 @@ export function helixScene({ THREE, scene, colors, reduced, lowPower, seed, host
   let clickSpin = 0;   // 点击附加的一次转动
 
   return {
+    onResize(w, h, camera) {
+      const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+      baseScale = Math.min(viewScale * 0.86, half * 1.5 / Math.max(COUNT * 0.36 + 1, 1), half * camera.aspect * 1.35 / 11);
+      group.scale.setScalar(baseScale);
+      group.position.set(w / h > 2 ? half * camera.aspect * 0.3 : 0, -(COUNT - 1) * 0.18 * baseScale, 0);
+    },
     update(t, dt, { reduced: isReduced }) {
       const act = input.activity;
 
@@ -397,7 +379,7 @@ export function helixScene({ THREE, scene, colors, reduced, lowPower, seed, host
       group.rotation.z = follow(group.rotation.z, -input.px * 0.04, 3, dt);
 
       // 入场揭示同样挂在滚动上
-      reveal = follow(reveal, clamp01(0.25 + input.scroll * 1.2), 6, dt);
+      reveal = isReduced ? 1 : follow(reveal, clamp01(0.25 + input.scroll * 1.2), 6, dt);
 
       for (let i = 0; i < plates.length; i++) {
         const p = plates[i];
@@ -421,7 +403,7 @@ export function helixScene({ THREE, scene, colors, reduced, lowPower, seed, host
     onTheme(c) {
       for (let i = 0; i < plates.length; i++) {
         plates[i].mat.color.copy(i > 10 ? c.accent : c.line);
-        plates[i].fill.color.copy(c.accent);
+        plates[i].fill.material.color.copy(c.accent);
         plates[i].anchor.material.color.copy(c.accent);
       }
       for (const r of rings) r.mat.color.copy(c.faint);
@@ -498,11 +480,16 @@ export function keplerScene({ THREE, scene, colors, reduced, lowPower, host, inp
   let wobble = 0;     // 点击后的抖动
 
   return {
+    onResize(w, h, camera) {
+      const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+      group.scale.setScalar(Math.min(viewScale, half * 0.7 / 3.5, half * camera.aspect * 0.7 / 3.5));
+      group.position.x = w / h > 2 ? half * camera.aspect * 0.4 : 0;
+    },
     update(t, dt, { reduced: isReduced }) {
       const act = input.activity;
-      reveal = follow(reveal, clamp01(0.35 + input.scroll * 1.1), 6, dt);
+      reveal = isReduced ? 1 : follow(reveal, clamp01(0.35 + input.scroll * 1.1), 6, dt);
       // 滚动决定「拆开」：0.6 → 1.9 的缩放系数，拆开后三层立体的间距明显拉开
-      spread = follow(spread, 0.62 + input.scroll * 1.28, 6, dt);
+      spread = isReduced ? 1 : follow(spread, 0.62 + input.scroll * 1.28, 6, dt);
 
       /* 点击：一次短促的抖动，三个立体错峰回弹 */
       if (input.impulse > 0.2) wobble = Math.min(1.2, wobble + input.impulse);
@@ -765,31 +752,29 @@ export function tagSphereScene({ THREE, scene, colors, lowPower, host, input, vi
   const group = new THREE.Group();
   scene.add(group);
 
-  const COUNT = 17;
+  const network = JSON.parse(host.dataset.tagNetwork ?? '{"nodes":[],"edges":[]}');
+  const COUNT = network.nodes.length;
   const pts = [];
   // 斐波那契球面：均匀分布，比随机点好看得多
   for (let i = 0; i < COUNT; i++) {
-    const y = 1 - (i / (COUNT - 1)) * 2;
+    const y = COUNT > 1 ? 1 - (i / (COUNT - 1)) * 2 : 0;
     const r = Math.sqrt(Math.max(0, 1 - y * y));
     const theta = i * 2.399963;
     pts.push(new THREE.Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r).multiplyScalar(7.2));
   }
 
   const nodeGeo = new THREE.SphereGeometry(0.17, 10, 10);
-  const nodes = pts.map((p) => {
-    const m = new THREE.Mesh(nodeGeo, new THREE.MeshBasicMaterial({ color: colors.accent, transparent: true, opacity: 0.9 }));
+  const nodes = pts.map((p, i) => {
+    const featured = network.nodes[i].count >= 2;
+    const m = new THREE.Mesh(nodeGeo, new THREE.MeshBasicMaterial({ color: featured ? colors.mark : colors.accent, transparent: true, opacity: 0.9 }));
+    m.userData.baseScale = Math.min(2, Math.sqrt(network.nodes[i].count));
+    m.userData.featured = featured;
     m.position.copy(p);
     group.add(m);
     return m;
   });
 
-  // 近邻相连：形成一张网而不是一坨
-  const segs = [];
-  for (let i = 0; i < pts.length; i++) {
-    for (let j = i + 1; j < pts.length; j++) {
-      if (pts[i].distanceTo(pts[j]) < 6.2) segs.push(pts[i], pts[j]);
-    }
-  }
+  const segs = network.edges.flatMap(([a, b]) => [pts[a], pts[b]]);
   const lineGeo = new THREE.BufferGeometry().setFromPoints(segs);
   const netMat = new THREE.LineBasicMaterial({ color: colors.line, transparent: true, opacity: 0.42, depthWrite: false });
   group.add(new THREE.LineSegments(lineGeo, netMat));
@@ -827,6 +812,10 @@ export function tagSphereScene({ THREE, scene, colors, lowPower, host, input, vi
   let pop = 0;
 
   return {
+    onResize(w, h, camera) {
+      const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+      group.scale.setScalar(Math.min(viewScale, half * 1.7 / 14.4, half * camera.aspect * 1.7 / 14.4));
+    },
     update(t, dt, { reduced: isReduced }) {
       const act = input.activity;
 
@@ -846,13 +835,13 @@ export function tagSphereScene({ THREE, scene, colors, lowPower, host, input, vi
       for (let i = 0; i < nodes.length; i++) {
         // 静止时几乎不跳动，交互时明显
         const breathe = 1 + Math.sin(t * 1.6 + i * 0.7) * 0.28 * (0.15 + act);
-        nodes[i].scale.setScalar(breathe * (1 + pop * 0.5));
+        nodes[i].scale.setScalar(nodes[i].userData.baseScale * (isReduced ? 1 : breathe * (1 + pop * 0.5)));
       }
 
       motes.rotation.y = -input.scroll * 0.4 + input.px * 0.2;
     },
     onTheme(c) {
-      for (const n of nodes) n.material.color.copy(c.accent);
+      for (const n of nodes) n.material.color.copy(n.userData.featured ? c.mark : c.accent);
       netMat.color.copy(c.line);
       shellMat.color.copy(c.faint);
       motes.material.color.copy(c.ink);

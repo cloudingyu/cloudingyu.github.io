@@ -11,7 +11,7 @@ import { SITE, AUTHOR, SOCIALS, FRIENDS, NAV, PAGES } from '../data/site';
 // 类型单独一行导入：Astro 7.3.6 的编译器对句内 `type` 修饰符的解析不稳，
 // 混写时会报 Expected } but found : 这类指向别处的错。
 import type { PageKey, SceneKind } from '../data/site';
-import { assetUrl } from '../lib/posts';
+import { assetUrl, allPosts, tagGraph } from '../lib/posts';
 import '../styles/global.css';
 import '../styles/layout.css';
 import '../styles/scene.css';
@@ -25,6 +25,7 @@ interface Props {
   tags?: string[];
   image?: string;
   noindex?: boolean;
+  author?: string;
   /** 使用哪个页面的引言与场景 */
   page?: PageKey;
   /** 覆盖该页默认的几何场景 */
@@ -43,6 +44,8 @@ interface Props {
   seed?: string;
   /** 在正文顶部放一枚印章（文章页用） */
   seal?: boolean;
+  /** 是否显示页脚装饰场景。 */
+  footerScene?: boolean;
 }
 
 const {
@@ -53,6 +56,7 @@ const {
   tags,
   image,
   noindex,
+  author,
   page = 'home',
   scene: sceneOverride,
   hero = 'compact',
@@ -62,10 +66,12 @@ const {
   showQuote = hero !== 'bare',
   seed = '',
   seal = false,
+  footerScene = true,
 } = Astro.props;
 
 const bg = PAGES[page];
 const sceneKind: SceneKind = sceneOverride ?? bg.scene;
+const scenePosts = hero === 'bare' ? [] : await allPosts();
 const sceneSeed = `${page}-${seed || title || ''}`.trim();
 const current = Astro.url.pathname;
 const isActive = (href: string) =>
@@ -75,7 +81,7 @@ const isActive = (href: string) =>
 <!doctype html>
 <html lang={SITE.lang}>
   <head>
-    <Head {title} {description} {type} {published} {tags} {image} {noindex} />
+    <Head {title} {description} {type} {published} {tags} {image} {noindex} {author} />
     <slot name="head" />
   </head>
   <body>
@@ -121,7 +127,7 @@ const isActive = (href: string) =>
             </svg>
             <span class="nav__search-label">搜索</span>
           </a>
-          <button class="theme-toggle" id="theme-toggle" type="button" aria-live="polite" data-magnetic="0.18">
+          <button class="theme-toggle" id="theme-toggle" type="button" disabled aria-live="polite" data-magnetic="0.18">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
               <path class="tt-sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m0-11.32L4.93 4.93m14.14 14.14-1.41-1.41" />
               <circle cx="12" cy="12" r="4.2" />
@@ -143,6 +149,8 @@ const isActive = (href: string) =>
           <div
             class="scene scene--bleed"
             data-scene={sceneKind}
+            data-post-count={scenePosts.length}
+            data-tag-network={sceneKind === 'tags' ? JSON.stringify(tagGraph(scenePosts)) : undefined}
             data-seed={sceneSeed}
             data-scene-scroll="on"
             data-scene-scale={hero === 'full' ? '1.55' : '1.12'}
@@ -155,9 +163,9 @@ const isActive = (href: string) =>
                 {SITE.url.replace(/^https?:\/\//, '')}
               </p>
             )}
-            <h1 class="hero__title stage-text depth" style="--stage-i:1">
+            {hero !== 'full' && <h1 class="hero__title stage-text depth" style="--stage-i:1">
               {title || SITE.title}
-            </h1>
+            </h1>}
             {showQuote && (
               <blockquote class="hero__quote stage-text" style="--stage-i:2">
                 {bg.quote}
@@ -239,35 +247,13 @@ const isActive = (href: string) =>
 
       <!-- 页脚上方的几何带：把「本站的体量」画成一张网 -->
       {
-        seal === false && (
+        footerScene && seal === false && (
           <div class="foot__band">
             <div class="scene scene--band" data-scene="seal" data-seed={`foot-${page}`} aria-hidden="true" />
           </div>
         )
       }
     </footer>
-
-    <script>
-      // ---- 主题切换 --------------------------------------------------------
-      const root = document.documentElement;
-      const toggle = document.getElementById('theme-toggle');
-      const label = document.getElementById('theme-label');
-      const KEY = 'cy-theme';
-
-      const syncLabel = () => {
-        const isDark = root.dataset.theme === 'dark';
-        if (label) label.textContent = isDark ? '日间' : '夜间';
-        toggle?.setAttribute('aria-label', isDark ? '切换到日间模式' : '切换到夜间模式');
-      };
-      syncLabel();
-
-      toggle?.addEventListener('click', () => {
-        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
-        root.dataset.theme = next;
-        try { localStorage.setItem(KEY, next); } catch (e) { /* 隐私模式 */ }
-        syncLabel();
-      });
-    </script>
 
     <script>
       // 动效总控：WebGL 场景 + 磁力光标 + 复制 + 揭示 + 目录高亮。

@@ -46,7 +46,7 @@
     底部格外重要 —— 树的下半截要「落进」下方的内容区，
     所以底部遮罩拉到 40%，避免在页头边界上切出一条硬线。
   */
-  inset: -20% -14% -6% -14%;
+  inset: 0 -6% 0 -6%;
   mask-image:
     linear-gradient(to bottom, transparent 0%, #000 9%, #000 62%, transparent 100%),
     radial-gradient(130% 120% at 62% 40%, #000 66%, transparent 100%);
@@ -65,6 +65,10 @@
 
 /* WebGL 不可用（或 three.js 加载失败）时不留空档：直接不占位 */
 .scene--off { display: none; }
+.hero--full:has(.scene--off),
+.orb__stage:has(.scene--off),
+.spiral:has(.scene--off),
+.about__divider:has(.scene--off) { display: none; }
 
 /* 页头图层顺序：场景 0 → 遮罩 1 → 文案 2 */
 .hero--scene .hero__veil { z-index: 1; }
@@ -182,11 +186,15 @@
 */
 html[data-theme-transition]::view-transition-old(root) {
   animation: none;
+  z-index: 1;
 }
 html[data-theme-transition]::view-transition-new(root) {
   animation: theme-reveal 0.62s var(--ease) both;
   mix-blend-mode: normal;
+  z-index: 2;
 }
+
+html[data-theme-transition] :is(.hero, h1) { view-transition-name: none !important; }
 
 @keyframes theme-reveal {
   from {
@@ -253,20 +261,9 @@ html[data-theme-transition]::view-transition-new(root) {
   移动端地址栏收起时 vh 会把内容顶出屏幕。兜底再给 vh。
 */
 .hero--full {
-  /*
-    整屏页头要「减掉站牌高度」：站牌是 sticky 的，若页头仍按 100vh 算，
-    下方标题区就会被推到首屏之外 —— 打开页面第一眼只看到几何体，
-    看不到「这是谁的博客」。所以这里用 100svh - 站牌高度。
-  */
-  /*
-    取 72svh：整屏（100svh）会把标题区整个推到折叠线以下 ——
-    打开页面第一眼只看得到几何体，看不到站点名，这与「一眼看出这是谁的博客」
-    正好相反。72svh + 开场区刚好让「站名 · 副标语」落在首屏内，
-    几何体仍然占满上方三分之二。
-  */
-  --masthead-h: 4.25rem;
-  min-height: calc(72vh - var(--masthead-h));
-  min-height: calc(72svh - var(--masthead-h));
+  /* 控制几何区高度，让站名、引语与阅读入口落在首屏内。 */
+  min-height: clamp(18rem, 42vh, 32rem);
+  min-height: clamp(18rem, 42svh, 32rem);
   display: flex;
   align-items: flex-end;
   /* 不留底边界线：整屏页头与下方内容要连成一片，硬线会把树切断 */
@@ -277,8 +274,11 @@ html[data-theme-transition]::view-transition-new(root) {
 .hero--full .hero__rule { display: none; }
 
 .hero--full .hero__inner {
-  min-height: auto;
-  padding-block: var(--s6) var(--s5);
+  display: none;
+}
+
+@media (max-width: 40rem) {
+  .hero--full { min-height: clamp(15rem, 36svh, 22rem); }
 }
 
 /*
@@ -311,7 +311,7 @@ html[data-theme-transition]::view-transition-new(root) {
 .hero--full .hero__title { display: none; }
 
 .hero--scene.hero--compact .hero__inner {
-  padding-right: 0;
+  padding-right: var(--gutter);
 }
 @media (min-width: 68rem) {
   .hero--scene.hero--compact .hero__inner { padding-right: 46%; }

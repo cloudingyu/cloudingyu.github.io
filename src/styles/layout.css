@@ -30,7 +30,13 @@
   backdrop-filter: saturate(1.4) blur(10px);
   -webkit-backdrop-filter: saturate(1.4) blur(10px);
   border-bottom: 1px solid var(--line);
+  transition: transform 0.25s var(--ease);
 }
+
+.masthead.is-tucked { transform: translateY(-100%); }
+.masthead:focus-within { transform: none; }
+
+[data-magnetic] { translate: var(--mag-x, 0px) var(--mag-y, 0px); }
 
 .masthead__inner {
   display: flex;
@@ -84,6 +90,8 @@
 
 @media (max-width: 30rem) {
   .brand__tag { display: none; }
+  .masthead__inner { padding-block: 0.5rem; gap: 0.5rem; }
+  .nav { width: 100%; justify-content: space-between; }
 }
 
 .nav {

@@ -50,6 +50,7 @@ const showToc = toc.length >= 2;
   seed={slugOf(post)}
   type="article"
   {title}
+  {author}
   published={date}
   tags={tags}
   image={cover || undefined}
@@ -352,6 +353,8 @@ const showToc = toc.length >= 2;
     transition: color 0.22s var(--ease);
   }
   .post__toc a:hover { color: var(--ink); }
+  .post__toc a.is-current { color: var(--accent); font-weight: 600; }
+  .post__toc a.is-current .post__toc-rule { background: var(--accent); width: 1.1rem; }
 
   /* 一道会随悬停延展的短横线 —— 图纸上被标注的条目 */
   .post__toc-rule {

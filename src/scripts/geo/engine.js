@@ -12,7 +12,23 @@
  *   3. three.js 走动态 import —— 首屏 HTML 不背 400KB 的库；
  *      不支持 WebGL 的浏览器直接不加载（catch 掉即可）。
  */
-import * as THREE from 'three';
+import {
+  AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry,
+  CanvasTexture, Color, DoubleSide, EdgesGeometry, Float32BufferAttribute, Fog,
+  Group, IcosahedronGeometry, Line, LineBasicMaterial, LineSegments, MathUtils,
+  Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera, PlaneGeometry,
+  PointLight, Points, PointsMaterial, Scene, SphereGeometry, TetrahedronGeometry,
+  TorusGeometry, Vector3, WebGLRenderer, WireframeGeometry,
+} from 'three';
+// 只向场景提供实际使用的类型，避免把 three 的全部导出保留在产物里。
+const THREE = {
+  AdditiveBlending, AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry,
+  CanvasTexture, Color, DoubleSide, EdgesGeometry, Float32BufferAttribute, Fog,
+  Group, IcosahedronGeometry, Line, LineBasicMaterial, LineSegments, MathUtils,
+  Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera, PlaneGeometry,
+  PointLight, Points, PointsMaterial, Scene, SphereGeometry, TetrahedronGeometry,
+  TorusGeometry, Vector3, WebGLRenderer, WireframeGeometry,
+};
 // 工具函数住在 util.js（不 import three），这样 motion.js 只引工具时
 // 不会把整包 three 拖进首屏 chunk
 import { seeded, damp, clamp01, prefersReducedMotion, palette } from './util.js';
@@ -119,7 +135,6 @@ export function dust(count = 400, spread = 40, { color, size = 0.16, opacity = 0
  */
 export function mountScene(host, factory, opts = {}) {
   if (!host || host.dataset.sceneMounted === '1') return () => {};
-  host.dataset.sceneMounted = '1';
 
   const reduced = prefersReducedMotion();
   const lowPower
@@ -131,6 +146,7 @@ export function mountScene(host, factory, opts = {}) {
     alpha: true,
     powerPreference: 'high-performance',
   });
+  host.dataset.sceneMounted = '1';
   renderer.setClearAlpha(0);
   const maxDpr = lowPower ? 1.35 : 1.75;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
@@ -178,7 +194,9 @@ export function mountScene(host, factory, opts = {}) {
     idle: 0,
   };
 
-  const state = factory({
+  let state;
+  try {
+    state = factory({
     THREE,
     scene,
     camera,
@@ -206,16 +224,30 @@ export function mountScene(host, factory, opts = {}) {
     get scroll() {
       return input.scroll;
     },
-  });
+    });
+  } catch (error) {
+    renderer.dispose();
+    renderer.forceContextLoss();
+    renderer.domElement.remove();
+    delete host.dataset.sceneMounted;
+    throw error;
+  }
 
   /* 尺寸：容器尺寸变化（翻页、响应式断点）时重建投影矩阵 */
   const resize = () => {
-    const w = host.clientWidth || window.innerWidth;
-    const h = host.clientHeight || 1;
+    const w = host.clientWidth;
+    const h = host.clientHeight;
+    if (!w || !h) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     state?.onResize?.(w, h, camera);
+    // 第一次 resize 发生在下方状态初始化前，推迟绘制以避免 TDZ。
+    queueMicrotask(() => {
+      if (disposed) return;
+      onScroll();
+      if (reduced || !visible) renderOnce();
+    });
   };
   resize();
   // ResizeObserver 覆盖「容器尺寸变了但窗口没变」的情况（比如翻页切换）
@@ -226,7 +258,7 @@ export function mountScene(host, factory, opts = {}) {
   const themeObs = new MutationObserver(() => {
     colors = toColors(palette());
     state?.onTheme?.(colors);
-    if (reduced || !visible) renderOnce();
+    if (reduced && visible) renderOnce();
   });
   themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
@@ -235,7 +267,8 @@ export function mountScene(host, factory, opts = {}) {
     onScroll 在注册时会立刻跑一次（初始化推进度），它会调用 bump()，
     而 bump 里引用了 raf / start —— 声明在后面就是 TDZ 报错。
   */
-  const clock = new THREE.Clock();
+  let frameTime = performance.now();
+  let disposed = false;
   let raf = 0;
   let elapsed = 0;
   // 可见性：bump() 与 onScroll() 都要读它，所以先于监听器声明
@@ -243,13 +276,16 @@ export function mountScene(host, factory, opts = {}) {
 
   const renderOnce = () => {
     input.scroll = input.scrollT;
-    state?.update?.(elapsed, 1 / 60, { reduced: true, input });
+    state?.update?.(elapsed, 1 / 60, { reduced, input });
     renderer.render(scene, camera);
   };
 
   const frame = () => {
+    if (disposed || !visible || document.hidden) { raf = 0; return; }
     raf = requestAnimationFrame(frame);
-    const dt = Math.min(clock.getDelta(), 0.05);
+    const now = performance.now();
+    const dt = Math.min((now - frameTime) / 1000, 0.05);
+    frameTime = now;
     elapsed += dt;
 
     const prevScroll = input.scroll;
@@ -274,7 +310,7 @@ export function mountScene(host, factory, opts = {}) {
 
   const start = () => {
     if (reduced || raf || document.hidden) return;
-    clock.getDelta();
+    frameTime = performance.now();
     frame();
   };
   const stop = () => {
@@ -286,7 +322,10 @@ export function mountScene(host, factory, opts = {}) {
   const io = new IntersectionObserver(
     (entries) => {
       visible = entries[0]?.isIntersecting ?? false;
-      if (visible) start();
+      if (visible) {
+        if (reduced) renderOnce();
+        else start();
+      }
       else stop();
     },
     { threshold: 0 },
@@ -308,21 +347,19 @@ export function mountScene(host, factory, opts = {}) {
     input.pty = ny;
     bump(1);
   };
-  window.addEventListener('pointermove', onPointer, { passive: true });
+  if (!reduced) window.addEventListener('pointermove', onPointer, { passive: true });
 
   /*
     滚动：容器在视口里的推进度。
     0 → 1 表示「从刚进入视口到滚过它」，各场景把这一条曲线用成自己的时间轴。
   */
-  let lastScrollY = window.scrollY;
   const onScroll = () => {
     const r = host.getBoundingClientRect();
     const vh = window.innerHeight;
-    let t = clamp01(1 - (r.top + r.height) / (vh + r.height));
+    let t = clamp01((vh - r.top) / (vh + r.height));
     if (r.bottom < 0) t = 1;
     if (r.top > vh) t = 0;
     input.scrollT = t;
-    lastScrollY = window.scrollY;
     bump(1);
   };
   if (opts.scroll !== false) {
@@ -346,7 +383,7 @@ export function mountScene(host, factory, opts = {}) {
     input.impulse = Math.min(1, Math.max(0.25, 1 - d / reach));
     bump(1);
   };
-  document.addEventListener('pointerdown', onPress, { passive: true });
+  if (!reduced) document.addEventListener('pointerdown', onPress, { passive: true });
 
   /** 把活跃度顶起来：任何交互都会让几何体「醒过来」，然后缓慢回落 */
   function bump(amount) {
@@ -356,7 +393,10 @@ export function mountScene(host, factory, opts = {}) {
 
   const onVis = () => {
     if (document.hidden) stop();
-    else if (visible) start();
+    else if (visible) {
+      if (reduced) renderOnce();
+      else start();
+    }
   };
   document.addEventListener('visibilitychange', onVis);
 
@@ -371,21 +411,26 @@ export function mountScene(host, factory, opts = {}) {
 
   /* 返回卸载函数：ClientRouter 换页时旧页面会被替换，必须显式释放 */
   return () => {
+    disposed = true;
     stop();
     io.disconnect();
     ro.disconnect();
     themeObs.disconnect();
     window.removeEventListener('pointermove', onPointer);
     window.removeEventListener('scroll', onScroll);
+    document.removeEventListener('pointerdown', onPress);
     document.removeEventListener('visibilitychange', onVis);
     state?.dispose?.();
+    const resources = new Set();
     scene.traverse((obj) => {
-      if (obj.geometry) obj.geometry.dispose?.();
+      if (obj.geometry) resources.add(obj.geometry);
       const m = obj.material;
-      if (Array.isArray(m)) m.forEach((x) => x.dispose?.());
-      else m?.dispose?.();
+      if (Array.isArray(m)) m.forEach((x) => resources.add(x));
+      else if (m) resources.add(m);
     });
+    resources.forEach((resource) => resource.dispose?.());
     renderer.dispose();
+    renderer.forceContextLoss();
     renderer.domElement.remove();
     delete host.dataset.sceneMounted;
   };

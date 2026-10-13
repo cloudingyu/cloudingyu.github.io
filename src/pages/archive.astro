@@ -86,7 +86,7 @@ const yearSpan = years.length
       {
         years.map(({ year, posts: items }) => (
           <div class="year">
-            <h3 class="year__head">
+            <h3 class="year__head" id={`year-${year}`}>
               <span class="year__num">{year}</span>
               <span class="mono-meta year__count">{items.length} 篇</span>
               <span class="year__line" aria-hidden="true" />
@@ -242,7 +242,7 @@ const yearSpan = years.length
     位移只有 14px —— 归档页一屏十几条，幅度大了像是在抖。
   */
   @media (prefers-reduced-motion: no-preference) {
-    .item {
+    .item[data-row-ready] {
       opacity: 0;
       transform: translateX(-14px);
       transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);

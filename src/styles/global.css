@@ -29,7 +29,7 @@
   --ink:        #171C1A;
   --ink-soft:   #39433F;
   --ink-muted:  #667069;
-  --ink-faint:  #98A19B;
+  --ink-faint:  #69736C;
 
   /* 描线 */
   --line:       #DFE3DD;
@@ -83,7 +83,7 @@
   --ink:        #E6EAE7;
   --ink-soft:   #BAC3BD;
   --ink-muted:  #838E88;
-  --ink-faint:  #5A6560;
+  --ink-faint:  #85918A;
 
   --line:       #222A29;
   --line-strong:#303A38;
@@ -100,6 +100,8 @@
 /* --- 2. Reset ----------------------------------------------------------- */
 
 *, *::before, *::after { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
 
 html {
   -webkit-text-size-adjust: 100%;
@@ -257,7 +259,7 @@ strong { font-weight: 650; }
 
 /* 滚动进入视口才揭示（由 IntersectionObserver 添加 class） */
 @media (prefers-reduced-motion: no-preference) {
-  .reveal {
+  .reveal[data-reveal-ready] {
     opacity: 0;
     transform: translateY(16px);
     transition: opacity 0.62s var(--ease), transform 0.62s var(--ease);

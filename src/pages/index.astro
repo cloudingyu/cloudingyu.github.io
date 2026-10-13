@@ -1,467 +1,239 @@
 ---
-/**
- * 首页。
- *
- * 版式主张（刻意不按「博客首页 = 一列文章标题」的常规来）：
- *
- *   一、开场整屏，标题压在几何体上。
- *       树不是「页头右侧的一个插图」，而是从标题右侧长出去、溢出到屏幕外，
- *       标题本身叠在它上面 —— 文字与图形互相穿插，不是文字给图形让位。
- *
- *   二、年份不是一条小进度条，而是一整段通铺的「地层」。
- *       三年占满整个视口宽度，篇数用大字号压在色块上；往下滚，色块从各自
- *       那一年底部升起来。它代替了常见的「按年折叠列表」。
- *
- *   三、标签球与标题并列，容器右侧不留边距 —— 球被裁掉一块，
- *       版心在这里被故意打破。
- *
- *   四、索引排成两条纵栏，而不是一列流水账。
- *
- * 仍然保留：每页 6 篇的分页（/、/page/2、/page/3）、15 篇的完整入口。
- */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
 import Pagination from '../components/Pagination.astro';
-import { allPosts, paginate, groupByYear, tagCounts, formatDate, permalink } from '../lib/posts';
+import Tag from '../components/Tag.astro';
+import { allPosts, paginate, groupByYear, tagCounts, formatDate, permalink, excerpt } from '../lib/posts';
 import { SITE, POSTS_PER_PAGE, PAGES } from '../data/site';
 
 const posts = await allPosts();
 const [first] = paginate(posts, POSTS_PER_PAGE);
+const latest = first.items[0]!;
+const leaves = posts.slice(1, 4).reverse();
 const years = groupByYear(posts);
-const tags = tagCounts(posts);
-
-const total = posts.length;
-const featured = tags.filter((t) => t.featured);
-
-// 开场右侧的近路：最近几篇
-const recent = posts.slice(0, 5);
+const tags = tagCounts(posts).filter((tag) => tag.featured);
+const yearSpan = `${years[years.length - 1]!.year} — ${years[0]!.year}`;
 ---
 
-<BaseLayout
-  page="home"
-  hero="full"
-  showQuote={false}
-  description={`${SITE.seoTitle} —— ${SITE.tagline}`}
->
-  <!-- ================= 开场：标题与树互相穿插 ================= -->
-  <section class="opening" data-scroll-target aria-label="站点开场">
-    <div class="opening__grid">
-      <div class="opening__lead">
-        <p class="opening__kicker mono-meta">
-          {total} 篇 · {tags.length} 个标签 · 2022–2026
-        </p>
-        {/*
-          开场第一眼要说清「这是谁的博客」。
-          站点名取自 SITE_DATA.md（唯一事实来源），副标语也是原文 ——
-          之前这里写的是一串文章方向，等于替作者把博客题材定死了。
-        */}
-        <h2 class="opening__title">
-          <span class="opening__name">{SITE.title}</span>
-          <span class="opening__tagline">{SITE.tagline}</span>
-        </h2>
-        {/*
-          首页的引语（SITE_DATA.md 第 7 节）是内容，必须原样出现在页面上。
-          之前它挂在页头，现在页头交给几何体，就把这句放在开场里 ——
-          字号与位置都比原来更突出，而不是被压在一张背景图上。
-        */}
-        <blockquote class="opening__quote">{PAGES.home.quote}</blockquote>
+<BaseLayout page="home" hero="bare" footerScene={false} description={`${SITE.seoTitle} —— ${SITE.tagline}`}>
+  <div class="home shell">
+    <section class="feature" data-article-stage aria-labelledby="feature-title">
+      <article class="feature__copy entry">
+        <div class="feature__meta">
+          <span class="feature__badge">最新发布</span>
+          <time class="mono-meta" datetime={latest.data.date.toISOString()}>{formatDate(latest.data.date)}</time>
+        </div>
+        <h1 id="feature-title"><a href={permalink(latest)}>{latest.data.title}</a></h1>
+        <p class="feature__summary">{latest.data.subtitle || excerpt(latest.body ?? '', 100)}</p>
+        <div class="feature__tags">{latest.data.tags.map((tag) => <Tag name={tag} href={`/tags/${encodeURIComponent(tag)}/`} />)}</div>
+        <div class="feature__actions">
+          <a class="feature__read" href={permalink(latest)} data-magnetic="0.12">阅读全文 <span aria-hidden="true">↗</span></a>
+          <a class="feature__archive" href="#index">继续浏览 <span aria-hidden="true">↓</span></a>
+        </div>
+      </article>
 
-        {/*
-          这段不写「本站只写某几类内容」—— 作者之后会写别的方向。
-          只描述几何体在做什么，以及怎么用它，不承诺题材。
-        */}
-        <p class="opening__note">
-          页头那棵树上的每个节点，都是这里的一篇文章。
-          <span class="opening__mark">根节点</span>是最新的一篇，越往下越早 ——
-          按日期长的结构，题材不限。往下滚动，它会一层层长出来。
-        </p>
-        <div class="opening__actions">
-          <a class="btn btn--solid" href="#index" data-magnetic="0.16">从最新读起</a>
-          <a class="btn" href="/archive/" data-magnetic="0.16">看完整归档</a>
+      <div class="reading-stage" aria-label="更多文章">
+        <div class="reading-stage__aura" aria-hidden="true" />
+        <div class="reading-stage__float"><div class="reading-stage__deck">
+          {leaves.map((post, i) => (
+            <div class={`folio-slot folio-slot--${i}`} data-depth={i}>
+              <a class="folio" href={permalink(post)} draggable="false" aria-label={`阅读《${post.data.title}》`}>
+                <div class="folio__top">
+                  <span class="mono-meta">{formatDate(post.data.date)}</span>
+                  <span class="folio__arrow" aria-hidden="true">↗</span>
+                </div>
+                <p class="folio__category">{post.data.tags.slice(0, 2).join(' / ')}</p>
+                <h2>{post.data.title}</h2>
+                <p class="folio__summary">{post.data.subtitle || excerpt(post.body ?? '', 72)}</p>
+                <div class="folio__bottom"><span>{post.data.author}</span><span class="mono-meta">{String(leaves.length - i + 1).padStart(2, '0')}</span></div>
+                <span class="folio__shine" aria-hidden="true" />
+              </a>
+            </div>
+          ))}
+        </div></div>
+        <div class="reading-stage__caption mono-meta">
+          <span class="reading-stage__hint"><span class="stage-hint--static">{yearSpan}</span><span class="stage-hint--active">拖动切换</span></span>
+          <div class="stage-controls" aria-label="切换展台文章">
+            <button type="button" data-stage-prev aria-label="上一篇展台文章" disabled>←</button>
+            <span data-stage-position aria-live="polite" aria-atomic="true">01 / 03</span>
+            <button type="button" data-stage-next aria-label="下一篇展台文章" disabled>→</button>
+          </div>
+          <span>{posts.length} 篇文章</span>
         </div>
       </div>
+    </section>
 
-      <aside class="opening__aside" aria-label="最近更新">
-        <p class="mono-meta opening__aside-head">最近更新</p>
-        <ol class="opening__recent">
-          {
-            recent.map((p) => (
-              <li>
-                <time class="mono-meta" datetime={p.data.date.toISOString()}>
-                  {formatDate(p.data.date, 'slash')}
-                </time>
-                <a href={permalink(p)}>{p.data.title}</a>
-              </li>
-            ))
-          }
-        </ol>
+    <div class="home__columns">
+      <section class="index" id="index" aria-labelledby="index-head">
+        <div class="section-head"><h2 id="index-head">继续阅读</h2><a href="/archive/">全部 {posts.length} 篇 <span aria-hidden="true">→</span></a></div>
+        <div class="index__grid">{first.items.slice(1).map((post, i) => <PostCard post={post} index={i} headingLevel="h3" variant="compact" />)}</div>
+        <Pagination page={first} />
+      </section>
+      <aside class="home__sidebar" aria-label="文章分类">
+        <section class="sidebar-section" aria-labelledby="home-tags-head">
+          <h2 id="home-tags-head">常用标签</h2>
+          <ul class="home-tags">{tags.map(({ tag, count }) => <li><a href={`/tags/${encodeURIComponent(tag)}/`}><span>{tag}</span><span class="count">{count}</span></a></li>)}</ul>
+          <a class="sidebar-more" href="/archive/#tags-head">所有标签 <span aria-hidden="true">→</span></a>
+        </section>
+        <section class="sidebar-section" aria-labelledby="home-years-head">
+          <h2 id="home-years-head">归档</h2>
+          <ul class="home-years">{years.map(({ year, posts: items }) => <li><a href={`/archive/#year-${year}`}><span>{year}</span><span class="count">{items.length} 篇</span></a></li>)}</ul>
+        </section>
       </aside>
     </div>
-  </section>
-
-  <!-- ================= 标签球：与标题并列，球体破出容器 ================= -->
-  <section class="orb" data-scroll-target aria-labelledby="orb-head">
-    <div class="orb__text">
-      <h2 class="orb__title" id="orb-head">
-        <span class="orb__num">{tags.length}</span>
-        个标签，一张网
-      </h2>
-      <p class="orb__note">
-        球面上的每个点是一个标签，连线表示它们出现在同一批文章里。
-        文章数 ≥ 2 的标签——{featured.map((t) => t.tag).join('、')}——是这张网里最先被牵引的部分。
-      </p>
-      <a class="orb__link" href="/archive/#tags-head" data-magnetic="0.16">按标签浏览 →</a>
-    </div>
-    <div class="orb__stage">
-      <div
-        class="scene scene--bleed"
-        data-scene="tags"
-        data-seed="home-net"
-        data-scene-scale="1.5"
-        aria-hidden="true"
-      />
-    </div>
-  </section>
-
-  <!-- ================= 索引：两条纵栏 ================= -->
-  <section class="index" id="index" aria-labelledby="index-head">
-    <div class="index__head">
-      <h2 class="index__title" id="index-head">
-        最新 <span class="mono-meta">第 {first.current} / {first.total} 页</span>
-      </h2>
-      <p class="index__hint mono-meta">共 {total} 篇 · 每页 {POSTS_PER_PAGE} 篇</p>
-    </div>
-
-    <div class="index__grid">
-      {first.items.map((post, i) => <PostCard post={post} index={i} />)}
-    </div>
-
-    <Pagination page={first} />
-  </section>
-
-  <!-- ================= 时间螺旋：收尾 ================= -->
-  <section class="spiral" data-scroll-target aria-labelledby="spiral-head">
-    <h2 class="spiral__title" id="spiral-head">
-      <span class="mono-meta">2022 → 2026</span>
-    </h2>
-    <div class="spiral__stage">
-      <div
-        class="scene scene--bleed"
-        data-scene="helix"
-        data-seed="home-spiral"
-        data-scene-scale="1.35"
-        aria-hidden="true"
-      />
-    </div>
-    <p class="spiral__note mono-meta">
-      从最近的一篇倒着往回走，一共 {total} 篇 —— 滚动时它跟着你转
-    </p>
-  </section>
+    <blockquote class="opening__quote">{PAGES.home.quote}</blockquote>
+  </div>
+  <script>
+    import '../scripts/article-stage.js';
+  </script>
 </BaseLayout>
 
 <style>
-  /* ======================= 开场 ======================= */
+  .home { padding-top: 2rem; }
+  .feature {
+    --stage-x: 0; --stage-y: 0; --stage-scroll: 0; --light-x: 55%; --light-y: 35%;
+    position: relative; display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr);
+    gap: 1.5rem; align-items: center; min-height: 27rem;
+    border-bottom: 1px solid var(--line-strong); padding-bottom: 2rem;
+  }
+  .feature__copy { position: relative; z-index: 2; min-width: 0; border: 0; padding: 0; }
+  .feature__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-bottom: 1.3rem; }
+  .feature__badge { display: inline-flex; align-items: center; gap: 0.6rem; color: var(--accent); font-size: 0.75rem; }
+  .feature__badge::before { content: ''; width: 0.35rem; height: 0.35rem; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 9%, transparent); }
+  .feature h1 { max-width: 15em; font-size: clamp(1.8rem, 1rem + 1.65vw, 2.5rem); line-height: 1.45; font-weight: 600; letter-spacing: -0.035em; }
+  .feature h1 a:hover { color: var(--accent); }
+  .feature__summary { color: var(--ink-muted); font-size: 0.95rem; line-height: 1.9; margin: 1rem 0 1.2rem; max-width: 30em; }
+  .feature__tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .feature__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1.5rem; margin-top: 1.8rem; font-size: 0.85rem; }
+  .feature__read { display: inline-flex; align-items: center; gap: 1.5rem; color: var(--paper); background: var(--ink); border: 1px solid var(--ink); padding: 0.75rem 1.1rem; }
+  .feature__read span { transition: transform 0.3s var(--ease); }
+  .feature__read:hover { background: var(--accent); border-color: var(--accent); }
+  .feature__read:hover span { transform: translate(2px, -2px); }
+  .feature__archive { display: inline-flex; align-items: center; gap: 0.8rem; color: var(--ink-muted); }
+  .feature__archive:hover { color: var(--accent); }
 
-  .opening {
-    /*
-      负上边距：让标题区与整屏页头的几何体咬合，而不是被一条线切开。
-      数值收在 clamp(3rem, 8vh, 5.5rem) —— 再多就会把标题推到首屏之外。
-    */
-    margin-top: calc(-1 * clamp(2rem, 6vh, 4rem));
-    padding-bottom: var(--s6);
-    position: relative;
-    z-index: 2;
-  }
+  .reading-stage { position: relative; min-width: 0; height: 26rem; perspective: 1200px; isolation: isolate; }
+  .reading-stage__aura { position: absolute; inset: 1rem -1rem; z-index: -1; border-radius: 50%; background: radial-gradient(ellipse at var(--light-x) var(--light-y), color-mix(in srgb, var(--accent-soft) 16%, transparent), transparent 65%); }
+  .reading-stage__float { position: absolute; inset: 0; transform-style: preserve-3d; }
+  .reading-stage__deck { position: absolute; inset: 0 0 2.5rem; transform-style: preserve-3d; transform: scale(var(--deck-scale, 1)) rotateX(calc(9deg + var(--stage-y) * -7deg)) rotateY(calc(-12deg + var(--stage-x) * 12deg)); }
+  .folio-slot { position: absolute; width: min(70%, 21rem); height: 17rem; left: 50%; top: 50%; transform-style: preserve-3d; transition: transform 0.65s var(--ease), filter 0.4s var(--ease); }
+  .folio-slot[data-depth='0'] { z-index: 1; transform: translate(-50%, -50%) translate3d(calc(2.3rem + var(--stage-scroll) * 4rem + var(--stage-x) * 12px), calc(-3.1rem - var(--stage-scroll) * 3rem), -70px) rotateZ(calc(14deg + var(--stage-scroll) * 14deg)); }
+  .folio-slot[data-depth='1'] { z-index: 2; transform: translate(-50%, -50%) translate3d(calc(-2rem - var(--stage-scroll) * 4rem + var(--stage-x) * 20px), calc(-0.9rem - var(--stage-scroll) * 0.7rem), -25px) rotateZ(calc(-12deg - var(--stage-scroll) * 14deg)); }
+  .folio-slot[data-depth='2'] { z-index: 3; transform: translate(-50%, -50%) translate3d(calc(0.6rem + var(--stage-x) * 28px + var(--stage-drag, 0) * 90px), calc(2.3rem + var(--stage-scroll) * 2rem + var(--stage-y) * 12px), 45px) rotateZ(calc(5deg + var(--stage-x) * 3deg + var(--stage-drag, 0) * 14deg)); }
+  .feature[data-stage-dragging] .folio-slot { transition: none; }
+  .feature[data-stage-dragging] .reading-stage__float { animation-play-state: paused; }
+  .feature[data-stage-ready] .reading-stage__deck { cursor: grab; touch-action: pan-y; }
+  .feature[data-stage-dragging] .reading-stage__deck { cursor: grabbing; }
+  .folio-slot:focus-within { z-index: 5; }
+  .folio { position: relative; display: flex; flex-direction: column; height: 100%; padding: 1.2rem 1.4rem; overflow: hidden; border: 1px solid var(--line-strong); border-radius: 3px; background: var(--panel); box-shadow: 0 2px 1px color-mix(in srgb, var(--ink) 8%, transparent), 0 18px 45px -18px color-mix(in srgb, var(--ink) 32%, transparent); transform-style: preserve-3d; transition: box-shadow 0.4s var(--ease), border-color 0.4s var(--ease), translate 0.4s var(--ease); }
+  .folio:hover, .folio:focus-visible { border-color: var(--accent-soft); translate: 0 -9px; box-shadow: 0 30px 65px -25px color-mix(in srgb, var(--ink) 40%, transparent); }
+  .folio__top { display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.8rem; border-bottom: 1px solid var(--line); }
+  .folio__top .mono-meta { font-size: 0.62rem; }
+  .folio__arrow { color: var(--accent); }
+  .folio__category { margin: 1.15rem 0 0.55rem; color: var(--accent); font-size: 0.63rem; }
+  .folio h2 { font-size: 1.2rem; line-height: 1.5; text-wrap: pretty; }
+  .folio__summary { margin: 0.8rem 0 0.6rem; font-size: 0.72rem; line-height: 1.8; color: var(--ink-muted); }
+  .folio__bottom { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 0.65rem; margin-top: auto; font-size: 0.63rem; color: var(--ink-muted); }
+  .folio__shine { position: absolute; inset: 0; pointer-events: none; overflow: hidden; background: radial-gradient(ellipse at var(--light-x) var(--light-y), color-mix(in srgb, var(--accent-soft) 14%, transparent), transparent 65%); }
+  .folio__shine::after { content: ''; position: absolute; inset: -20% -80%; background: linear-gradient(110deg, transparent 40%, color-mix(in srgb, var(--ink) 5%, transparent) 47%, color-mix(in srgb, var(--paper) 80%, transparent) 50%, transparent 57%); transform: translateX(-60%); }
+  .reading-stage__caption { position: absolute; bottom: -0.6rem; left: 1rem; right: 0; display: flex; justify-content: space-between; font-size: 0.65rem; }
+  .reading-stage__caption { align-items: center; gap: 0.5rem; }
+  .stage-controls { display: none; align-items: center; gap: 0.75rem; }
+  .feature[data-stage-ready] .stage-controls { display: flex; }
+  .stage-controls button { display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border: 1px solid var(--line-strong); border-radius: 50%; font-size: 0.85rem; transition: color 0.25s var(--ease), background 0.25s var(--ease), transform 0.25s var(--ease); }
+  .stage-controls button:hover { background: var(--ink); color: var(--paper); transform: scale(1.08); }
+  .stage-hint--active { display: none; }
+  .feature[data-stage-ready] .stage-hint--active { display: inline; }
+  .feature[data-stage-ready] .stage-hint--static { display: none; }
+  .feature h1 :global(.title-line) { display: block; overflow: clip; }
+  .feature h1 :global(.title-line__text) { display: block; }
 
-  .opening__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s6);
-    align-items: end;
-    padding-inline: var(--gutter);
-    max-width: var(--page-max);
-    margin-inline: auto;
-  }
-  @media (min-width: 62rem) {
-    .opening__grid {
-      grid-template-columns: minmax(0, 1.35fr) minmax(0, 22rem);
-      gap: var(--s8);
-    }
-  }
+  .home__columns { display: grid; grid-template-columns: minmax(0, 1fr) 11rem; gap: 3.5rem; margin-top: 2rem; }
+  .index { min-width: 0; }
+  .index__grid :global(.entry) { isolation: isolate; }
+  .index__grid :global(.entry)::after { content: ''; position: absolute; inset: 0 -0.7rem; z-index: -1; background: radial-gradient(ellipse 20rem 10rem at var(--row-x, 50%) var(--row-y, 50%), color-mix(in srgb, var(--accent-soft) 10%, transparent), transparent 75%); opacity: 0; pointer-events: none; transition: opacity 0.4s var(--ease); }
+  .index__grid :global(.entry:hover)::after { opacity: 1; }
+  .index__grid :global(.entry__title) { transition: translate 0.35s var(--ease); }
+  .index__grid :global(.entry:hover .entry__title) { translate: 0.35rem 0; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding-bottom: 1rem; }
+  .section-head h2 { font-family: var(--font-sans); font-size: 1rem; font-weight: 600; }
+  .section-head > a { font-size: 0.8rem; color: var(--ink-muted); white-space: nowrap; }
+  .section-head > a:hover { color: var(--accent); }
+  .home__sidebar { min-width: 0; display: flex; flex-direction: column; gap: 2rem; padding-top: 0.1rem; }
+  .sidebar-section h2 { font-family: var(--font-sans); font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem; }
+  .home-tags, .home-years { list-style: none; padding: 0; margin: 0; }
+  .home-tags a, .home-years a { display: flex; justify-content: space-between; gap: 0.75rem; align-items: baseline; padding-block: 0.4rem; font-size: 0.8rem; color: var(--ink-soft); }
+  .home-tags a > span:first-child { overflow-wrap: anywhere; }
+  .home-tags a:hover, .home-years a:hover { color: var(--accent); }
+  .count { flex-shrink: 0; color: var(--ink-faint); font-size: 0.72rem; font-variant-numeric: tabular-nums; }
+  .sidebar-more { display: inline-block; margin-top: 0.7rem; font-size: 0.75rem; color: var(--ink-muted); }
+  .sidebar-more:hover { color: var(--accent); }
+  .opening__quote { margin: 3rem 0 0; padding-top: 1.5rem; border-top: 1px solid var(--line); font-size: 0.8rem; line-height: 1.9; color: var(--ink-muted); }
 
-  .opening__kicker {
-    margin: 0 0 var(--s3);
-    color: var(--ink-faint);
+  @media (prefers-reduced-motion: no-preference) {
+    .feature__meta, .feature h1, .feature__summary, .feature__tags, .feature__actions { animation: feature-arrive 0.9s var(--ease) both; }
+    .feature h1 { animation-delay: 80ms; }
+    .feature__summary { animation-delay: 160ms; }
+    .feature__tags { animation-delay: 220ms; }
+    .feature__actions { animation-delay: 280ms; }
+    .folio { animation: folio-arrive 1.4s var(--ease) both; }
+    .folio-slot--0 .folio { animation-delay: 120ms; }
+    .folio-slot--1 .folio { animation-delay: 260ms; }
+    .folio-slot--2 .folio { animation-delay: 400ms; }
+    .reading-stage__aura { animation: light-drift 9s ease-in-out infinite alternate; }
+    .reading-stage__float { animation: page-float 6s ease-in-out infinite alternate; }
+    .folio__shine::after { animation: paper-sweep 7s ease-in-out infinite; }
+    .folio-slot--1 .folio__shine::after { animation-delay: 1s; }
+    .folio-slot--0 .folio__shine::after { animation-delay: 2s; }
+    .feature[data-stage-ready]:not([data-stage-visible]) :is(.reading-stage__aura, .reading-stage__float), .feature[data-stage-ready]:not([data-stage-visible]) .folio__shine::after { animation-play-state: paused; }
+    .feature[data-stage-ready] .reading-stage__deck { will-change: transform; }
+    .feature h1[data-title-lines] { animation: none; }
+    .feature h1 :global(.title-line__text) { animation: title-rise 1s var(--ease) both; animation-delay: calc(120ms + var(--title-line, 0) * 110ms); }
+    .feature h1[data-title-settled] :global(.title-line__text) { animation: none; }
   }
-
-  /* 大字号标题：全页最大的元素，制造一眼记住的尺度对比 */
-  .opening__title {
-    /* 字号上限收到 3.6rem：再大一行放不下，站名与副标语就会被拆到两行开外 */
-    font-size: clamp(1.9rem, 1.1rem + 3vw, 3.6rem);
-    font-weight: 640;
-    line-height: 1.1;
-    letter-spacing: -0.028em;
-    margin: 0 0 var(--s4);
-    max-width: 22ch;
+  @keyframes feature-arrive { from { opacity: 0; transform: translateY(20px); clip-path: inset(0 0 100% 0); } to { opacity: 1; transform: none; clip-path: inset(0); } }
+  @keyframes folio-arrive { from { opacity: 0; transform: translate3d(0, 90px, -160px) rotateX(45deg) rotateZ(-10deg); } to { opacity: 1; transform: none; } }
+  @keyframes light-drift { from { transform: translate(-8px, 6px) scale(0.95); opacity: 0.65; } to { transform: translate(12px, -12px) scale(1.08); opacity: 1; } }
+  @keyframes page-float { from { transform: translateY(-7px) rotateZ(-1deg); } to { transform: translateY(7px) rotateZ(1deg); } }
+  @keyframes paper-sweep { 0%, 15% { transform: translateX(-60%); } 55%, 100% { transform: translateX(60%); } }
+  @keyframes title-rise { from { opacity: 0; transform: translateY(115%) rotateZ(2deg); } to { opacity: 1; transform: none; } }
+  @media (max-width: 62rem) {
+    .feature { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.8rem; }
+    .folio-slot { width: 76%; height: 16rem; }
+    .folio { padding: 1rem; }
+    .folio h2 { font-size: 1rem; }
+    .folio__summary { font-size: 0.65rem; }
   }
-
-  /* 末行换成描边字（空心），与实心前两行拉开层次 */
-  /*
-    两行结构：
-      第一行 站点名 —— 实心、最大，一眼认出「这是谁的博客」；
-      第二行 副标语 —— 描边空心字，小一档，说明「这是个什么样的博客」。
-    实虚对比把两层意思分开，也让整块文字有明确的视觉重心。
-  */
-  .opening__name {
-    display: block;
-    font-size: clamp(2rem, 1.1rem + 3.2vw, 3.9rem);
-    font-weight: 650;
-    line-height: 1.02;
+  @media (max-width: 48rem) {
+    .feature { grid-template-columns: minmax(0, 1fr); gap: 0.8rem; }
+    .feature h1 { max-width: 25em; }
+    .reading-stage { height: 22rem; max-width: 32rem; width: 100%; margin-inline: auto; }
+    .folio-slot { width: 65%; height: 15rem; }
+    .feature__summary { max-width: none; }
+    .home__columns { grid-template-columns: minmax(0, 1fr); gap: 2.5rem; }
+    .home__sidebar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
   }
-
-  .opening__tagline {
-    display: block;
-    margin-top: 0.18em;
-    font-size: clamp(1.5rem, 0.9rem + 2.1vw, 2.75rem);
-    font-weight: 600;
-    line-height: 1.12;
-    /* 空心字：只留描线，与上一行的实心拉开层次 */
-    -webkit-text-stroke: 1px var(--ink);
-    color: transparent;
+  @media (max-width: 36rem) {
+    .home { padding-top: 1.6rem; }
+    .feature { padding-bottom: 1.4rem; }
+    .feature h1 { font-size: 1.75rem; line-height: 1.55; }
+    .feature__meta { margin-bottom: 0.85rem; }
+    .feature__summary { font-size: 0.85rem; margin-top: 0.8rem; }
+    .feature__actions { margin-top: 1.2rem; }
+    .reading-stage { height: 20rem; }
+    .reading-stage__deck { --deck-scale: 0.9; }
+    .folio-slot { width: 72%; height: 14rem; }
+    .folio__category { margin-top: 0.8rem; }
+    .folio h2 { font-size: 0.95rem; }
+    .folio__summary { display: none; }
+    .folio__bottom { font-size: 0.6rem; }
+    .opening__quote { margin-top: 2rem; }
   }
-  @supports not (-webkit-text-stroke: 1px black) {
-    .opening__tagline { color: var(--ink); }
-  }
-
-  /*
-    引语：用大一号的衬线字排在标题与说明之间，左侧一道短描线。
-    它是这一页的「题记」，不该被折成小字附注。
-  */
-  .opening__quote {
-    margin: var(--s4) 0 var(--s3);
-    padding-left: var(--s4);
-    border-left: 2px solid var(--accent);
-    font-family: var(--font-serif);
-    font-size: clamp(1rem, 0.92rem + 0.5vw, 1.35rem);
-    line-height: 1.85;
-    color: var(--ink-soft);
-    max-width: 44ch;
-  }
-
-  .opening__note {
-    color: var(--ink-muted);
-    font-size: 0.95rem;
-    line-height: 1.9;
-    max-width: 46ch;
-  }
-
-  .opening__mark {
-    color: var(--mark);
-    border-bottom: 1px solid color-mix(in srgb, var(--mark) 40%, transparent);
-  }
-
-  .opening__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s3);
-    margin-top: var(--s4);
-  }
-
-  /* 按钮：本站不用圆角与阴影，所以按钮也只靠描线与位移反馈 */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.6rem 1.1rem;
-    border: 1px solid var(--line-strong);
-    font-size: 0.9rem;
-    color: var(--ink);
-    background: var(--panel);
-    transition: transform 0.28s var(--ease), border-color 0.28s var(--ease),
-      background-color 0.28s var(--ease), color 0.28s var(--ease);
-  }
-  .btn:hover {
-    border-color: var(--accent);
-    transform: translateY(-1px);
-  }
-  .btn--solid {
-    background: var(--ink);
-    color: var(--paper);
-    border-color: var(--ink);
-  }
-  .btn--solid:hover {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--paper);
-  }
+  @media (max-width: 22rem) { .reading-stage__deck { --deck-scale: 0.8; } }
   @media (prefers-reduced-motion: reduce) {
-    .btn, .btn:hover { transition: none; transform: none; }
-  }
-
-  /* --- 最近更新 --- */
-
-  .opening__aside {
-    border-top: 1px solid var(--line-strong);
-    padding-top: var(--s4);
-  }
-
-  .opening__aside-head {
-    margin: 0 0 var(--s4);
-    color: var(--ink-faint);
-  }
-
-  .opening__recent {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .opening__recent li {
-    display: grid;
-    grid-template-columns: 5.6rem minmax(0, 1fr);
-    gap: var(--s3);
-    align-items: baseline;
-    padding: 0.5rem 0;
-    border-top: 1px solid var(--line);
-  }
-  .opening__recent li:first-child { border-top: 0; }
-
-  .opening__recent a {
-    font-family: var(--font-serif);
-    font-size: 0.98rem;
-    line-height: 1.45;
-    color: var(--ink);
-    transition: color 0.22s var(--ease);
-  }
-  .opening__recent a:hover { color: var(--accent); }
-
-  /* ======================= 标签球 ======================= */
-
-  .orb {
-    max-width: var(--page-max);
-    margin: var(--s9) auto 0;
-    padding-inline: var(--gutter);
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s5);
-    align-items: center;
-  }
-  @media (min-width: 56rem) {
-    .orb {
-      /* 文字栏窄、球栏宽 —— 故意不对称 */
-      grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
-      gap: var(--s6);
-    }
-  }
-
-  .orb__title {
-    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.2rem);
-    line-height: 1.15;
-    margin: 0 0 var(--s4);
-  }
-
-  .orb__num {
-    font-family: var(--font-serif);
-    font-size: clamp(3.2rem, 1rem + 7vw, 6.5rem);
-    font-weight: 620;
-    line-height: 0.9;
-    letter-spacing: -0.04em;
-    color: var(--accent);
-    display: block;
-    margin-bottom: 0.1em;
-  }
-
-  .orb__note {
-    color: var(--ink-muted);
-    font-size: 0.92rem;
-    line-height: 1.9;
-    max-width: 40ch;
-  }
-
-  .orb__link {
-    display: inline-block;
-    margin-top: var(--s4);
-    color: var(--accent);
-  }
-
-  .orb__stage {
-    position: relative;
-    height: clamp(18rem, 40vw, 30rem);
-    border: 1px solid var(--line);
-    border-radius: 2px;
-    background: var(--panel);
-    overflow: hidden;
-  }
-  @media (min-width: 56rem) {
-    /* 往右破出容器：右边不留边距，球被裁掉一块 */
-    .orb__stage { margin-right: calc(-1 * var(--gutter)); }
-  }
-
-  /* ======================= 索引 ======================= */
-
-  .index {
-    max-width: var(--page-max);
-    margin: var(--s9) auto 0;
-    padding-inline: var(--gutter);
-  }
-
-  .index__head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--s3) var(--s5);
-    padding-bottom: var(--s4);
-    border-bottom: 1px solid var(--line-strong);
-    margin-bottom: var(--s2);
-  }
-
-  .index__title {
-    font-size: clamp(1.25rem, 1rem + 0.8vw, 1.6rem);
-  }
-
-  .index__hint { color: var(--ink-faint); }
-
-  /*
-    两条纵栏：宽屏把 6 篇排成 2×3，而不是一列。
-    这是「破开单列目录」的关键一步 —— 一屏能交代更多，也不再是流水账。
-  */
-  .index__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0 var(--s7);
-  }
-  @media (min-width: 60rem) {
-    .index__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
-
-  /* ======================= 时间螺旋 ======================= */
-
-  .spiral {
-    margin-top: var(--s9);
-  }
-
-  .spiral__title {
-    max-width: var(--page-max);
-    margin: 0 auto var(--s4);
-    padding-inline: var(--gutter);
-    font-size: 1rem;
-    font-weight: 500;
-  }
-
-  .spiral__stage {
-    position: relative;
-    height: clamp(18rem, 46vw, 32rem);
-    overflow: hidden;
-    mask-image: radial-gradient(80% 92% at 50% 50%, #000 58%, transparent 100%);
-    -webkit-mask-image: radial-gradient(80% 92% at 50% 50%, #000 58%, transparent 100%);
-  }
-
-  .spiral__note {
-    max-width: var(--page-max);
-    margin: var(--s3) auto 0;
-    padding-inline: var(--gutter);
-    color: var(--ink-faint);
-    font-size: 0.7rem;
+    .reading-stage__deck { transform: scale(var(--deck-scale, 1)) rotateX(9deg) rotateY(-12deg); }
+    .folio:hover { translate: none; }
+    .folio-slot { transition: none; }
+    .index__grid :global(.entry:hover .entry__title) { translate: none; }
   }
 </style>

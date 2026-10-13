@@ -14,7 +14,7 @@
  * 于是「有没有图」不再是一个待填的缺口，而是一条记录自身的属性差异。
  */
 import Tag from './Tag.astro';
-import { formatDate, permalink, excerpt, coverUrl, assetUrl, type Post } from '../lib/posts';
+import { formatDate, permalink, excerpt, coverUrl, type Post } from '../lib/posts';
 
 interface Props {
   post: Post;
@@ -24,9 +24,11 @@ interface Props {
   showExcerpt?: boolean;
   /** 标题层级：列表页用 h2，它处可降级 */
   headingLevel?: 'h2' | 'h3';
+  /** 首页使用紧凑的文章列表。 */
+  variant?: 'default' | 'compact';
 }
 
-const { post, index = 0, showExcerpt = true, headingLevel = 'h2' } = Astro.props;
+const { post, index = 0, showExcerpt = true, headingLevel = 'h2', variant = 'default' } = Astro.props;
 const { title, subtitle, date, tags, author } = post.data;
 const cover = coverUrl(post);
 const url = permalink(post);
@@ -34,7 +36,7 @@ const summary = excerpt(post.body ?? '', 96);
 const Heading = headingLevel;
 ---
 
-<article class:list={['entry', { 'entry--has-cover': !!cover }]} style={`--stage-i:${Math.min(index, 8)}`}>
+<article class:list={['entry', { 'entry--has-cover': !!cover, 'entry--compact': variant === 'compact' }]} style={`--stage-i:${Math.min(index, 8)}`}>
   {
     cover && (
       <a class="entry__cover" href={url} tabindex="-1" aria-hidden="true">
@@ -247,4 +249,9 @@ const Heading = headingLevel;
     margin: 0;
     padding: 0;
   }
+
+  .entry--compact { padding-block: 1.5rem; }
+  .entry--compact .entry__meta { margin-bottom: 0.65rem; }
+  .entry--compact .entry__title { font-size: clamp(1.15rem, 1rem + 0.6vw, 1.4rem); }
+  .entry--compact .entry__foot { margin-top: 0.85rem; }
 </style>
