@@ -1,0 +1,29 @@
+---
+import Arrow from './Arrow.astro';
+interface Props {
+  headings: { depth: number; slug: string; text: string }[];
+  label?: string;
+}
+const { headings, label = '本文目录' } = Astro.props;
+---
+<aside class="post__toc" aria-label={label}>
+  <div class="post__toc-panel">
+    <button class="post__toc-head" type="button" data-toc-toggle aria-expanded="true" aria-controls="post-toc-list" aria-label="收起目录" title="收起目录">
+      <span class="post__toc-label">{label}</span>
+      <span class="post__toc-meta">
+        <span data-reading-progress>0%</span>
+        <i aria-hidden="true"><Arrow direction="right" /></i>
+        <svg class="post__toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 6h1m4 0h11M4 12h1m4 0h11M4 18h1m4 0h11" /></svg>
+      </span>
+    </button>
+    <nav id="post-toc-list">
+      <ul>
+        {headings.map((heading) => (
+          <li class={`depth-${heading.depth}`}>
+            <a href={`#${heading.slug}`}><span>{heading.text}</span></a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</aside>

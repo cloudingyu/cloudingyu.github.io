@@ -1,7 +1,11 @@
 .notebook--reading {
   font-size: 1.25rem;
 }
-.experimental #main .notebook-reader .post__prose { max-width: none; }
+.experimental #main .notebook-reader .post__prose { max-width: 72rem; }
+@media (min-width: 68rem) {
+  .experimental #main .notebook-reader .post__grid--with-toc .post__prose { max-width: 60rem; }
+  .experimental #main .notebook-reader .post__grid--with-toc[data-toc-collapsed] .post__prose { max-width: 72rem; }
+}
 .experimental #main .notebook--reading .post__title {
   font-family: 'Times New Roman', 'CY Notebook WenKai', KaiTi, STKaiti, serif;
   font-size: 1.5625em;

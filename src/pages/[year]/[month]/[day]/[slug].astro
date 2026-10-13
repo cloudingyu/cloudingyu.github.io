@@ -9,7 +9,7 @@
  * 渲染正文用 render(entry) —— Astro 7 的 Content Layer 写法，
  * KaTeX 与 Shiki 的结果都由 astro.config.mjs 里那条 unified 处理器产出。
  */
-import Arrow from '../../../../components/Arrow.astro';
+import ReadingToc from '../../../../components/ReadingToc.astro';
 import ReadingNavigation from '../../../../components/ReadingNavigation.astro';
 import { render } from 'astro:content';
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
@@ -101,33 +101,7 @@ const showToc = toc.length >= 2;
     <div class="shell post__body">
       <div class="post__opening-rule" aria-hidden="true" />
       <div class:list={['post__grid', showToc && 'post__grid--with-toc']}>
-        {
-          showToc && (
-            <aside class="post__toc" aria-label="本文目录">
-              <div class="post__toc-panel">
-              <button class="post__toc-head" type="button" data-toc-toggle aria-expanded="true" aria-controls="post-toc-list" aria-label="收起目录" title="收起目录">
-                <span class="post__toc-label">本文目录</span>
-                <span class="post__toc-meta">
-                  <span data-reading-progress>0%</span>
-                  <i aria-hidden="true"><Arrow direction="right" /></i>
-                  <svg class="post__toc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 6h1m4 0h11M4 12h1m4 0h11M4 18h1m4 0h11" /></svg>
-                </span>
-              </button>
-              <nav id="post-toc-list">
-                <ul>
-                  {toc.map((h) => (
-                    <li class:list={[`depth-${h.depth}`]}>
-                      <a href={`#${h.slug}`}>
-                        <span>{h.text}</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-              </div>
-            </aside>
-          )
-        }
+        {showToc && <ReadingToc headings={toc} />}
 
         <div class="prose post__prose">
           <Content />
@@ -269,64 +243,6 @@ const showToc = toc.length >= 2;
   .post__body {
     padding-top: var(--s6);
   }
-
-  /* 有目录时正文右侧让出一列；窄屏塌成单栏，目录移到正文之前 */
-  .post__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s6);
-  }
-  @media (min-width: 68rem) {
-    .post__grid--with-toc {
-      grid-template-columns: minmax(0, 1fr) 13.5rem;
-      gap: var(--s7);
-    }
-  }
-
-  .post__toc {
-    grid-row: 1;
-    align-self: start;
-    scrollbar-width: none;
-  }
-  .post__toc::-webkit-scrollbar { display: none; }
-  @media (min-width: 68rem) {
-    .post__grid--with-toc .post__toc {
-      grid-column: 2;
-      position: sticky;
-      top: 5.5rem;
-      max-height: calc(100vh - 7rem);
-      overflow-y: auto;
-    }
-  }
-
-  .post__toc-head {
-    margin: 0 0 var(--s3);
-    padding-bottom: var(--s2);
-    border-bottom: 1px solid var(--line);
-    color: var(--ink-faint);
-  }
-
-  .post__toc ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .post__toc li { margin: 0; }
-
-  .post__toc a {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    padding: 0.3rem 0;
-    font-size: 0.85rem;
-    line-height: 1.5;
-    color: var(--ink-muted);
-    transition: color 0.22s var(--ease);
-  }
-  .post__toc a:hover { color: var(--ink); }
-  .post__toc a.is-current { color: var(--accent); font-weight: 600; }
-  .post__prose { min-width: 0; }
 
   .post__foot {
     margin-top: var(--s8);

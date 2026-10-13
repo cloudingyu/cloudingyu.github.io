@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Arrow from '../../components/Arrow.astro';
 import ReadingNavigation from '../../components/ReadingNavigation.astro';
+import ReadingToc from '../../components/ReadingToc.astro';
 import { NOTEBOOK_PATH, NOTEBOOK_SEMESTER } from '../../data/notebook-config.mjs';
 import { loadNotebook, renderSemesterNote, courseUrl, noteUrl, noteDate } from '../../lib/notebook';
 import type { CourseNotes, SemesterNote } from '../../lib/notebook';
@@ -25,6 +26,8 @@ export async function getStaticPaths() {
 interface Props { courses: CourseNotes[]; course?: CourseNotes; note?: SemesterNote }
 const { courses, course, note } = Astro.props;
 const rendered = note ? await renderSemesterNote(note) : undefined;
+const toc = (rendered?.metadata.headings ?? []).filter((heading: { depth: number }) => heading.depth >= 2 && heading.depth <= 4);
+const showToc = toc.length > 0;
 const index = note && course ? course.notes.findIndex((item) => item.date === note.date) : -1;
 const newer = course && index > 0 ? course.notes[index - 1] : undefined;
 const older = course && index >= 0 ? course.notes[index + 1] : undefined;
@@ -80,7 +83,8 @@ const title = note && course ? `${course.name} · ${noteDate(note.date)}` : cour
     {note && rendered && course && (
       <article class="notebook-reader">
         <div class="post__opening-rule" aria-hidden="true" />
-        <div class="post__grid">
+        <div class:list={['post__grid', showToc && 'post__grid--with-toc']}>
+          {showToc && <ReadingToc headings={toc} label="笔记目录" />}
           <div class="prose post__prose" set:html={rendered.code} />
         </div>
         <nav class="notebook-reader__neighbors" aria-label="前后课堂笔记">

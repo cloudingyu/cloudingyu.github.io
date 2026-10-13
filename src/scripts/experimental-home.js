@@ -1,5 +1,6 @@
 import { bindReading } from './reading-interactions.js';
 import { bindReadingNavigation } from './reading-navigation.js';
+import { bindHomeScroll } from './home-scroll.js';
 
 let cleanup = () => {};
 
@@ -16,6 +17,7 @@ function bindExperiment() {
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const readingCleanup = bindReading(body);
   const navigationCleanup = bindReadingNavigation(body);
+  const homeScrollCleanup = bindHomeScroll(body);
   const fine = matchMedia('(hover: hover) and (pointer: fine)');
   const input = { x: 0, y: 0, scroll: 0 };
   const target = { x: 0, y: 0, scroll: 0 };
@@ -226,18 +228,19 @@ function bindExperiment() {
   }, { rootMargin: '100px' });
   if (hero && host) artObserver.observe(hero);
 
-  const homepageReveal = !!hero;
   const revealObserver = new IntersectionObserver((entries) => {
     entries.filter((entry) => entry.isIntersecting).forEach((entry, i) => {
       revealObserver.unobserve(entry.target);
       if (motion.matches || !entry.target.animate) return;
       remember(entry.target.animate([
-        { opacity: 0, transform: homepageReveal ? `translateY(${fine.matches ? 56 : 36}px) scale(.98)` : 'translateY(35px)' },
+        { opacity: 0, transform: 'translateY(35px)' },
         { opacity: 1, transform: 'none' },
-      ], { duration: homepageReveal ? 760 : 550, delay: Math.min(i, 2) * 60, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' }));
+      ], { duration: 550, delay: Math.min(i, 2) * 60, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' }));
     });
-  }, { threshold: homepageReveal ? .01 : .08, rootMargin: homepageReveal ? '0px 0px 32px 0px' : '0px' });
-  body.querySelectorAll('[data-exp-reveal], .archive__stats > div, .year__head, .year__list .item, .about__main, .about__card, .notfound__path').forEach((el) => revealObserver.observe(el));
+  }, { threshold: .08 });
+  body.querySelectorAll('[data-exp-reveal], .archive__stats > div, .year__head, .year__list .item, .about__main, .about__card, .notfound__path').forEach((el) => {
+    if (!el.hasAttribute('data-scroll-scene')) revealObserver.observe(el);
+  });
   const motionObserver = new IntersectionObserver((entries) => {
     for (const entry of entries) entry.target.toggleAttribute('data-motion-paused', !entry.isIntersecting);
   });
@@ -266,7 +269,7 @@ function bindExperiment() {
     clearTimeout(scrollingTimer);
     cancelAnimationFrame(frame);
     animations.forEach((animation) => animation.cancel());
-    artObserver.disconnect(); revealObserver.disconnect(); motionObserver.disconnect(); heroResize.disconnect(); art?.dispose(); readingCleanup(); navigationCleanup();
+    artObserver.disconnect(); revealObserver.disconnect(); motionObserver.disconnect(); heroResize.disconnect(); art?.dispose(); readingCleanup(); navigationCleanup(); homeScrollCleanup();
     themeButton.removeEventListener('click', onTheme);
     morphButton?.removeEventListener('click', onMorph);
     window.removeEventListener('pointermove', onPointer);

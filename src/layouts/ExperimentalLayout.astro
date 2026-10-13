@@ -108,6 +108,7 @@ const [emailName, emailDomain] = SITE.email.split('@');
   .exp-theme:hover { rotate: 180deg; color: var(--accent); }
   .exp-theme:disabled { opacity: .5; cursor: default; }
   .exp-footer { padding: 5rem var(--exp-space) 1.5rem; }
+  .experimental:has([data-exp-hero]) .exp-footer { overflow: clip; }
   .exp-footer__lead { display: flex; align-items: end; justify-content: space-between; gap: 2rem; }
   .exp-footer__lead p { font-family: 'Arial Black', var(--font-sans); font-size: clamp(2.5rem, 7vw, 7rem); line-height: .95; font-weight: 900; letter-spacing: -.06em; margin: 0; }
   .exp-footer__lead p > span { color: var(--accent); }
