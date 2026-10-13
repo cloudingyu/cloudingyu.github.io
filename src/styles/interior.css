@@ -29,14 +29,14 @@
 .experimental #main a.tag:hover .tag__count { color: inherit; border-color: currentColor; }
 
 /* Reading: a bold entrance followed by a calm, generous text column. */
-.experimental #main .post__head { padding-top: 2rem; padding-bottom: 2.5rem; }
+.experimental #main .post__head { padding-top: 2rem; padding-bottom: 1.25rem; }
 .experimental #main .post__crumbs { font: .85rem var(--font-sans); margin-bottom: 2.5rem; }
 .experimental #main .post__title { max-width: 18em; font-size: clamp(2.05rem, 4.5vw, 4.5rem); line-height: 1.25; letter-spacing: -.045em; font-weight: 850; text-wrap: balance; }
 .experimental #main .post__subtitle { max-width: 55rem; font-size: 1rem; margin-top: 1.3rem; color: var(--ink-muted); }
 .experimental #main .post__byline { margin-top: 2rem; padding-top: 0; border: 0; }
 .experimental #main .post__cover { margin-bottom: 2rem; }
 .experimental #main .post__cover img { border-radius: .8rem; max-height: 28rem; object-fit: cover; }
-.experimental #main .post__body { width: calc(100% - var(--exp-space) * 2); max-width: 76rem; margin-inline: auto; padding-top: 1.5rem; }
+.experimental #main .post__body { width: calc(100% - var(--exp-space) * 2); max-width: 76rem; margin-inline: auto; padding-top: .75rem; }
 .post__opening-rule { height: 1px; background: var(--line-strong); margin-bottom: 2rem; }
 .experimental #main .post__prose { width: 100%; max-width: 50rem; margin-inline: auto; }
 .experimental #main .post__grid:not(.post__grid--with-toc) .post__prose { margin-inline: 0; }
@@ -137,13 +137,13 @@
   .experimental #main .year__num { font-size: 2.7rem; }
   .experimental #main .item { grid-template-columns: minmax(0, 1fr); padding-block: 1.2rem; }
   .experimental #main .item__tags { grid-column: 1; }
-  .experimental #main .post__head { padding-top: 1.5rem; padding-bottom: 2rem; }
+  .experimental #main .post__head { padding-top: 1.5rem; padding-bottom: 1rem; }
   .experimental #main .post__crumbs { margin-bottom: 2rem; }
   .experimental #main .post__title { font-size: clamp(1.9rem, 7.6vw, 3rem); }
   .experimental #main .post__subtitle { font-size: .88rem; }
   .experimental #main .post__tags { width: 100%; }
   .experimental #main .post__toc { padding: 1rem; }
-  .experimental #main .post__body { padding-top: 1.25rem; }
+  .experimental #main .post__body { padding-top: .5rem; }
   .experimental #main .prose { font-size: .96rem; }
   .experimental #main .prose h2 { font-size: 1.4rem; }
   .experimental #main .post__nav-item--next { text-align: left; }
