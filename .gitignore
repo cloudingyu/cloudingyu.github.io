@@ -23,3 +23,8 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# 网站笔记整理：只提交发布成果和公开核查记录。
+/course-notes/local.config.json
+/course-notes/.work/
+/course-notes/**/*.tmp

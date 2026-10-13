@@ -42,8 +42,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # build 脚本里串了三步：同步内容包 → 复制 KaTeX 字体 → astro build。
-      # 所以这里不需要额外手工步骤。
+      - name: Test course-note workflow
+        run: npm run notes:test
+
+      # build 会同步内容包、复制字体、检查已发布笔记，再构建静态网站。
       - name: Build with Astro
         run: npm run build
 
