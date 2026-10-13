@@ -184,6 +184,8 @@ export async function mountCloud(host, input, { signal } = {}) {
   let x = 0;
   let y = 0;
   let scrolling = false;
+  let interacting = false;
+  let dirty = true;
   let quality = 1;
   let width = 0;
   let height = 0;
@@ -198,14 +200,21 @@ export async function mountCloud(host, input, { signal } = {}) {
   let query = null;
   const smooth = (value) => { const t = Math.max(0, Math.min(1, value)); return t * t * (3 - 2 * t); };
   const setResolution = () => {
-    const budget = (innerWidth < 768 ? 120000 : 280000) * quality;
-    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5, Math.sqrt(budget / (width * height))));
-    renderer.setSize(width, height, false);
+    // Render a smaller volume while turning, then refine the settled image once.
+    const mobile = innerWidth < 768;
+    const budget = interacting ? (mobile ? 65000 : 100000) * quality : (mobile ? 120000 : 280000);
+    uniforms.uSteps.value = interacting ? (mobile ? 28 : 32) : (mobile ? 36 : 48);
+    renderer.setDrawingBufferSize(width, height, Math.min(devicePixelRatio || 1, 1.5, Math.sqrt(budget / (width * height))));
+  };
+  const setInteracting = (value) => {
+    if (interacting === value) return;
+    interacting = value;
+    if (width && height) setResolution();
   };
   const adaptQuality = (cost, now, measuredGPU) => {
-    if (reduced.matches || scrolling || now - lastQualityChange < 2000) return;
-    const slow = cost > (measuredGPU ? 14 : 28);
-    const fast = measuredGPU && cost < 7 && now - lastQualityChange > 8000;
+    if (reduced.matches || scrolling || !interacting || now - lastQualityChange < 2000) return;
+    const slow = cost > (measuredGPU ? 6 : 24);
+    const fast = measuredGPU && cost < 3 && now - lastQualityChange > 8000;
     const next = slow ? Math.max(.25, quality * .8) : fast ? Math.min(1, quality + .1) : quality;
     if (next === quality) return;
     quality = next;
@@ -236,7 +245,7 @@ export async function mountCloud(host, input, { signal } = {}) {
     sculpture.updateMatrixWorld();
     uniforms.uCamera.value.copy(camera.position);
     sculpture.worldToLocal(uniforms.uCamera.value);
-    const measure = timer && !query && renderCount++ % 15 === 0 && !reduced.matches;
+    const measure = timer && !query && renderCount++ % 8 === 0 && interacting && !reduced.matches;
     if (measure) { query = gl.createQuery(); gl.beginQuery(timer.TIME_ELAPSED_EXT, query); }
     try { renderer.render(scene, camera); }
     finally { if (measure) gl.endQuery(timer.TIME_ELAPSED_EXT); }
@@ -249,53 +258,64 @@ export async function mountCloud(host, input, { signal } = {}) {
       if (!timer || gpuSamples === 0) adaptQuality(frameCost, now, false);
     }
     lastFrame = now;
-    if (now - previous < 1000 / 30) { frame = requestAnimationFrame(tick); return; }
+    if (now - previous < 1000 / 60 - 1) { frame = requestAnimationFrame(tick); return; }
     const dt = Math.min((now - previous) / 1000, .08);
     previous = now;
     elapsed += dt;
-    const follow = 1 - Math.exp(-10 * dt);
+    const follow = 1 - Math.exp(-18 * dt);
     x += (input.x - x) * follow;
     y += (input.y - y) * follow;
-    morph += (morphTarget - morph) * follow;
+    morph += (morphTarget - morph) * (1 - Math.exp(-10 * dt));
     pulse *= Math.exp(-3.3 * dt);
+    const pending = Math.abs(input.x - x) + Math.abs(input.y - y) > .002 || Math.abs(morphTarget - morph) > .00001 || pulse > .005;
+    if (!pending) {
+      x = input.x; y = input.y; morph = morphTarget; pulse = 0;
+      setInteracting(false);
+    }
     sculpture.rotation.set(.08 + y * .28 + Math.sin(elapsed * .18) * .045, -.12 + x * .5 + Math.sin(elapsed * .13) * .12 + input.scroll * .3, -.05 + Math.sin(elapsed * .16) * .03);
     sculpture.position.y = Math.sin(elapsed * .5) * .09 + input.scroll * .4;
     render();
-    frame = requestAnimationFrame(tick);
+    dirty = false;
+    // Idle movement belongs to the compositor; stop all volume draws and JS frames.
+    if (pending) frame = requestAnimationFrame(tick);
   };
   const start = () => {
     if (disposed || frame || !visible || document.hidden || scrolling) return;
-    if (reduced.matches) { render(); return; }
+    if (reduced.matches) { if (dirty) render(); dirty = false; return; }
+    if (!dirty && Math.abs(input.x - x) + Math.abs(input.y - y) <= .002 && morph === morphTarget && pulse === 0) return;
+    setInteracting(true);
     previous = performance.now();
     lastFrame = 0;
     frame = requestAnimationFrame(tick);
   };
+  const wake = () => { dirty = true; start(); };
   const stop = () => { cancelAnimationFrame(frame); frame = 0; };
   const resize = () => {
     const w = host.clientWidth, h = host.clientHeight;
     if (!w || !h || disposed || (width === w && height === h)) return;
     width = w; height = h;
-    uniforms.uSteps.value = innerWidth < 768 ? 36 : 48;
     setResolution();
     camera.position.z = Math.max(5.4, 7.1 / (w / h)) / (2 * Math.tan(Math.PI / 10));
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    render();
+    wake();
   };
   const palette = () => {
     const day = document.documentElement.dataset.theme === 'light';
     uniforms.uAcid.value.set(day ? '#5941bf' : '#d0ff45');
     uniforms.uDay.value = day ? 1 : 0;
     renderer.toneMappingExposure = day ? .82 : 1.1;
-    render();
+    wake();
   };
   const onPreference = () => {
     stop();
     if (reduced.matches) {
       pulse = 0;
       morph = morphTarget;
+      setInteracting(false);
       render();
-    } else start();
+      dirty = false;
+    } else wake();
   };
   const onVisibility = () => { if (document.hidden) stop(); else start(); };
   const io = new IntersectionObserver(([entry]) => {
@@ -308,7 +328,7 @@ export async function mountCloud(host, input, { signal } = {}) {
   try {
     await renderer.compileAsync(scene, camera);
     checkAbort();
-    resize(); palette();
+    resize(); palette(); render(); dirty = false;
   }
   catch (error) {
     geometry.dispose(); material.dispose(); renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
@@ -322,15 +342,16 @@ export async function mountCloud(host, input, { signal } = {}) {
   document.addEventListener('visibilitychange', onVisibility);
 
   return {
+    wake,
     setScrolling(value) {
       scrolling = value;
-      if (scrolling) stop(); else start();
+      if (scrolling) stop(); else wake();
     },
     reshape() {
       morphTarget += 1;
       pulse = 1;
       if (reduced.matches) { morph = morphTarget; render(); }
-      else start();
+      else wake();
     },
     dispose() {
       disposed = true;

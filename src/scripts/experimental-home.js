@@ -62,10 +62,12 @@ function bindExperiment() {
     previous = time;
     const amount = 1 - Math.exp(-9 * dt);
     let pending = false;
-    for (const key of Object.keys(input)) {
-      input[key] += (target[key] - input[key]) * amount;
-      if (Math.abs(input[key] - target[key]) > .0008) pending = true;
-    }
+    // Let the cloud ease the pointer once, rather than chaining two slow followers.
+    const pointerChanged = input.x !== target.x || input.y !== target.y;
+    input.x = target.x; input.y = target.y;
+    input.scroll += (target.scroll - input.scroll) * amount;
+    if (Math.abs(input.scroll - target.scroll) > .0008) pending = true;
+    if (pointerChanged) art?.wake();
     cx += (tx - cx) * amount; cy += (ty - cy) * amount;
     if (cursorVisible && (Math.abs(tx - cx) + Math.abs(ty - cy) > .3)) pending = true;
     paint();
