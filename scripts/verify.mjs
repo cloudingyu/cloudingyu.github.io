@@ -58,7 +58,7 @@ const FRIEND_NAMES = ['顺其自然2319', 'trs62'];
  * 已按用户要求撤掉 —— 页头改由 WebGL 几何场景承担。
  */
 const IMAGE_TOTAL = 46;
-/** 四个页面各自的引语原文（SITE_DATA.md 第 7 节，逐字比对） */
+/** 四个页面各自的引语原文（SITE_DATA.md 第 7 节，核对正文，允许引号版式变化） */
 const PAGE_QUOTES = {
   home: '「好奇心仅是引领我们启程的火种。它点燃了我们对未知的渴望，却不足以照亮整个旅程。」',
   about: '「节制与癫狂，秩序与诗意，能相提并论乎？」',
@@ -396,12 +396,19 @@ await check('11. 首页 / 关于 / 归档 / 404 保留原始引语，背景照�
       首页改版后放在文章列表下方（opening__quote）。两者都算「引语区块」，
       关键是那句原文必须出现在页面里。
     */
-    if (!/class="[^"]*(page-opening__quote|opening__quote)/.test(html)) {
+    const quoteBlock = html.match(/<blockquote\b[^>]*class="[^"]*(?:page-opening__quote|opening__quote)[^"]*"[^>]*>([\s\S]*?)<\/blockquote>/i);
+    if (!quoteBlock) {
       missing.push(`${key} 缺引语区块`);
     }
-    // 该页的引语原文必须逐字出现（内容不能被版式改动冲掉）
-    const quote = PAGE_QUOTES[key];
-    if (!html.includes(quote)) missing.push(`${key} 的引语原文没有出现`);
+    // 只比较引语区块的正文，装饰引号与源码排版不属于引语内容。
+    const quoteText = (quoteBlock?.[1] ?? '')
+      .replace(/<span\b[^>]*class="[^"]*\bquote-mark\b[^"]*"[^>]*>[\s\S]*?<\/span>/gi, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/^[「“]|[」”]$/g, '');
+    const expectedQuote = PAGE_QUOTES[key].replace(/^[「“]|[」”]$/g, '');
+    if (quoteText !== expectedQuote) missing.push(`${key} 的引语正文与原文不一致`);
     for (const retired of RETIRED_IMAGES) {
       if (html.includes(retired)) missing.push(`${key} 仍在引用旧背景图 ${retired}`);
     }

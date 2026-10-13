@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -50,7 +50,7 @@ jobs:
       - name: Check source diagnostics
         run: npm run check
 
-      # 发布前先过一遍校验清单。内容层的约束（50 张图、15 篇永久链接、
+      # 发布前先过一遍校验清单。内容层的约束（46 张图、15 篇永久链接、
       # 公式渲染、无死链…）如果被改坏，宁可这一步失败，也不要把坏页面推上线。
       - name: Verify content integrity
         run: npm run verify
