@@ -14,9 +14,6 @@ const next = neighbors.find((item) => item.rel === 'next');
       <span class="reading-navigation__core" />
       <span class="reading-navigation__spark" />
       <span class="reading-navigation__echo" />
-      <span class="reading-navigation__particle reading-navigation__particle--one" />
-      <span class="reading-navigation__particle reading-navigation__particle--two" />
-      <span class="reading-navigation__particle reading-navigation__particle--three" />
     </span>
   </button>
   <nav class="reading-navigation__panel" id="reading-navigation-panel" aria-label={label} data-reading-navigation-panel inert>
@@ -46,15 +43,15 @@ const next = neighbors.find((item) => item.rel === 'next');
 <style>
   .reading-navigation {
     --orb-size: 3.5rem; --dial-size: 15rem;
-    position: fixed; top: max(1.25rem, env(safe-area-inset-top)); right: max(.75rem, env(safe-area-inset-right));
+    position: fixed; bottom: calc(1.5rem + env(safe-area-inset-bottom)); right: calc(1.25rem + env(safe-area-inset-right));
     z-index: 60; width: var(--orb-size); height: var(--orb-size); transform-origin: center;
-    animation: orb-arrive .85s cubic-bezier(.22, 1, .36, 1) both;
+    animation: orb-arrive .46s cubic-bezier(.22, 1, .36, 1) both;
   }
   .reading-navigation[hidden] { display: none; }
-  .reading-navigation[data-leaving] { pointer-events: none; animation: orb-depart .48s cubic-bezier(.55, 0, 1, .45) both; }
+  .reading-navigation[data-leaving] { pointer-events: none; animation: orb-depart .3s cubic-bezier(.4, 0, 1, 1) both; }
   .reading-navigation, .reading-navigation :is(a, button) { cursor: pointer; }
   .reading-navigation__toggle { position: relative; z-index: 2; display: grid; place-items: center; width: 100%; height: 100%; padding: .25rem; border: 0; border-radius: 50%; touch-action: manipulation; }
-  .reading-navigation__sphere { position: relative; display: block; width: 100%; height: 100%; animation: orb-float 4s ease-in-out infinite; }
+  .reading-navigation__sphere { position: relative; display: block; width: 100%; height: 100%; }
   .reading-navigation__core {
     position: absolute; inset: .2rem; border-radius: 50%;
     background: var(--accent);
@@ -62,31 +59,21 @@ const next = neighbors.find((item) => item.rel === 'next');
   }
   .reading-navigation__core::after { content: ''; position: absolute; inset: 30%; border: 1px solid var(--paper); border-radius: 50%; }
   .reading-navigation__ring { position: absolute; inset: -.12rem; border: 1px solid color-mix(in srgb, var(--exp-purple) 65%, transparent); border-radius: 50%; transition: transform .75s var(--exp-ease), border-color .4s; }
-  .reading-navigation__ring--one { border-style: dashed; transform: rotate(-32deg); animation: orb-ring-arrive .85s var(--exp-ease) backwards; }
+  .reading-navigation__ring--one { border-style: dashed; transform: rotate(-32deg); animation: orb-ring-settle .46s ease-out backwards; }
   .reading-navigation__ring--two { inset: .05rem; transform: rotate(48deg); }
   .reading-navigation__spark { position: absolute; top: 12%; right: 11%; width: .3rem; height: .3rem; border-radius: 50%; background: var(--paper); transition: transform .75s var(--exp-ease); }
-  .reading-navigation__echo { position: absolute; inset: 0; border: 1px solid var(--accent); border-radius: 50%; opacity: 0; pointer-events: none; animation: orb-echo .85s ease-out backwards; }
-  .reading-navigation__particle {
-    --burst-x: -2rem; --burst-y: -1rem;
-    position: absolute; top: 50%; left: 50%; width: .2rem; height: .2rem; background: var(--accent); border-radius: 50%; opacity: 0; pointer-events: none;
-    animation: orb-particles .65s .12s ease-out backwards;
-  }
-  .reading-navigation__particle--two { --burst-x: -1.75rem; --burst-y: 1.75rem; background: var(--exp-purple); animation-delay: .18s; }
-  .reading-navigation__particle--three { --burst-x: .6rem; --burst-y: 2.1rem; animation-delay: .24s; }
-  .reading-navigation[data-leaving] .reading-navigation__core { animation: orb-core-depart .48s ease-in both; }
-  .reading-navigation[data-leaving] .reading-navigation__ring { animation: orb-ring-depart .48s ease-in both; }
-  .reading-navigation[data-leaving] .reading-navigation__echo { animation: orb-echo-depart .48s ease-in both; }
-  .reading-navigation[data-leaving] .reading-navigation__particle { animation: none; }
+  .reading-navigation__echo { position: absolute; inset: -.08rem; border: 1px solid var(--accent); border-radius: 50%; opacity: 0; pointer-events: none; animation: orb-ripple .46s ease-out backwards; }
+  .reading-navigation[data-leaving] .reading-navigation__echo { animation: orb-ripple-depart .3s ease-out both; }
   .reading-navigation__toggle:hover .reading-navigation__core { transform: scale(1.08) rotate(18deg); }
   .reading-navigation[data-open] .reading-navigation__core { transform: scale(.85) rotate(155deg); background: var(--exp-purple); }
   .reading-navigation[data-open] .reading-navigation__ring--one { transform: rotate(155deg); border-color: var(--accent); }
   .reading-navigation[data-open] .reading-navigation__ring--two { transform: rotate(-120deg); }
   .reading-navigation[data-open] .reading-navigation__spark { transform: translate(-1.7rem, 1.7rem); }
   .reading-navigation__panel {
-    position: absolute; top: 0; right: 0; width: var(--dial-size); height: var(--dial-size);
+    position: absolute; bottom: 0; right: 0; width: var(--dial-size); height: var(--dial-size);
     border-radius: 50%; border: 1px solid color-mix(in srgb, var(--exp-purple) 35%, var(--line));
     background: var(--panel);
-    opacity: 0; visibility: hidden; pointer-events: none; transform-origin: calc(100% - var(--orb-size) / 2) calc(var(--orb-size) / 2);
+    opacity: 0; visibility: hidden; pointer-events: none; transform-origin: calc(100% - var(--orb-size) / 2) calc(100% - var(--orb-size) / 2);
     transform: rotate(100deg) scale(.05);
     transition: transform .65s var(--exp-ease), opacity .25s .12s, visibility 0s .65s;
   }
@@ -117,24 +104,33 @@ const next = neighbors.find((item) => item.rel === 'next');
   .reading-navigation__item:disabled > * { opacity: .3; }
   .reading-navigation__caption { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: .3rem; background: var(--panel); color: var(--ink-muted); font: 500 .55rem var(--font-mono); letter-spacing: .12em; pointer-events: none; }
   @keyframes orb-arrive {
-    0% { opacity: 0; transform: translate(2.5rem, -.75rem) scale(.18) rotate(-180deg); }
-    42% { opacity: 1; transform: translate(-.3rem, .1rem) scale(1.12) rotate(18deg); }
-    68% { transform: translate(.1rem, 0) scale(.95) rotate(-6deg); }
+    0% { opacity: 0; transform: translate(.35rem, .6rem) scale(.82); }
+    65% { opacity: 1; transform: translate(0, -.06rem) scale(1.04); }
     100% { opacity: 1; transform: none; }
   }
-  @keyframes orb-ring-arrive { 0% { opacity: 0; transform: rotate(-220deg) scale(.5); } 38% { opacity: 1; transform: rotate(35deg) scale(1.1); } 100% { opacity: 1; transform: rotate(-32deg); } }
-  @keyframes orb-echo { 0% { opacity: 0; transform: scale(.4); } 32% { opacity: .65; } 100% { opacity: 0; transform: scale(1.6); } }
-  @keyframes orb-particles { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--burst-x), var(--burst-y)) scale(.4); } }
-  @keyframes orb-depart { 0% { opacity: 1; transform: none; } 35% { opacity: 1; transform: translate(-.2rem, 0) scale(1.04) rotate(-12deg); } 100% { opacity: 0; transform: translate(2rem, -.5rem) scale(.12) rotate(160deg); } }
-  @keyframes orb-core-depart { 0%, 20% { transform: scale(1); } 100% { transform: scale(.25) rotate(180deg); } }
-  @keyframes orb-ring-depart { 0% { opacity: 1; transform: scale(1); } 40% { opacity: 1; transform: scale(1.15) rotate(60deg); } 100% { opacity: 0; transform: scale(.2) rotate(240deg); } }
-  @keyframes orb-echo-depart { 0% { opacity: 0; transform: scale(1.45); } 35% { opacity: .55; } 100% { opacity: 0; transform: scale(.15); } }
-  @keyframes orb-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+  @keyframes orb-ring-settle {
+    0% { opacity: .2; transform: rotate(-85deg) scale(.9); }
+    100% { opacity: 1; transform: rotate(-32deg) scale(1); }
+  }
+  @keyframes orb-ripple {
+    0% { opacity: 0; transform: scale(.85); }
+    35% { opacity: .5; }
+    100% { opacity: 0; transform: scale(1.35); }
+  }
+  @keyframes orb-depart {
+    0% { opacity: 1; transform: none; }
+    25% { opacity: 1; transform: scale(1.02); }
+    100% { opacity: 0; transform: translate(0, .25rem) scale(.82); }
+  }
+  @keyframes orb-ripple-depart {
+    0% { opacity: .5; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.45); }
+  }
   @media (max-width: 48rem) {
-    .reading-navigation { --dial-size: 14rem; }
+    .reading-navigation { --dial-size: 14rem; bottom: calc(1rem + env(safe-area-inset-bottom)); right: calc(1rem + env(safe-area-inset-right)); }
   }
   @media (max-height: 20rem) {
-    .reading-navigation { --dial-size: 12rem; top: max(.75rem, env(safe-area-inset-top)); }
+    .reading-navigation { --dial-size: 12rem; bottom: calc(.75rem + env(safe-area-inset-bottom)); }
     .reading-navigation__item { width: 3rem; height: 3rem; }
   }
   @media (prefers-reduced-motion: reduce) {

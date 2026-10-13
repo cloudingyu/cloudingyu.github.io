@@ -11,6 +11,9 @@ export function bindReadingNavigation(body) {
   let open = false;
   let available = false;
   let hideTimer = 0;
+  let frame = 0;
+  let layoutDirty = true;
+  let headerEnd = 0;
 
   const close = (restoreFocus = false) => {
     if (restoreFocus || panel.contains(document.activeElement)) button.focus({ preventScroll: true });
@@ -31,8 +34,7 @@ export function bindReadingNavigation(body) {
     button.title = '收起阅读转盘';
     if (keyboard) panel.querySelector('a')?.focus({ preventScroll: true });
   };
-  const observer = new IntersectionObserver(([entry]) => {
-    const offscreen = entry.boundingClientRect.bottom <= 0;
+  const setAvailable = (offscreen) => {
     if (offscreen === available) return;
     available = offscreen;
     clearTimeout(hideTimer);
@@ -47,10 +49,35 @@ export function bindReadingNavigation(body) {
       button.disabled = true;
       root.setAttribute('data-leaving', '');
       if (motion.matches) root.hidden = true;
-      else hideTimer = setTimeout(() => { root.hidden = true; }, 480);
+      // animationend handles normal playback; this also covers interrupted animation.
+      else hideTimer = setTimeout(() => { if (!available) root.hidden = true; }, 400);
     }
-  });
-  observer.observe(header);
+  };
+  const update = () => {
+    frame = 0;
+    if (layoutDirty) {
+      headerEnd = header.getBoundingClientRect().bottom + window.scrollY;
+      layoutDirty = false;
+    }
+    // An intersection at exactly zero can miss the next pixel on a slow return.
+    // Use the scroll position directly, with an 18px gap only when appearing.
+    setAvailable(window.scrollY > headerEnd + (available ? 0 : 18));
+  };
+  const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
+  const invalidate = () => { layoutDirty = true; schedule(); };
+  const resize = new ResizeObserver(invalidate);
+  resize.observe(header);
+  window.addEventListener('scroll', schedule, { ...options, passive: true });
+  window.addEventListener('resize', invalidate, { ...options, passive: true });
+  root.addEventListener('animationend', (event) => {
+    if (event.target === root && event.animationName === 'orb-depart' && !available) {
+      clearTimeout(hideTimer); root.hidden = true;
+    }
+  }, options);
+  motion.addEventListener('change', () => {
+    if (motion.matches && !available) { clearTimeout(hideTimer); root.hidden = true; }
+  }, options);
+  update();
   button.addEventListener('click', (event) => open ? close(true) : show(event.detail === 0), options);
   topButton.addEventListener('click', () => {
     close(true);
@@ -63,7 +90,7 @@ export function bindReadingNavigation(body) {
     if (event.key === 'Escape' && open) { event.preventDefault(); close(true); }
   }, options);
   return () => {
-    observer.disconnect(); controller.abort(); clearTimeout(hideTimer); close();
+    resize.disconnect(); controller.abort(); cancelAnimationFrame(frame); clearTimeout(hideTimer); close();
     available = false; root.hidden = true; root.removeAttribute('data-leaving');
   };
 }

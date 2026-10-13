@@ -62,7 +62,7 @@ const title = note && course ? `${course.name} · ${noteDate(note.date)}` : cour
 
     {course && !note && (
       <nav class="notebook__tabs" aria-label="选择课程">
-        {courses.map((item) => <a href={courseUrl(item)} aria-current={item.id === course.id ? 'page' : undefined}>{item.shortName}</a>)}
+        {courses.map((item) => <a href={courseUrl(item)} aria-current={item.id === course.id ? 'page' : undefined}>{item.name}</a>)}
       </nav>
     )}
 
