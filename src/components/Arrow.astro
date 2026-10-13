@@ -1,0 +1,22 @@
+---
+interface Props { direction?: 'up-right' | 'down-right' | 'up' | 'down' | 'refresh'; }
+const { direction = 'up-right' } = Astro.props;
+const paths = {
+  'up-right': 'M5 19 19 5M5 5h14v14',
+  'down-right': 'M5 5 19 19M5 19h14V5',
+  up: 'M12 20V4M5 11l7-7 7 7',
+  down: 'm6 9 6 6 6-6',
+  refresh: 'M19 12a7 7 0 1 1-7-7M9 2l3 3-3 3',
+};
+---
+<svg class="ui-arrow" data-direction={direction} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d={paths[direction]} /></svg>
+<style is:global>
+  .ui-arrow { display: inline-block; width: 1em; height: 1em; max-width: none; vertical-align: -.12em; flex-shrink: 0; transform-origin: center; transform-box: view-box; transition: rotate .4s var(--exp-ease, ease); }
+  :is(a:focus-visible, button:focus-visible) .ui-arrow[data-direction='up-right'] { rotate: 45deg; }
+  :is(a:focus-visible, button:focus-visible) .ui-arrow[data-direction='down-right'] { rotate: -45deg; }
+  @media (hover: hover) and (pointer: fine) {
+    :is(a:hover, button:hover) .ui-arrow[data-direction='up-right'], .ui-arrow[data-direction='up-right']:hover { rotate: 45deg; }
+    :is(a:hover, button:hover) .ui-arrow[data-direction='down-right'] { rotate: -45deg; }
+  }
+  @media (prefers-reduced-motion: reduce) { .ui-arrow { transition: none; } }
+</style>

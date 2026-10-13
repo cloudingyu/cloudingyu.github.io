@@ -39,6 +39,7 @@
 .experimental #main .post__body { width: calc(100% - var(--exp-space) * 2); max-width: 76rem; margin-inline: auto; padding-top: 1.5rem; }
 .post__opening-rule { height: 1px; background: var(--line-strong); margin-bottom: 2rem; }
 .experimental #main .post__prose { width: 100%; max-width: 50rem; margin-inline: auto; }
+.experimental #main .post__grid:not(.post__grid--with-toc) .post__prose { margin-inline: 0; }
 .experimental #main .post__prose > :first-child { margin-top: 0; }
 .experimental #main .prose { font-family: var(--font-sans); font-size: 1rem; line-height: 1.95; }
 .experimental #main .prose h2 { font-size: 1.65rem; font-weight: 750; padding-top: 0; border: 0; margin-top: 3.5rem; }
@@ -153,6 +154,7 @@
 }
 
 .experimental #main :is(.archive__stats dt, .year__count, .item__date, .item__tags, .post__byline time) { font: .85rem/1.6 var(--font-sans); }
+.experimental #main .archive__stats dt { font-size: 1.3rem; font-weight: 700; }
 .experimental #main .post__nav-item > .mono-meta { font: .9rem var(--font-sans); }
 .experimental #main .notfound__recent-head { font: 700 1.5rem var(--font-sans); }
 .experimental #main .notfound__recent time { font: .85rem var(--font-sans); }

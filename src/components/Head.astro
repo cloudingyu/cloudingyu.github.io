@@ -88,8 +88,8 @@ const jsonLd =
 <link rel="icon" href={assetUrl('images/site/favicon.ico')} sizes="any" />
 <link rel="apple-touch-icon" href={assetUrl(AUTHOR.avatar)} />
 
-<!-- KaTeX 样式（由 scripts/vendor-katex.mjs 复制到 public/vendor/） -->
-<link rel="stylesheet" href="/vendor/katex/katex.min.css" />
+<!-- 数学排版仅在文章页加载，首页与导航页面无需等待它。 -->
+{type === 'article' && <link rel="stylesheet" href="/vendor/katex/katex.min.css" />}
 
 <!-- RSS / sitemap -->
 <link rel="sitemap" href="/sitemap-index.xml" />

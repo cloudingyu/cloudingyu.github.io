@@ -1,4 +1,5 @@
 ---
+import Arrow from './Arrow.astro';
 import { formatDate, permalink, excerpt } from '../lib/posts';
 import type { Post } from '../lib/posts';
 interface Props { post: Post; index?: number; headingLevel?: 'h2' | 'h3'; }
@@ -13,7 +14,7 @@ const Heading = headingLevel;
       <Heading>{post.data.title}</Heading>
       <p>{post.data.subtitle || excerpt(post.body ?? '', 74)}</p>
     </div>
-    <span class="journal-entry__action" aria-hidden="true"><i>↗</i></span>
+    <span class="journal-entry__action" aria-hidden="true"><i><Arrow /></i></span>
   </a>
 </article>
 <style>

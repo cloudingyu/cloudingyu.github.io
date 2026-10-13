@@ -1,4 +1,5 @@
 ---
+import Arrow from '../components/Arrow.astro';
 import ExperimentalLayout from '../layouts/ExperimentalLayout.astro';
 import Pagination from '../components/Pagination.astro';
 import PostPoster from '../components/PostPoster.astro';
@@ -10,34 +11,37 @@ const [first] = paginate(posts, POSTS_PER_PAGE);
 const latest = posts[0]!;
 const tags = tagCounts(posts);
 const homeQuote = PAGES.home.quote.replace(/^「|」$/g, '');
+const homeQuoteLines = homeQuote.match(/[^。]+。?/g) ?? [homeQuote];
 ---
 
 <ExperimentalLayout description={SITE.description}>
+  <div class="home-stage">
   <section class="exp-hero" data-exp-hero aria-labelledby="hero-title">
     <div class="hero-type">
       <h1 id="hero-title"><span class="hero-line"><span>保持</span></span><span class="hero-line hero-line--acid"><span>好奇<span class="hero-period">。</span></span></span></h1>
       <p>算法、设计与未完成的探索。</p>
-      <a class="hero-cta" href="#index" data-magnet data-cursor-label="探索"><span>进入文章</span><span aria-hidden="true">↘</span></a>
+      <a class="hero-cta" href="#index" data-magnet data-cursor-label="探索"><span>进入文章</span><span aria-hidden="true"><Arrow direction="down-right" /></span></a>
     </div>
 
     <div class="cloud-stage" data-cloud-stage aria-hidden="true">
       <div class="cloud-fallback" />
       <div class="cloud-stage__halo" />
     </div>
-    <a class="hero-orbit-tag hero-orbit-tag--one" href="/tags/机器学习/" data-cursor-label="探索">机器学习 <span aria-hidden="true">↗</span></a>
-    <a class="hero-orbit-tag hero-orbit-tag--two" href="/tags/设计模式/" data-cursor-label="探索">设计模式 <span aria-hidden="true">↗</span></a>
-    <button class="hero-morph" type="button" data-morph disabled><span aria-hidden="true">↻</span><span>换一朵云</span></button>
+    <a class="hero-orbit-tag hero-orbit-tag--one" href="/tags/机器学习/" data-cursor-label="探索">机器学习 <span aria-hidden="true"><Arrow /></span></a>
+    <a class="hero-orbit-tag hero-orbit-tag--two" href="/tags/设计模式/" data-cursor-label="探索">设计模式 <span aria-hidden="true"><Arrow /></span></a>
+    <button class="hero-morph" type="button" data-morph disabled><span aria-hidden="true"><Arrow direction="refresh" /></span><span>换一朵云</span></button>
 
     <a class="latest-dock" href={permalink(latest)} data-cursor-label="阅读">
       <div><span class="latest-dock__badge">最新文章</span><time datetime={latest.data.date.toISOString()}>{formatDate(latest.data.date)}</time></div>
-      <h2>{latest.data.title}</h2><span class="latest-dock__arrow" aria-hidden="true">↗</span>
+      <h2>{latest.data.title}</h2><span class="latest-dock__arrow" aria-hidden="true"><Arrow /></span>
     </a>
   </section>
 
   <div class="signal-band" aria-hidden="true"><div class="signal-band__offset"><div class="signal-band__track">{Array.from({ length: 4 }, () => <span>STAY CURIOUS <i>✳</i> MAKE SOMETHING <i>✳</i> KEEP EXPLORING <i>✳</i></span>)}</div></div></div>
+  </div>
 
   <section class="exp-journal" id="index" aria-labelledby="journal-title">
-    <div class="journal-heading" data-exp-reveal><h2 id="journal-title">博客<span>与笔记</span></h2><a href="/page/1/">全部文章 <span aria-hidden="true">↗</span></a></div>
+    <div class="journal-heading" data-exp-reveal><h2 id="journal-title">博客<span>与笔记</span></h2><a href="/page/1/">全部文章 <span aria-hidden="true"><Arrow /></span></a></div>
     <div class="journal-list">
       {first.items.map((post, i) => <PostPoster {post} index={i} headingLevel="h3" />)}
     </div>
@@ -46,22 +50,24 @@ const homeQuote = PAGES.home.quote.replace(/^「|」$/g, '');
 
   <section class="exp-topics" aria-labelledby="topics-title">
     <div class="topics-heading"><h2 id="topics-title" data-exp-reveal>按<span>主题</span>阅读</h2></div>
-    <div class="topic-flow"><div class="topic-flow__track">{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`} data-cursor-label="探索">{tag}<sup>{count}</sup><span aria-hidden="true">↗</span></a>)}{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`} aria-hidden="true" tabindex="-1">{tag}<sup>{count}</sup><span>↗</span></a>)}</div></div>
+    <div class="topic-flow"><div class="topic-flow__track">{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`} data-cursor-label="探索">{tag}<sup>{count}</sup><span aria-hidden="true"><Arrow /></span></a>)}{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`} aria-hidden="true" tabindex="-1">{tag}<sup>{count}</sup><span><Arrow /></span></a>)}</div></div>
     <blockquote class="opening__quote" data-exp-reveal>
       <span class="quote-mark" aria-hidden="true">“</span>
-      {homeQuote}
+      {homeQuoteLines.map((line) => <span class="quote-line">{line}</span>)}
       <span class="quote-mark quote-mark--close" aria-hidden="true">”</span>
     </blockquote>
   </section>
 </ExperimentalLayout>
 
 <style>
-  .exp-hero { --hero-progress: 0; position: relative; min-height: 48rem; height: calc(100svh - 6.5rem); max-height: 65rem; padding: 2rem var(--exp-space) 5rem; isolation: isolate; overflow: clip; }
+  .home-stage { display: grid; grid-template-rows: minmax(0, 1fr) auto; height: calc(100dvh - var(--exp-nav-height)); min-height: 0; }
+  .exp-hero { --hero-progress: 0; position: relative; display: flex; align-items: center; min-height: 0; padding: 1.5rem var(--exp-space); isolation: isolate; overflow: clip; }
   .exp-hero::before { content: ''; position: absolute; inset: 0; z-index: -2; background: radial-gradient(ellipse at 74% 44%, color-mix(in srgb, var(--exp-purple) 9%, transparent), transparent 48%); }
-  .hero-type { position: relative; z-index: 3; width: 54%; margin-top: calc(clamp(2rem, 5vh, 4rem) + 3.5rem); pointer-events: none; transform: translateY(calc(var(--hero-progress) * -100px)); opacity: max(0, calc(1 - var(--hero-progress) * 1.1)); }
+  .hero-type { position: relative; z-index: 3; width: 54%; pointer-events: none; transform: translateY(calc(var(--hero-progress) * -100px)); opacity: max(0, calc(1 - var(--hero-progress) * 1.1)); }
+  .hero-type, .hero-type h1, .hero-line, .hero-line > span { background: transparent; box-shadow: none; backdrop-filter: none; }
   .hero-line:first-child { translate: calc(var(--hero-progress) * -45px) 0; }
   .hero-line--acid { translate: calc(var(--hero-progress) * 75px) 0; }
-  .hero-type h1 { font-size: clamp(5rem, 11.3vw, 11rem); font-weight: 900; line-height: 1.1; letter-spacing: -.08em; font-family: var(--font-sans); }
+  .hero-type h1 { font-size: clamp(4.5rem, min(11.3vw, 19svh), 11rem); font-weight: 900; line-height: 1.1; letter-spacing: -.08em; font-family: var(--font-sans); }
   .hero-line { display: block; overflow: clip; padding: .03em .08em .06em 0; margin-bottom: -.05em; }
   .hero-line > span { display: block; }
   .hero-line--acid { color: var(--accent); }
@@ -71,7 +77,7 @@ const homeQuote = PAGES.home.quote.replace(/^「|」$/g, '');
   .hero-cta { pointer-events: auto; display: inline-flex; align-items: center; justify-content: space-between; gap: 2.8rem; background: var(--accent); color: var(--paper); font-size: .85rem; font-weight: 700; padding: 1rem 1.4rem; border-radius: 3rem; translate: var(--mag-x, 0px) var(--mag-y, 0px); transition: scale .3s var(--exp-ease); }
   .hero-cta > span:last-child { font-size: 1.4rem; line-height: 1; }
   .hero-cta:hover { scale: 1.04; }
-  .cloud-stage { position: absolute; z-index: 1; top: -4%; right: -1%; width: 65%; height: 100%; pointer-events: none; translate: calc(var(--hero-progress) * 45px) calc(var(--hero-progress) * -90px); scale: calc(1 + var(--hero-progress) * .18); rotate: calc(var(--hero-progress) * 5deg); opacity: max(0, calc(1 - var(--hero-progress) * .8)); }
+  .cloud-stage { position: absolute; z-index: 1; top: 2%; right: -1%; width: 65%; height: 100%; pointer-events: none; translate: calc(var(--hero-progress) * 45px) calc(var(--hero-progress) * -90px); scale: calc(1 + var(--hero-progress) * .18); rotate: calc(var(--hero-progress) * 5deg); opacity: max(0, calc(1 - var(--hero-progress) * .8)); }
   .cloud-stage :global(canvas) { position: absolute; width: 100%; height: 100%; inset: 0; z-index: 1; }
   :global([data-theme='light']) .cloud-stage :global(canvas) { filter: drop-shadow(0 22px 24px #303c7628); }
   :global([data-theme='light']) .cloud-fallback { filter: brightness(.85) drop-shadow(0 22px 24px #303c7628); }
@@ -81,23 +87,23 @@ const homeQuote = PAGES.home.quote.replace(/^「|」$/g, '');
   .hero-orbit-tag { position: absolute; z-index: 2; display: flex; gap: 1.8rem; border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent); padding: .65rem 1rem; border-radius: 3rem; background: color-mix(in srgb, var(--panel) 65%, transparent); backdrop-filter: blur(14px); font-size: .85rem; }
   .hero-orbit-tag:hover { color: var(--accent); border-color: var(--accent); }
   .hero-orbit-tag span { color: var(--accent); }
-  .hero-orbit-tag--one { top: 25%; right: 6%; rotate: 9deg; transform: translateY(calc(var(--hero-progress) * -140px)); }
-  .hero-orbit-tag--two { top: 61%; right: 38%; rotate: -10deg; transform: translate(calc(var(--hero-progress) * -40px), calc(var(--hero-progress) * -70px)); }
-  .hero-morph { position: absolute; z-index: 5; right: 10%; top: 58%; display: flex; align-items: center; gap: .7rem; font-size: .85rem; color: var(--ink); transform: translateY(calc(var(--hero-progress) * -75px)); padding: .45rem .8rem .45rem .45rem; border: 1px solid var(--line-strong); border-radius: 3rem; background: color-mix(in srgb, var(--paper) 75%, transparent); backdrop-filter: blur(12px); }
+  .hero-orbit-tag--one { top: 30%; right: 6%; rotate: 9deg; transform: translateY(calc(var(--hero-progress) * -140px)); }
+  .hero-orbit-tag--two { top: 66%; right: 38%; rotate: -10deg; transform: translate(calc(var(--hero-progress) * -40px), calc(var(--hero-progress) * -70px)); }
+  .hero-morph { position: absolute; z-index: 5; right: 10%; top: 64%; display: flex; align-items: center; gap: .7rem; font-size: .85rem; color: var(--ink); transform: translateY(calc(var(--hero-progress) * -75px)); padding: .45rem .8rem .45rem .45rem; border: 1px solid var(--line-strong); border-radius: 3rem; background: color-mix(in srgb, var(--paper) 75%, transparent); backdrop-filter: blur(12px); }
   .hero-morph > span:first-child { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border: 1px solid var(--line-strong); border-radius: 50%; font-size: 1.4rem; transition: rotate .6s var(--exp-ease), background .3s; }
   .hero-morph:hover > span:first-child { rotate: 180deg; background: var(--accent); color: var(--paper); }
   .hero-morph:disabled { display: none; }
-  .latest-dock { position: absolute; z-index: 5; bottom: 5.2rem; right: var(--exp-space); width: min(38%, 28rem); padding: 1.25rem 3.7rem 1.25rem 0; border: 0; border-top: 1px solid var(--line-strong); background: transparent; translate: calc(var(--hero-progress) * -25px) calc(var(--hero-progress) * -50px); transition: border-color .3s; }
+  .latest-dock { position: absolute; z-index: 5; bottom: 2rem; right: var(--exp-space); width: min(38%, 28rem); padding: 1.25rem 3.7rem 1.25rem 0; border: 0; border-top: 1px solid var(--line-strong); background: transparent; translate: calc(var(--hero-progress) * -25px) calc(var(--hero-progress) * -50px); transition: border-color .3s; }
   .latest-dock:hover { border-color: var(--accent); color: var(--accent); }
   .latest-dock > div { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; font: .8rem var(--font-sans); color: var(--ink-muted); margin-bottom: .7rem; }
   .latest-dock__badge { color: var(--accent); }
   .latest-dock h2 { font-size: .95rem; font-weight: 500; line-height: 1.6; letter-spacing: 0; }
   .latest-dock__arrow { position: absolute; right: 1.4rem; bottom: 1.5rem; color: var(--accent); font-size: 1.5rem; }
-  .signal-band { position: relative; overflow: hidden; padding-block: 1.15rem; background: #d0ff45; color: #10120b; }
+  .signal-band { position: relative; overflow: hidden; padding-block: .65rem; background: #d0ff45; color: #10120b; }
   .signal-band__offset { transform: translateX(calc(var(--signal-offset, 0) * -1px)); width: max-content; }
-  .signal-band__track { display: flex; width: max-content; font-family: 'Arial Black', var(--font-sans); font-size: clamp(1.1rem, 2.7vw, 2.5rem); font-weight: 900; letter-spacing: -.04em; }
+  .signal-band__track { display: flex; width: max-content; font-family: 'Arial Black', var(--font-sans); font-size: clamp(1.1rem, 2.7vw, 2.5rem); line-height: 1.2; font-weight: 900; letter-spacing: -.04em; }
   .signal-band__track > span { display: flex; align-items: center; gap: 2rem; padding-right: 2rem; }
-  .signal-band i { font-style: normal; font-size: 1.4em; }
+  .signal-band i { font-style: normal; font-size: 1.4em; line-height: 1; }
   .exp-journal { padding: 6rem var(--exp-space) 5rem; }
   .journal-heading { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 2.8rem; }
   .journal-heading h2 { font-size: clamp(2.75rem, 6vw, 6rem); font-weight: 800; letter-spacing: -.065em; }
@@ -117,7 +123,8 @@ const homeQuote = PAGES.home.quote.replace(/^「|」$/g, '');
   .topic-flow a > span { color: var(--accent); font-size: 1.2rem; }
   .topic-flow a:hover { background: var(--accent); color: var(--paper); rotate: -3deg; }
   .topic-flow a:hover :is(sup, span) { color: inherit; }
-  .opening__quote { position: relative; margin: 5rem var(--exp-space) 0; max-width: 55rem; font-size: clamp(1.3rem, 2.7vw, 2.7rem); font-weight: 500; line-height: 1.8; letter-spacing: -.03em; }
+  .opening__quote { position: relative; margin: 5rem var(--exp-space) 0; font-size: clamp(1.3rem, 2.4vw, 2.65rem); font-weight: 500; line-height: 1.65; letter-spacing: -.03em; }
+  .quote-line { display: block; text-wrap: pretty; }
   .quote-mark { display: block; font-family: Georgia, serif; color: var(--exp-purple); font-size: 6rem; line-height: .7; margin-bottom: 1rem; }
   .quote-mark--close { text-align: right; margin-top: 1.5rem; margin-bottom: 0; }
   @media (prefers-reduced-motion: no-preference) {
@@ -141,22 +148,21 @@ const homeQuote = PAGES.home.quote.replace(/^「|」$/g, '');
   @keyframes signal-run { to { transform: translateX(-25%); } }
   @keyframes topics-run { to { transform: translateX(-50%); } }
   @media (max-width: 64rem) {
-    .exp-hero { min-height: 44rem; }
-    .hero-type h1 { font-size: clamp(5rem, 12vw, 8rem); }
+    .hero-type h1 { font-size: clamp(4.5rem, min(12vw, 19svh), 8rem); }
     .hero-orbit-tag--two { right: 32%; }
   }
   @media (max-width: 48rem) {
-    .exp-hero { height: auto; min-height: 51rem; padding-top: 1.5rem; }
-    .hero-type { width: 70%; margin-top: 3.75rem; }
-    .hero-type h1 { font-size: clamp(4.5rem, 18vw, 7rem); }
-    .hero-type p { font-size: .75rem; margin-top: 1rem; text-shadow: 0 1px 8px var(--paper), 0 0 18px var(--paper); }
+    .exp-hero { padding-block: 1rem; }
+    .hero-type { width: 80%; align-self: flex-start; padding-top: clamp(1rem, 4svh, 2rem); }
+    .hero-type h1 { font-size: clamp(3.5rem, min(18vw, 13svh), 7rem); }
+    .hero-type p { font-size: .75rem; margin-top: 1rem; }
     .hero-cta { padding: .85rem 1.2rem; gap: 2rem; font-size: .75rem; }
-    .cloud-stage { width: 110%; height: 36rem; top: 7rem; right: -5%; }
-    .hero-orbit-tag--one { top: 24rem; right: 3%; font-size: .75rem; padding: .5rem .75rem; gap: 1rem; }
-    .hero-orbit-tag--two { top: 30rem; right: 48%; font-size: .75rem; padding: .5rem .75rem; gap: 1rem; }
-    .hero-morph { top: 32rem; right: 6%; font-size: .75rem; }
+    .cloud-stage { width: 125%; height: 78%; top: 24%; right: -12%; }
+    .hero-orbit-tag--one { top: 48%; right: 3%; font-size: .75rem; padding: .5rem .75rem; gap: 1rem; }
+    .hero-orbit-tag--two { top: 70%; right: 48%; font-size: .75rem; padding: .5rem .75rem; gap: 1rem; }
+    .hero-morph { top: auto; bottom: 19%; right: 6%; font-size: .75rem; }
     .hero-morph > span:first-child { width: 2.1rem; height: 2.1rem; font-size: 1.2rem; }
-    .latest-dock { width: auto; left: var(--exp-space); bottom: 5rem; right: var(--exp-space); padding: 1rem 3.5rem 1rem 0; }
+    .latest-dock { width: auto; left: var(--exp-space); bottom: 1rem; right: var(--exp-space); padding: 1rem 3.5rem 1rem 0; }
     .latest-dock h2 { font-size: .85rem; }
     .signal-band { padding-block: .7rem; }
     .signal-band__track > span { gap: 1rem; padding-right: 1rem; }
@@ -165,6 +171,7 @@ const homeQuote = PAGES.home.quote.replace(/^「|」$/g, '');
     .journal-heading > a { font-size: .75rem; }
     .journal-heading > a span { margin-left: .75rem; }
     .opening__quote { margin-top: 3rem; }
+    .quote-line { display: inline; }
     .exp-topics { padding-block: 3rem; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -172,5 +179,12 @@ const homeQuote = PAGES.home.quote.replace(/^「|」$/g, '');
     .topic-flow { overflow-x: auto; }
     .topic-flow__track { width: max-content; }
     .topic-flow a[aria-hidden] { display: none; }
+  }
+  @media (min-width: 48.01rem) and (max-height: 38rem) {
+    .exp-hero { padding-block: .5rem; }
+    .hero-type h1 { font-size: clamp(2.5rem, 12dvh, 5rem); }
+    .hero-type p { font-size: .8rem; margin-block: .6rem; }
+    .hero-cta { padding-block: .7rem; }
+    .latest-dock { bottom: .75rem; padding-block: .75rem; }
   }
 </style>

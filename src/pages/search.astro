@@ -10,6 +10,7 @@
  * 读者输入的多半是标题词、标签或代码标识符，精确子串的命中率比编辑距离高得多，
  * 也不会出现拼错一个字就搜不到中文标题的情况。
  */
+import Arrow from '../components/Arrow.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
@@ -40,9 +41,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             <path d="M18 6 6 18M6 6l12 12" />
           </svg>
         </button>
-        <button class="search__submit" type="submit" aria-label="搜索"><span aria-hidden="true">↗</span></button>
+        <button class="search__submit" type="submit" aria-label="搜索"><span aria-hidden="true"><Arrow /></span></button>
       </div>
-      <div class="search__result-heading"><p class="search__status" id="search-status" role="status" aria-live="polite"></p><a href="/archive/">全部记录 <span aria-hidden="true">↗</span></a></div>
+      <div class="search__result-heading"><p class="search__status" id="search-status" role="status" aria-live="polite"></p><a href="/archive/">全部记录 <span aria-hidden="true"><Arrow /></span></a></div>
       <button class="search__retry" id="search-retry" type="button" hidden>重新加载搜索</button>
     </form>
 
@@ -78,8 +79,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .search__input::placeholder { color: var(--ink-soft); opacity: 1; }
   .experimental #main .search__input:focus-visible { outline: none; caret-color: var(--accent); }
   .search__input::-webkit-search-cancel-button { display: none; }
-  .search__submit { flex: none; display: grid; place-items: center; width: 5rem; height: 5rem; font: 300 4.5rem/1 Arial, sans-serif; color: var(--exp-purple); transition: color .3s, rotate .4s var(--exp-ease); }
-  .search__field:focus-within .search__submit { color: var(--accent); rotate: 45deg; }
+  .search__submit { flex: none; display: grid; place-items: center; width: 5rem; height: 5rem; font: 300 4.5rem/1 Arial, sans-serif; color: var(--exp-purple); transition: color .3s; }
+  .search__field:focus-within .search__submit { color: var(--accent); }
   .search__clear { flex: none; display: grid; place-items: center; width: 2rem; height: 2rem; color: var(--ink-muted); }
   .search__clear[hidden], .search__retry[hidden] { display: none; }
   .search__clear svg { width: 1rem; height: 1rem; }
@@ -92,14 +93,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .experimental #main .search__results { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; padding-top: 1.5rem; }
   .result { position: relative; display: block; min-width: 0; padding: .9rem 3rem .9rem 0; }
   .search .result + .result { border-top: 1px solid var(--line); }
-  .result::after { content: '↗'; position: absolute; right: .5rem; top: 2.4rem; font: 300 2rem/1 Arial, sans-serif; color: var(--ink-muted); transition: translate .4s var(--exp-ease), color .3s; }
+  .result::after { content: ''; width: 1em; height: 1em; background: currentColor; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 19 19 5M5 5h14v14' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; position: absolute; right: .5rem; top: 2.4rem; font: 300 2rem/1 Arial, sans-serif; color: var(--ink-muted); transition: rotate .4s var(--exp-ease), color .3s; }
   .result__meta { display: flex; gap: 1rem; margin-bottom: .65rem; color: var(--ink-muted); font: .8rem var(--font-sans); font-variant-numeric: tabular-nums; }
   .result__meta > span:last-child { display: none; }
   .result__title { font-size: clamp(1.15rem, 1.75vw, 1.75rem); font-weight: 650; line-height: 1.6; letter-spacing: -.025em; color: var(--ink); transition: color .3s, translate .4s var(--exp-ease); }
   .result__snippet { margin: .75rem 0 0; max-width: 56rem; font-size: .8rem; line-height: 1.9; color: var(--ink-muted); }
   .result__tags { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .7rem; padding: 0; list-style: none; font-size: .8rem; color: var(--exp-purple); }
   .result:hover .result__title { color: var(--accent); translate: .25rem 0; }
-  .result:hover::after { color: var(--accent); translate: .15rem -.15rem; }
+  .result:focus-visible::after { color: var(--accent); rotate: 45deg; }
+  @media (hover: hover) and (pointer: fine) {
+    .result:hover::after { color: var(--accent); rotate: 45deg; }
+  }
   .search mark { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); padding: .05em .1em; }
   .search__empty { padding-block: 2rem; font-size: .85rem; line-height: 1.9; color: var(--ink-muted); }
   .search__empty strong { color: var(--ink); font-weight: 600; }

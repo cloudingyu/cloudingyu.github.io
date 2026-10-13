@@ -543,20 +543,20 @@ await check('18. 永久链接大小写与旧站逐一相符（Linux 上路径敏
   return `${mixed.length} 篇带大小写的 slug 全部原样保留（luogu-P1007 / vim-VScode / UML / MLInit …）`;
 });
 
-/* 19. WebGL 几何层 */
-await check('19. three.js 场景被打包且按需加载（不在首屏关键路径上）', async () => {
+/* 19. 轻量 WebGL 云朵 */
+await check('19. 云朵独立打包、按需加载且保持轻量', async () => {
   const js = allFiles.filter((f) => f.endsWith('.js'));
-  let hasThree = false;
-  for (const f of js) {
-    const src = await read(f);
-    // three 的标志性符号
-    if (/WebGLRenderer/.test(src) && /PerspectiveCamera/.test(src)) hasThree = true;
-  }
-  assert(hasThree, '产物里没有 three.js 的渲染器代码');
+  const clouds = js.filter((f) => /^cloud-sculpture\..+\.js$/.test(path.basename(f)));
+  assert(clouds.length === 1, '缺少独立的云朵脚本产物');
+  const cloudName = path.basename(clouds[0]);
+  const cloudBytes = Buffer.byteLength(await read(clouds[0]), 'utf8');
+  assert(cloudBytes < 50 * 1024, `云朵脚本过大：${cloudBytes} 字节`);
+  const loaders = await Promise.all(js.filter((f) => f !== clouds[0]).map(read));
+  assert(loaders.some((src) => src.includes(cloudName) && /\bimport\s*\(/.test(src)), '云朵脚本没有通过动态 import 加载');
 
-  // 首屏 HTML 里不应直接 <script src> 同步加载 three —— 必须是动态 import
+  // 首屏 HTML 不直接加载或预加载云朵脚本，先显示正文与导航。
   const home = await read(distFile('index.html'));
-  assert(!/three/i.test(home.match(/<script[^>]*src="[^"]*"[^>]*>/g)?.join(' ') ?? ''), 'three.js 被同步加载了');
+  assert(!/(?:src|href)="[^"]*cloud-sculpture\./.test(home), '云朵脚本进入了首屏关键加载路径');
 
   // 立体云场景按需挂载于首页。
   assert(/data-cloud-stage/.test(home), '首页没有立体云场景容器');
@@ -567,7 +567,7 @@ await check('19. three.js 场景被打包且按需加载（不在首屏关键路
     css += await read(path.join(distFile('_astro'), n));
   }
   assert(/prefers-reduced-motion/.test(css), 'CSS 里没有 prefers-reduced-motion 处理');
-  return `${js.length} 个 JS 产物，three 位于按需 chunk`;
+  return `${js.length} 个 JS 产物，云朵脚本 ${cloudBytes} 字节，按需加载`;
 });
 
 /* 22. 归档统计与真实内容一致 */

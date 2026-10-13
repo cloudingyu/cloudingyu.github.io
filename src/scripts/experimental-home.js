@@ -19,6 +19,10 @@ function bindExperiment() {
   let disposed = false;
   let art = null;
   let artLoading = false;
+  let artFrame = 0;
+  let artIdle = 0;
+  let artTimer = 0;
+  const artController = new AbortController();
   let frame = 0;
   let previous = 0;
   let cx = innerWidth / 2, cy = innerHeight / 2;
@@ -75,7 +79,9 @@ function bindExperiment() {
     }
     const link = event.target.closest('a, button:not(:disabled)');
     cursor.classList.toggle('is-link', !!link);
-    cursor.querySelector('span').textContent = link?.dataset.cursorLabel || '↗';
+    const label = link?.dataset.cursorLabel || '';
+    cursor.classList.toggle('has-label', !!label);
+    cursor.querySelector('[data-cursor-text]').textContent = label;
 
     const nextMagnet = event.target.closest('[data-magnet]');
     if (nextMagnet !== magnet) { resetMagnet(); magnet = nextMagnet; }
@@ -145,17 +151,30 @@ function bindExperiment() {
     art?.reshape();
     if (!motion.matches) remember(morphButton.animate([{ transform: 'scale(.9)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 450, easing: 'cubic-bezier(.16,1,.3,1)' }));
   };
-  const artObserver = new IntersectionObserver(async ([entry]) => {
-    hero.toggleAttribute('data-offscreen', !entry.isIntersecting);
-    if (!entry.isIntersecting || art || artLoading) return;
-    artLoading = true;
+  const loadArt = async () => {
+    if (disposed || hero.hasAttribute('data-offscreen')) { artLoading = false; return; }
     try {
       const { mountCloud } = await import('./cloud-sculpture.js');
       if (disposed) return;
-      art = mountCloud(host, input);
+      const mounted = await mountCloud(host, input, { signal: artController.signal });
+      if (disposed) { mounted.dispose(); return; }
+      art = mounted;
       morphButton.disabled = false;
-    } catch { host.setAttribute('data-canvas-fallback', ''); }
+    } catch { if (!disposed) host.setAttribute('data-canvas-fallback', ''); }
     finally { artLoading = false; }
+  };
+  const artObserver = new IntersectionObserver(([entry]) => {
+    hero.toggleAttribute('data-offscreen', !entry.isIntersecting);
+    if (!entry.isIntersecting || art || artLoading) return;
+    artLoading = true;
+    // Paint the readable homepage first; the CSS cloud is visible during initialization.
+    artFrame = requestAnimationFrame(() => {
+      artFrame = requestAnimationFrame(() => {
+        artFrame = 0;
+        if ('requestIdleCallback' in window) artIdle = requestIdleCallback(loadArt, { timeout: 1000 });
+        else artTimer = setTimeout(loadArt, 50);
+      });
+    });
   }, { rootMargin: '100px' });
   if (hero && host) artObserver.observe(hero);
 
@@ -185,6 +204,10 @@ function bindExperiment() {
 
   cleanup = () => {
     disposed = true;
+    artController.abort();
+    cancelAnimationFrame(artFrame);
+    if (artIdle) cancelIdleCallback(artIdle);
+    clearTimeout(artTimer);
     cancelAnimationFrame(frame);
     animations.forEach((animation) => animation.cancel());
     artObserver.disconnect(); revealObserver.disconnect(); art?.dispose(); readingCleanup();

@@ -1,4 +1,5 @@
 ---
+import Arrow from '../components/Arrow.astro';
 import Head from '../components/Head.astro';
 import { SITE, AUTHOR, SOCIALS, FRIENDS } from '../data/site';
 import '../styles/global.css';
@@ -35,8 +36,8 @@ const [emailName, emailDomain] = SITE.email.split('@');
     {type === 'article' && <div class="reading-progress" aria-hidden="true"><i id="progress-bar" /></div>}
     <header class="exp-nav">
       <a class="exp-brand" href="/" aria-label="小鱼儿clouding的博客 首页"><span class="exp-brand__name">小鱼儿<span class="exp-brand__accent">clouding</span>的博客</span></a>
-      <nav aria-label="主导航"><a href={articleList} aria-current={current.startsWith('/page/') ? 'page' : undefined}>文章</a><a href="/about/" aria-current={active('/about/') ? 'page' : undefined}>关于</a><a href="/archive/" aria-current={active('/archive/') || active('/tags/') ? 'page' : undefined}>归档</a><a href="/search/" aria-label="搜索文章" aria-current={active('/search/') ? 'page' : undefined}>搜索 ↗</a></nav>
-      <button class="exp-theme" type="button" data-exp-theme aria-label="切换明暗主题" disabled><span aria-hidden="true">◐</span></button>
+      <nav aria-label="主导航"><a href={articleList} aria-current={current.startsWith('/page/') ? 'page' : undefined}>文章</a><a href="/about/" aria-current={active('/about/') ? 'page' : undefined}>关于</a><a href="/archive/" aria-current={active('/archive/') || active('/tags/') ? 'page' : undefined}>归档</a><a href="/search/" aria-label="搜索文章" aria-current={active('/search/') ? 'page' : undefined}>搜索 <Arrow /></a></nav>
+      <button class="exp-theme" type="button" data-exp-theme aria-label="切换明暗主题" disabled><span class="exp-theme__icon" aria-hidden="true" /></button>
     </header>
     <main id="main"><slot /></main>
     <footer class="exp-footer">
@@ -44,28 +45,28 @@ const [emailName, emailDomain] = SITE.email.split('@');
         <p>KEEP THE<br /><span>CURIOSITY.</span></p>
         <a class="footer-email" href={`mailto:${SITE.email}`} data-cursor-label="联系" aria-label={`发送邮件至 ${SITE.email}`}>
           <span class="footer-email__address"><span class="footer-email__name">{emailName}</span><span class="footer-email__at">@</span><span class="footer-email__domain">{emailDomain}</span></span>
-          <span class="footer-email__arrow" aria-hidden="true">↗</span>
+          <span class="footer-email__arrow" aria-hidden="true"><Arrow /></span>
         </a>
       </div>
       <div class="exp-footer__links">
         <section class="footer-directory" aria-labelledby="footer-social" data-exp-reveal>
-          <h2 id="footer-social">找到我<span aria-hidden="true">↗</span></h2>
-          {SOCIALS.map((s) => <a href={s.url} target="_blank" rel="me noopener noreferrer"><span>{s.name}</span><i aria-hidden="true">↗</i></a>)}
+          <h2 id="footer-social">找到我<span aria-hidden="true"><Arrow /></span></h2>
+          {SOCIALS.map((s) => <a href={s.url} target="_blank" rel="me noopener noreferrer"><span>{s.name}</span><i aria-hidden="true"><Arrow /></i></a>)}
         </section>
         <section class="footer-directory" aria-labelledby="footer-friends" data-exp-reveal>
-          <h2 id="footer-friends">朋友们<span aria-hidden="true">↗</span></h2>
-          {FRIENDS.map((f) => <a href={f.url} target="_blank" rel="noopener noreferrer"><span>{f.name}</span><i aria-hidden="true">↗</i></a>)}
+          <h2 id="footer-friends">朋友们<span aria-hidden="true"><Arrow /></span></h2>
+          {FRIENDS.map((f) => <a href={f.url} target="_blank" rel="noopener noreferrer"><span>{f.name}</span><i aria-hidden="true"><Arrow /></i></a>)}
         </section>
         <section class="footer-directory" aria-labelledby="footer-records" data-exp-reveal>
-          <h2 id="footer-records">更多记录<span aria-hidden="true">↗</span></h2>
-          <a href="/archive/"><span>文章归档</span><i aria-hidden="true">↗</i></a>
-          <a href="/search/"><span>站内搜索</span><i aria-hidden="true">↗</i></a>
-          <a href="/about/"><span>关于我</span><i aria-hidden="true">↗</i></a>
+          <h2 id="footer-records">更多记录<span aria-hidden="true"><Arrow /></span></h2>
+          <a href="/archive/"><span>文章归档</span><i aria-hidden="true"><Arrow /></i></a>
+          <a href="/search/"><span>站内搜索</span><i aria-hidden="true"><Arrow /></i></a>
+          <a href="/about/"><span>关于我</span><i aria-hidden="true"><Arrow /></i></a>
         </section>
       </div>
-      <div class="exp-footer__base"><span>© {new Date().getFullYear()} {AUTHOR.name}</span><a href="#main">回到顶部 ↑</a></div>
+      <div class="exp-footer__base"><span>© {new Date().getFullYear()} {AUTHOR.name}</span><a href="#main">回到顶部 <Arrow direction="up" /></a></div>
     </footer>
-    <div class="exp-cursor" aria-hidden="true"><span>↗</span></div>
+    <div class="exp-cursor" aria-hidden="true"><span><Arrow /><b data-cursor-text></b></span></div>
     <script>import '../scripts/experimental-home.js';</script>
     <slot name="scripts" />
   </body>
@@ -91,11 +92,11 @@ const [emailName, emailDomain] = SITE.email.split('@');
   }
   .experimental :is(a, button) { -webkit-tap-highlight-color: transparent; }
   .experimental :focus-visible { outline-color: var(--accent); outline-offset: 5px; }
-  .exp-nav { position: relative; z-index: 20; display: flex; align-items: center; gap: 2rem; justify-content: space-between; margin-inline: var(--exp-space); height: 6.5rem; border-bottom: 1px solid var(--line); }
+  .exp-nav { position: relative; z-index: 20; display: flex; align-items: center; gap: 2rem; justify-content: space-between; margin-inline: var(--exp-space); height: var(--exp-nav-height); border-bottom: 1px solid var(--line); }
   .exp-brand { display: flex; align-items: center; gap: 1rem; }
-  .exp-brand__name { color: var(--ink); font-size: clamp(1rem, 1.5vw, 1.3rem); line-height: 1.5; font-weight: 700; white-space: nowrap; }
+  .exp-brand__name { color: var(--ink); font-size: clamp(1.25rem, 1.8vw, 1.7rem); line-height: 1.5; font-weight: 700; white-space: nowrap; }
   .exp-brand__accent { color: var(--brand-accent); font-weight: inherit; margin-inline: .15em; }
-  .exp-nav nav { display: flex; gap: clamp(1rem, 3vw, 3rem); font-size: 0.8rem; margin-left: auto; }
+  .exp-nav nav { display: flex; gap: clamp(1rem, 3vw, 3rem); font-size: 1.05rem; font-weight: 500; margin-left: auto; }
   .exp-nav nav a { position: relative; }
   .exp-nav nav a::after { content: ''; position: absolute; left: 0; right: 0; bottom: -0.25rem; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: right; transition: transform 0.35s var(--exp-ease); }
   .exp-nav nav a:hover::after { transform: scaleX(1); transform-origin: left; }
@@ -105,8 +106,9 @@ const [emailName, emailDomain] = SITE.email.split('@');
   .reading-progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--exp-purple), var(--accent)); transform: scaleX(0); transform-origin: left; }
   @view-transition { navigation: auto; }
   @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
-  .exp-theme { display: grid; place-items: center; flex: 0 0 2.5rem; width: 2.5rem; height: 2.5rem; border: 1px solid var(--line-strong); border-radius: 50%; font-size: 1.3rem; transition: rotate .5s var(--exp-ease), background .3s; }
-  .exp-theme:hover { rotate: 180deg; background: var(--panel-sunk); }
+  .exp-theme { display: grid; place-items: center; flex: 0 0 2.5rem; width: 2.5rem; height: 2.5rem; padding: 0; border: 0; transition: rotate .5s var(--exp-ease), color .3s; }
+  .exp-theme__icon { width: 1.6rem; height: 1.6rem; border: 1.5px solid currentColor; border-radius: 50%; background: linear-gradient(90deg, currentColor 50%, transparent 50%); }
+  .exp-theme:hover { rotate: 180deg; color: var(--accent); }
   .exp-theme:disabled { opacity: .5; cursor: default; }
   .exp-footer { padding: 5rem var(--exp-space) 1.5rem; }
   .exp-footer__lead { display: flex; align-items: end; justify-content: space-between; gap: 2rem; }
@@ -117,9 +119,8 @@ const [emailName, emailDomain] = SITE.email.split('@');
   .footer-email__name { font-weight: 600; }
   .footer-email__at { color: var(--accent); margin-inline: .06em; }
   .footer-email__domain { color: var(--ink-muted); transition: color .3s; }
-  .footer-email__arrow { display: grid; place-items: center; flex: 0 0 2.6rem; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: var(--accent); color: var(--paper); font-size: 1.35rem; transition: transform .3s var(--exp-ease); }
+  .footer-email__arrow { display: grid; place-items: center; flex: 0 0 2.6rem; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: var(--accent); color: var(--paper); font-size: 1.35rem; }
   .footer-email:hover .footer-email__domain { color: var(--ink); }
-  .footer-email:hover .footer-email__arrow { transform: rotate(45deg); }
   .exp-footer__links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(2rem, 5vw, 5rem); margin-top: 5rem; }
   .footer-directory { min-width: 0; padding-top: 1.25rem; }
   .footer-directory h2 { position: relative; font-size: clamp(1.4rem, 2.5vw, 2.2rem); font-weight: 700; letter-spacing: -.04em; margin-bottom: 1.5rem; }
@@ -132,6 +133,8 @@ const [emailName, emailDomain] = SITE.email.split('@');
   .exp-footer__base { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--line); font-size: .8rem; color: var(--ink-muted); }
   .exp-cursor { display: none; position: fixed; top: 0; left: 0; z-index: 100; width: 2.25rem; height: 2.25rem; border: 1px solid #d0ff45; border-radius: 50%; pointer-events: none; align-items: center; justify-content: center; color: #d0ff45; mix-blend-mode: difference; opacity: 0; transition: width .3s var(--exp-ease), height .3s var(--exp-ease), opacity .2s, background .3s; }
   .exp-cursor span { opacity: 0; font-size: .8rem; }
+  .exp-cursor b { font-weight: inherit; }
+  .exp-cursor.has-label .ui-arrow, .exp-cursor:not(.has-label) b { display: none; }
   .exp-cursor.is-link { width: 4rem; height: 4rem; background: #d0ff45; color: #090a0c; }
   .exp-cursor.is-link span { opacity: 1; }
   @media (hover: hover) and (pointer: fine) {
@@ -143,12 +146,13 @@ const [emailName, emailDomain] = SITE.email.split('@');
   html[data-exp-theme-transition]::view-transition-new(root) { animation: exp-theme-iris .65s cubic-bezier(.16,1,.3,1) both; mix-blend-mode: normal; }
   @keyframes exp-theme-iris { from { clip-path: circle(0 at var(--theme-x) var(--theme-y)); } to { clip-path: circle(160vmax at var(--theme-x) var(--theme-y)); } }
   @media (max-width: 48rem) {
-    .experimental { --exp-nav-height: 6.2rem; }
-    .exp-nav { display: grid; grid-template-columns: minmax(0, 1fr) auto; height: auto; padding-block: 1rem; gap: 1rem; }
-    .exp-brand__name { font-size: 1.05rem; }
-    .exp-nav nav { grid-row: 2; grid-column: 1 / -1; justify-content: space-between; gap: 1rem; font-size: .8rem; line-height: 1.5; margin-left: 0; }
+    .experimental { --exp-nav-height: calc(6.5rem + 1px); }
+    .exp-nav { display: grid; grid-template-columns: minmax(0, 1fr) auto; padding-block: 1rem; gap: 1rem; }
+    .exp-brand__name { font-size: 1.2rem; }
+    .exp-nav nav { grid-row: 2; grid-column: 1 / -1; justify-content: space-between; gap: 1rem; font-size: 1rem; line-height: 1.5; margin-left: 0; }
     .exp-theme { grid-row: 1; grid-column: 2; }
     .exp-theme { width: 2rem; height: 2rem; flex-basis: 2rem; font-size: 1rem; }
+    .exp-theme__icon { width: 1.4rem; height: 1.4rem; }
     .exp-footer { padding-top: 3rem; }
     .exp-footer__lead { align-items: start; flex-direction: column; }
     .exp-footer__links { grid-template-columns: minmax(0, 1fr); gap: 2rem; margin-top: 3rem; }
@@ -158,8 +162,7 @@ const [emailName, emailDomain] = SITE.email.split('@');
   }
   @media (prefers-reduced-motion: reduce) {
     .exp-cursor { display: none !important; }
-    .footer-email__arrow, .footer-email__domain { transition: none; }
-    .footer-email:hover .footer-email__arrow { transform: none; }
+    .footer-email__domain { transition: none; }
     .footer-directory a :is(span, i) { transition: none; }
     .footer-directory a:hover :is(span, i) { translate: none; }
   }

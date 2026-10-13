@@ -9,6 +9,7 @@
  * 渲染正文用 render(entry) —— Astro 7 的 Content Layer 写法，
  * KaTeX 与 Shiki 的结果都由 astro.config.mjs 里那条 unified 处理器产出。
  */
+import Arrow from '../../../../components/Arrow.astro';
 import { render } from 'astro:content';
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import Tag from '../../../../components/Tag.astro';
@@ -106,7 +107,7 @@ const showToc = toc.length >= 2;
           showToc && (
             <aside class="post__toc" aria-label="本文目录">
               <details class="post__toc-panel" open>
-              <summary class="post__toc-head">本文目录 <span><span data-reading-progress>0%</span><i aria-hidden="true">⌄</i></span></summary>
+              <summary class="post__toc-head">本文目录 <span><span data-reading-progress>0%</span><i aria-hidden="true"><Arrow direction="down" /></i></span></summary>
               <nav>
                 <ul>
                   {toc.map((h) => (

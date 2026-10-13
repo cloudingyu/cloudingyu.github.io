@@ -8,6 +8,7 @@ import { remarkGuardCurrency } from './src/lib/remark-guard-currency.mjs';
 import { remarkMathRestore } from './src/lib/remark-math-restore.mjs';
 import { rehypeMathHeadings } from './src/lib/rehype-math-headings.mjs';
 import { rehypeCodeFrame } from './src/lib/rehype-code-frame.mjs';
+import { rehypeLazyImages } from './src/lib/rehype-lazy-images.mjs';
 
 /**
  * Astro 7 起 Markdown 插件要经由 @astrojs/markdown-remark 的 unified() 传入，
@@ -25,7 +26,7 @@ import { rehypeCodeFrame } from './src/lib/rehype-code-frame.mjs';
  */
 const markdownProcessor = unified({
   remarkPlugins: [remarkMath, remarkMathRestore, remarkGuardCurrency],
-  rehypePlugins: [rehypeKatex, rehypeMathHeadings, rehypeCodeFrame],
+  rehypePlugins: [rehypeKatex, rehypeMathHeadings, rehypeCodeFrame, rehypeLazyImages],
 });
 
 export default defineConfig({
