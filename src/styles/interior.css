@@ -85,14 +85,12 @@
 .experimental #main a.post__nav-item:hover { color: var(--accent); }
 .experimental #main .post__nav-title { font-size: 1.05rem; }
 
-/* Archive: three data posters and a large year index. */
-.experimental #main .archive__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-bottom: 3rem; }
-.experimental #main .archive__stats > div { padding: 1.6rem; border: 1px solid var(--line-strong); border-radius: .75rem; background: var(--panel); }
-.experimental #main .archive__stats > div:nth-child(2) { background: #bfa9ff; border-color: #9c82e2; }
-.experimental #main .archive__stats > div:nth-child(3) { background: #d0ff45; border-color: #91b729; }
-.experimental #main .archive__stats > div:nth-child(n+2) :is(dt, dd) { color: #222713; }
-.experimental #main .archive__stats dd { margin-top: 1.1rem; font: 850 clamp(3rem, 6vw, 5.5rem)/1 'Arial Black', var(--font-sans); letter-spacing: -.07em; }
-.experimental #main .archive__stats .archive__span { font-size: clamp(1.5rem, 3.1vw, 3rem); padding-top: .8rem; line-height: 1.4; }
+/* Archive: open numeric typography followed by the year timeline. */
+.experimental #main .archive__stats { display: grid; grid-template-columns: 1fr 1fr 1.6fr; align-items: baseline; gap: clamp(1.5rem, 4vw, 4rem); margin: 0 0 3.5rem; }
+.experimental #main .archive__stats > div { display: flex; align-items: baseline; gap: .65rem; min-width: 0; }
+.experimental #main .archive__stats dt { margin: 0; color: var(--ink-muted); white-space: nowrap; }
+.experimental #main .archive__stats dd { order: -1; margin: 0; color: var(--accent); font: 800 clamp(3.75rem, 6vw, 5rem)/1.1 var(--font-sans); letter-spacing: -.055em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.experimental #main .archive__stats .archive__span { font-size: clamp(2rem, 3.6vw, 3.25rem); letter-spacing: -.04em; }
 .experimental #main .archive__head { font-size: 1.6rem; font-weight: 750; margin-bottom: 1.4rem; padding-bottom: 0; border: 0; }
 .experimental #main .archive__tags { gap: .65rem; }
 .experimental #main .archive__section { margin-bottom: 3.5rem; }
@@ -150,10 +148,10 @@
   .page-opening__seal { display: none; }
   .experimental #main > .shell { padding-bottom: 3rem; }
   .experimental #main :is(.home__list, .tagpage__list, .search__results) { grid-template-columns: minmax(0, 1fr); }
-  .experimental #main .archive__stats { gap: .5rem; margin-bottom: 2.5rem; }
-  .experimental #main .archive__stats > div { padding: 1rem .65rem; }
-  .experimental #main .archive__stats dd { font-size: 2.6rem; }
-  .experimental #main .archive__stats .archive__span { font-size: 1.1rem; padding-top: .4rem; overflow-wrap: anywhere; }
+  .experimental #main .archive__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem 1rem; margin-bottom: 2.5rem; }
+  .experimental #main .archive__stats > div:nth-child(3) { grid-column: 1 / -1; }
+  .experimental #main .archive__stats dd { font-size: 3.75rem; }
+  .experimental #main .archive__stats .archive__span { font-size: clamp(2rem, 8vw, 2.5rem); }
   .experimental #main .archive__head { font-size: 1.3rem; }
   .experimental #main .archive__timeline { --timeline-node-offset: -1.25rem; padding-left: 1.5rem; }
   .experimental #main .archive__timeline::before { top: .5rem; left: .25rem; }

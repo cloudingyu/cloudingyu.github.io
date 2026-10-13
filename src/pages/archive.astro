@@ -32,15 +32,15 @@ const yearSpan = years.length
     <!-- 概览：一眼看清这个博客的体量 -->
     <dl class="archive__stats">
       <div>
-        <dt class="mono-meta">文章</dt>
+        <dt>篇文章</dt>
         <dd>{posts.length}</dd>
       </div>
       <div>
-        <dt class="mono-meta">标签</dt>
+        <dt>个标签</dt>
         <dd>{tags.length}</dd>
       </div>
       <div>
-        <dt class="mono-meta">年份</dt>
+        <dt>年份</dt>
         <dd class="archive__span">{yearSpan}</dd>
       </div>
     </dl>
@@ -112,30 +112,6 @@ const yearSpan = years.length
   .archive {
     padding-top: var(--s7);
   }
-
-  /* --- 概览 --- */
-
-  .archive__stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s6) var(--s8);
-    margin: 0 0 var(--s8);
-  }
-  .archive__stats dt {
-    margin-bottom: 0.3rem;
-    color: var(--ink-faint);
-  }
-  .archive__stats dd {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: 2rem;
-    font-weight: 620;
-    line-height: 1;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-    font-variant-numeric: tabular-nums;
-  }
-  .archive__stats .archive__span { font-size: 1.5rem; }
 
   /* --- 区块标题 --- */
 

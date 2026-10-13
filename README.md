@@ -55,7 +55,7 @@ GitHub Actions 按锁文件安装依赖，完成构建、源码检查和内容�
 
 双击主页「保持好奇」旁边的句号（手机连续轻点两次），可进入 `/course-note/` 学期笔记；不设置键盘快捷键。笔记区没有普通导航入口，不进入公开文章集合、标签、归档、搜索索引或站点地图，每个页面均带 `noindex`。这是隐藏入口，没有访问控制或加密；知道地址的人可以阅读，仓库中的笔记快照也是公开的。
 
-目前仅导入 2026 年秋季学期的概统、计算理论基础、操作系统、计算机视觉四门课。`notebook/2026-autumn/` 保存独立 Markdown 快照，构建时生成课程列表与每篇笔记的静态阅读页。笔记列表与阅读页以日期为标题，开头的日期和内容分行显示。阅读样式参考 Obsidian 导出的 PDF：霞鹜文楷与 Times New Roman 组合，加粗正文使用黑体字体，Maple Mono 代码字体，1.5 倍行距，以及紧凑的段落、列表、引用和多级标题。沿用网站的明暗颜色，阅读区域加宽，不显示笔记目录。标题中的公式保留 KaTeX 排版。访问普通博客页面不会下载这些笔记或笔记字体。
+目前仅导入 2026 年秋季学期的概统、计算理论基础、操作系统、计算机视觉四门课。`notebook/2026-autumn/` 保存独立 Markdown 快照，构建时生成课程列表与每篇笔记的静态阅读页。笔记列表与阅读页以日期为标题，开头的日期和内容分行显示。阅读样式参考 Obsidian 导出的 PDF：霞鹜文楷与 Times New Roman 组合，加粗正文使用黑体字体，Maple Mono 代码字体，1.5 倍行距，以及紧凑的段落、列表、引用和多级标题。沿用网站的明暗颜色，阅读区域加宽，不显示笔记目录。标题中的公式保留 KaTeX 排版。博客与课程笔记的正文共用 `src/styles/reading.css`，统一字体、字号、行距与段落格式；访问博客不会下载课程笔记内容。字体仅在正文实际使用时加载。
 
 更新本地笔记后，显式同步，再构建：
 
@@ -66,4 +66,4 @@ npm run build
 
 根目录下应有 `Math/概率论与数理统计`、`Math/计算理论基础`、`CS/操作系统` 和 `CS/计算机视觉`。文件名以 `2026.月.日.md` 结尾；只同步这四个文件夹顶层的 Markdown 文件。同步不修改原笔记，同一日期的快照会更新，原目录中删除的笔记也会从该课程快照移除。提交快照后，GitHub Pages 的构建直接使用它们，不需要读取本地源目录。入口路径和课程配置在 `src/data/notebook-config.mjs` 中维护，路径修改时须同时调整页面路由文件夹名。
 
-`public/fonts/notebook/` 保存文楷与 Maple Mono 的 WOFF2 子集及 OFL 许可；浏览器优先使用已安装的对应字体。子集包含当前笔记使用的字形，未来新增生僻字会使用系统字体补足。需要扩充字形时，在本地安装 `fonttools[woff]`，执行 `python scripts/subset-notebook-fonts.py --font-dir "字体目录"` 后提交更新后的字体文件。字体目录应包含 `LXGWWenKaiMono-Regular.ttf`、`MapleMono-Regular.ttf` 和 `MapleMono-Bold.ttf`，普通构建无需 Python 或原始字体。
+`public/fonts/notebook/` 保存文楷与 Maple Mono 的 WOFF2 子集及 OFL 许可；浏览器优先使用已安装的对应字体。子集包含当前博客与笔记使用的字形，未来新增生僻字会使用系统字体补足。需要扩充字形时，在本地安装 `fonttools[woff]`，执行 `python scripts/subset-notebook-fonts.py --font-dir "字体目录"` 后提交更新后的字体文件。字体目录应包含 `LXGWWenKaiMono-Regular.ttf`、`MapleMono-Regular.ttf` 和 `MapleMono-Bold.ttf`，普通构建无需 Python 或原始字体。

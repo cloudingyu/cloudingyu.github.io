@@ -1,30 +1,7 @@
-/* Typography measured from the supplied Obsidian PDF. Colors come from the site. */
-@font-face {
-  font-family: 'CY Notebook WenKai';
-  src: local('LXGW WenKai Mono'), url('/fonts/notebook/wenkai.woff2') format('woff2');
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'CY Notebook Mono';
-  src: local('Maple Mono Regular'), url('/fonts/notebook/mono-regular.woff2') format('woff2');
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'CY Notebook Mono';
-  src: local('Maple Mono Bold'), url('/fonts/notebook/mono-bold.woff2') format('woff2');
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-}
 .notebook--reading {
-  --notebook-text: 'Times New Roman', 'CY Notebook WenKai', 'LXGW WenKai Mono', KaiTi, STKaiti, serif;
-  --notebook-mono: 'CY Notebook Mono', 'Maple Mono', 'CY Notebook WenKai', ui-monospace, monospace;
   font-size: 1.25rem;
 }
+.experimental #main .notebook-reader .post__prose { max-width: none; }
 .experimental #main .notebook--reading .post__title {
   font-family: 'Times New Roman', 'CY Notebook WenKai', KaiTi, STKaiti, serif;
   font-size: 1.5625em;
@@ -32,68 +9,3 @@
   line-height: 1.2;
   letter-spacing: normal;
 }
-.experimental #main .notebook-reader .post__prose {
-  max-width: none;
-  min-width: 0;
-  font-family: var(--notebook-text);
-  font-size: inherit;
-  font-weight: 400;
-  line-height: 1.5;
-  letter-spacing: normal;
-  overflow-wrap: break-word;
-}
-.experimental #main .notebook-reader .prose :is(h1, h2, h3, h4, h5, h6) {
-  font-family: inherit;
-  font-weight: 700;
-  letter-spacing: normal;
-  padding: 0;
-  border: 0;
-  line-height: 1.3;
-  margin: 1.5em 0 1em;
-}
-.experimental #main .notebook-reader .prose h1 { font-size: 1.5625em; line-height: 1.2; }
-.experimental #main .notebook-reader .prose h2 { font-size: 1.4375em; line-height: 1.2; }
-.experimental #main .notebook-reader .prose h3 { font-size: 1.3125em; }
-.experimental #main .notebook-reader .prose h4 { font-size: 1.1875em; }
-.experimental #main .notebook-reader .prose h5 { font-size: 1.125em; }
-.experimental #main .notebook-reader .prose h6 { font-size: 1.0625em; }
-.experimental #main .notebook-reader .prose :is(h1, h2, h3, h4, h5, h6) + :is(h2, h3, h4, h5, h6) { margin-top: 1em; }
-.experimental #main .notebook-reader .prose p { margin: 0 0 1em; }
-.experimental #main .notebook-reader .prose :is(strong, b) {
-  font-family: 'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC', 'Source Han Sans SC', SimHei, sans-serif;
-  font-weight: 700;
-}
-.experimental #main .notebook-reader .prose :is(ul, ol) { padding-left: 2em; margin: 0 0 1em; }
-.experimental #main .notebook-reader .prose li { margin-block: .25em; }
-.experimental #main .notebook-reader .prose li > p { margin-block: .5em; }
-.experimental #main .notebook-reader .prose :is(ul, ol) :is(ul, ol) { margin-block: .25em 0; }
-.experimental #main .notebook-reader .prose blockquote {
-  margin: 1em .75em;
-  padding: .5em .75em;
-  border-left: 3px solid var(--accent);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--panel-sunk) 40%, var(--paper));
-}
-.experimental #main .notebook-reader .prose blockquote > :last-child { margin-bottom: 0; }
-.experimental #main .notebook-reader .prose blockquote p { font-size: inherit; }
-.experimental #main .notebook-reader .prose hr { height: 0; border: 0; border-top: 1px solid var(--line); margin: 1.5em 0; }
-.experimental #main .notebook-reader .prose :not(pre) > code {
-  font-family: var(--notebook-mono);
-  font-size: .825em;
-  font-weight: 700;
-  padding: .1em .3em;
-  border: 0;
-  border-radius: 4px;
-  background: var(--panel-sunk);
-  color: var(--accent);
-}
-.experimental #main .notebook-reader .prose .code { margin: 1em 0; border-radius: 4px; }
-.experimental #main .notebook-reader .prose :is(pre, code, kbd, samp) { font-family: var(--notebook-mono); }
-.experimental #main .notebook-reader .prose pre { font-size: .825em; line-height: 1.5; }
-.experimental #main .notebook-reader .prose pre > code { font-family: var(--notebook-mono); padding-block: .75em; }
-.experimental #main .notebook-reader .prose pre code .line { min-height: 1.5em; }
-.experimental #main .notebook-reader .prose table { font-family: inherit; font-size: 1em; line-height: 1.5; margin: 1em 0; }
-.experimental #main .notebook-reader .prose :is(th, td) { padding: .4em .6em; }
-.experimental #main .notebook-reader .prose th { font-weight: 700; white-space: normal; }
-.experimental #main .notebook-reader .prose .katex { font-size: 1em; }
-.experimental #main .notebook-reader .prose .katex-display { margin: 1em 0; padding: 0; }

@@ -1,4 +1,4 @@
-"""Generate small WOFF2 font snapshots for the semester notes.
+"""Generate small WOFF2 font snapshots for blog posts and semester notes.
 
 Usage: python scripts/subset-notebook-fonts.py --font-dir "path/to/installed/fonts"
 Requires: pip install "fonttools[woff]"
@@ -15,7 +15,8 @@ parser.add_argument("--font-dir", type=Path, required=True)
 args = parser.parse_args()
 output = ROOT / "public/fonts/notebook"
 output.mkdir(parents=True, exist_ok=True)
-text = "".join(note.read_text(encoding="utf-8") for note in (ROOT / "notebook/2026-autumn").rglob("*.md"))
+sources = list((ROOT / "notebook/2026-autumn").rglob("*.md")) + list((ROOT / "posts").rglob("*.markdown"))
+text = "".join(source.read_text(encoding="utf-8") for source in sources)
 # Include Latin, Greek, punctuation and symbols for ordinary new text as well.
 codepoints = set(map(ord, text)) | set(range(0x20, 0x250)) | set(range(0x370, 0x400)) | set(range(0x2000, 0x2070))
 fonts = [
