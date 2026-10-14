@@ -115,17 +115,8 @@
 .experimental #main .archive .item__tags { font-size: 1.125rem; }
 .experimental #main .item:hover .item__title { translate: .25rem 0; }
 
-/* About: one profile poster, expressive typography, real author details. */
+/* About keeps its page-specific effects in about.css. */
 .experimental #main .page-opening--about { padding-bottom: 1rem; }
-.experimental #main .about { padding-top: .75rem; }
-.experimental #main .about__grid { padding-top: .75rem; gap: 4rem; }
-.experimental #main .about__main { font-size: 1.25rem; line-height: 1.9; }
-.experimental #main .about__h { font-size: clamp(1.8rem, 3.4vw, 3rem); font-weight: 800; max-width: 16em; }
-.experimental #main .about__h3 { font-size: 1.5rem; font-weight: 700; }
-.experimental #main .about__list li { padding-block: .25rem; }
-.experimental #main .about__divider { height: auto; min-height: 7rem; display: grid; align-items: center; padding-block: 1.5rem; margin-block: 2rem; overflow: hidden; color: var(--accent); }
-.about__manifesto { font: 900 clamp(1.8rem, 4vw, 3.5rem)/1.1 'Arial Black', var(--font-sans); letter-spacing: -.065em; margin: 0; }
-.about__portrait { display: block; width: 100%; max-width: 16rem; height: auto; aspect-ratio: 1; border-radius: 50%; object-fit: cover; }
 .experimental #main .notfound__paths { gap: 1rem; }
 .experimental #main .notfound__path { border: 1px solid var(--line); padding: 1.5rem; border-radius: .8rem; background: var(--panel); }
 .experimental #main .notfound__path:last-child { border: 1px solid var(--line); padding-right: 1.5rem; }
@@ -199,11 +190,6 @@
   .experimental #main .prose { font-size: 1.125rem; }
   .experimental #main .post__nav-item--next { text-align: left; }
   .experimental #main .post__nav-item--next .post__nav-title { margin-left: 0; }
-  .experimental #main .about__grid { padding-top: .75rem; gap: 1.5rem; }
-  .experimental #main .about__main { font-size: 1.125rem; }
-  .experimental #main .about__h3 { font-size: 1.375rem; }
-  .experimental #main .about__aside { grid-row: 1; }
-  .about__portrait { width: 7rem; }
 }
 
 .experimental #main :is(.archive__stats dt, .year__count, .item__date, .item__tags, .post__byline time) { font: .85rem/1.6 var(--font-sans); }

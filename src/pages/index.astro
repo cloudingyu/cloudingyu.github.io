@@ -4,7 +4,7 @@ import ExperimentalLayout from '../layouts/ExperimentalLayout.astro';
 import Pagination from '../components/Pagination.astro';
 import PostPoster from '../components/PostPoster.astro';
 import { allPosts, paginate, tagCounts, formatDate, permalink } from '../lib/posts';
-import { SITE, POSTS_PER_PAGE, PAGES } from '../data/site';
+import { SITE, POSTS_PER_PAGE } from '../data/site';
 import { NOTEBOOK_PATH } from '../data/notebook-config.mjs';
 
 const posts = await allPosts();
@@ -50,7 +50,6 @@ const tags = tagCounts(posts);
   <section class="exp-topics" aria-labelledby="topics-title">
     <div class="topics-heading"><h2 id="topics-title" data-exp-reveal>按<span>主题</span>阅读</h2></div>
     <div class="topic-flow"><div class="topic-flow__track">{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`}><span class="topic-flow__label">{tag}<sup>{count}</sup></span><span class="topic-flow__arrow" aria-hidden="true"><Arrow /></span></a>)}{tags.map(({ tag, count }) => <a href={`/tags/${encodeURIComponent(tag)}/`} aria-hidden="true" tabindex="-1"><span class="topic-flow__label">{tag}<sup>{count}</sup></span><span class="topic-flow__arrow"><Arrow /></span></a>)}</div></div>
-    <p class="home-manifesto" data-exp-reveal>{PAGES.home.quote}</p>
   </section>
 </ExperimentalLayout>
 
@@ -122,7 +121,6 @@ const tags = tagCounts(posts);
   .topic-flow__arrow { color: var(--accent); font-size: 1.2rem; }
   .topic-flow a:hover { background: var(--accent); color: var(--paper); rotate: -3deg; }
   .topic-flow a:hover :is(sup, span) { color: inherit; }
-  .home-manifesto { margin: 4rem var(--exp-space) 0; font: 750 clamp(1.4rem, 3.5vw, 3.5rem)/1.3 var(--font-sans); letter-spacing: -.035em; color: var(--exp-purple); }
   @media (prefers-reduced-motion: no-preference) {
     .cloud-stage__view { transform: perspective(1000px) rotateX(calc(var(--cloud-y, 0) * -8deg)) rotateY(calc(var(--cloud-x, 0) * 14deg)) translate3d(calc(var(--cloud-x, 0) * 10px), calc(var(--cloud-y, 0) * 6px), 0); transition: transform .1s ease-out; will-change: transform; }
     .hero-line > span { animation: giant-rise .75s var(--exp-ease) both; }
@@ -166,7 +164,6 @@ const tags = tagCounts(posts);
     .journal-heading { margin-bottom: 1.5rem; gap: 1rem; }
     .journal-heading > a { font-size: 1.25rem; }
     .journal-heading > a span { margin-left: .75rem; }
-    .home-manifesto { margin-top: 3rem; }
     .exp-topics { padding-block: 3rem; }
     .topic-flow a sup { font-size: 1.125rem; }
   }

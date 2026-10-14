@@ -13,7 +13,7 @@
 | 站点标题（页头品牌） | `CloudingYu的博客` |
 | SEO 标题 | `小鱼儿clouding的博客 \| CY's Blog` |
 | 站点内容描述 | `CloudingYu 的技术笔记，记录算法、机器学习与软件设计。` |
-| 首页导语 | `BUILD. BREAK. LEARN.` |
+| 首页导语 | 不显示 |
 | 邮箱 | `cloudingyu@gmail.com` |
 | 站点 URL | `http://cloudingyu.github.io` |
 | 关键词 | 无（原配置为空字符串） |
@@ -78,10 +78,9 @@
 
 ## 🚀 关于我
 
-- 💡 喜欢用优雅的代码简化复杂问题并解决实际问题
 - 🖥️ FDUSC 队员，正在学习 AI Infra 相关知识
 - 📚 终身学习者，始终保持好奇心
-- 🎓 复旦大学本科生
+- 复旦大学 · 计算与智能创新学院 · 本科生
 
 ![Coding GIF](https://media.giphy.com/media/qgQUggAC3Pfv687qPC/giphy.gif)
 
@@ -98,7 +97,7 @@
 
 | 页面 | 背景图 | 页面描述文案 |
 | --- | --- | --- |
-| 首页 | `images/site/home-bg.jpg` | `BUILD. BREAK. LEARN.` |
+| 首页 | `images/site/home-bg.jpg` | 不显示导语 |
 | About | `images/site/about-bg.jpg` | `「节制与癫狂，秩序与诗意，能相提并论乎？」` |
 | Archive | `images/site/archive-bg.jpg` | `「未经反思的生活不值得过」` |
 | 404 | `images/site/404-bg.jpg` | `你来到了没有知识的荒原` |

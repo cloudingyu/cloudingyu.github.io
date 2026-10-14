@@ -8,7 +8,7 @@ export function bindHomeScroll(body) {
   )];
   const scenes = elements.map((element, index) => {
     const kind = element.matches('.journal-entry') ? 'article'
-      : element.matches('.journal-heading, .topics-heading h2, .home-manifesto') ? 'heading'
+      : element.matches('.journal-heading, .topics-heading h2') ? 'heading'
       : element.matches('.exp-footer__lead, .footer-directory') ? 'footer' : 'band';
     element.dataset.scrollScene = kind;
     return { element, kind, index, animation: null, shown: false, top: 0 };

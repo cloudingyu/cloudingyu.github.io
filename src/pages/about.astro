@@ -1,136 +1,68 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Arrow from '../components/Arrow.astro';
 import { SITE, AUTHOR } from '../data/site';
 import { assetUrl } from '../lib/posts';
-
+import '../styles/about.css';
 
 ---
 
-<BaseLayout
-  page="about"
-  hero="compact"
-  title="关于"
-  description={`关于 ${SITE.title} 的作者与这个站点。`}
->
-  <div class="shell about">
-    <div class="about__grid">
-      <div class="about__main reveal">
-        <h2 class="about__h">
-          你好, 我是 CloudingYu <span class="about__wave" aria-hidden="true">👋</span>
+<BaseLayout page="about" hero="compact" title="关于" description={`关于 ${SITE.title} 的作者与这个站点。`}>
+  <div class="shell about" data-about>
+    <section class="about-profile" aria-labelledby="about-hello">
+      <div class="about-profile__intro">
+        <h2 id="about-hello" class="about-hello" data-exp-reveal>
+          你好, 我是<br />
+          <span class="about-name">CloudingYu<span class="about-name__dot">.</span></span>
         </h2>
-
-        <h3 class="about__h3">🚀 关于我</h3>
-        <ul class="about__list">
-          <li>💡 喜欢用优雅的代码简化复杂问题并解决实际问题</li>
-          <li>🖥️ FDUSC 队员，正在学习 AI Infra 相关知识</li>
-          <li>📚 终身学习者，始终保持好奇心</li>
-          <li>🎓 复旦大学本科生</li>
-        </ul>
-
-        <figure class="about__divider" aria-hidden="true">
-          <p class="about__manifesto">BUILD. BREAK. LEARN.</p>
-        </figure>
-
+        <h3 class="about-section-label" data-exp-reveal>关于我 <span aria-hidden="true"><Arrow direction="down-right" /></span></h3>
+        <div class="about-mosaic">
+          <section class="about-tile about-tile--explore" aria-labelledby="about-explore" data-exp-reveal>
+            <h4 id="about-explore">AI<br />INFRA<span aria-hidden="true"><Arrow /></span></h4>
+            <p>FDUSC 队员，正在学习 AI Infra 相关知识</p>
+            <span class="about-tile__track" aria-hidden="true" />
+          </section>
+          <section class="about-tile about-tile--fudan" aria-labelledby="about-fudan" data-exp-reveal>
+            <h4 id="about-fudan">FUDAN</h4>
+            <p>复旦大学 · 计算与智能创新学院 · 本科生</p>
+            <span class="about-tile__seal" aria-hidden="true" />
+          </section>
+          <section class="about-tile about-tile--curiosity" aria-labelledby="about-curiosity" data-exp-reveal>
+            <div><h4 id="about-curiosity">好奇心，没有终点。</h4><p>终身学习者，始终保持好奇心</p></div>
+            <svg class="about-tile__infinity" viewBox="0 0 120 60" fill="none" aria-hidden="true" focusable="false"><path d="M60 30C40 0 8 0 8 30s32 30 52 0c20-30 52-30 52 0S80 60 60 30Z" stroke="currentColor" stroke-width="2" /></svg>
+          </section>
+        </div>
       </div>
 
-
-      <aside class="about__aside" aria-label="作者头像" data-exp-reveal>
-        <img class="about__portrait" src={assetUrl(AUTHOR.avatar)} alt={AUTHOR.name} width="256" height="256" />
+      <aside class="about-art" aria-label="作者头像与灵感轨道" data-about-art data-phase="0" data-exp-reveal>
+        <div class="about-art__space" aria-hidden="true">
+          <div class="about-art__grid" />
+          <div class="about-art__halo" />
+          <div class="about-art__tilt">
+            <div class="about-orbit about-orbit--outer"><i /><i /></div>
+            <div class="about-orbit about-orbit--one"><i /></div>
+            <div class="about-orbit about-orbit--two"><i /></div>
+            <div class="about-art__cross about-art__cross--one">+</div>
+            <div class="about-art__cross about-art__cross--two">+</div>
+            <span class="about-art__tag about-art__tag--one">&lt; CODE /&gt;</span>
+            <span class="about-art__tag about-art__tag--two">AI INFRA</span>
+            <span class="about-art__tag about-art__tag--three">好奇心 ∞</span>
+          </div>
+        </div>
+        <button class="about-portrait-button" type="button" data-about-trigger aria-label="点亮灵感，切换到 BREAK" disabled>
+          <img class="about-avatar" src={assetUrl(AUTHOR.avatar)} alt={AUTHOR.name} width="256" height="256" />
+          <span class="about-portrait-button__ring" aria-hidden="true" />
+        </button>
+        <div class="about-art__sparks" aria-hidden="true" />
+        <div class="about-art__caption">
+          <p class="about-art__mode" aria-live="polite" aria-atomic="true"><span data-about-word>BUILD.</span> <span data-about-caption>把想法写成代码</span></p>
+        </div>
       </aside>
-    </div>
+    </section>
+
+    <section class="about-manifesto" aria-label="BUILD. BREAK. LEARN.">
+      <p class="about-manifesto__line" data-exp-reveal aria-hidden="true"><span>BUILD.</span><span>BREAK.</span><span>LEARN<svg class="about-manifesto__star" viewBox="0 0 40 40" fill="none" focusable="false"><path d="M20 2v36M2 20h36M7 7l26 26M7 33 33 7" stroke="currentColor" stroke-width="2.5" /></svg></span></p>
+    </section>
   </div>
+  <script>import '../scripts/about-effects.js';</script>
 </BaseLayout>
-
-<style>
-  .about {
-    padding-top: var(--s6);
-  }
-
-  .about__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--s7);
-    padding-top: var(--s7);
-  }
-  @media (min-width: 62rem) {
-    .about__grid {
-      grid-template-columns: minmax(0, 1fr) 16rem;
-      gap: var(--s8);
-    }
-  }
-
-  .about__main { min-width: 0; }
-
-  .about__h {
-    font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.3rem);
-    font-weight: 650;
-    letter-spacing: -0.02em;
-    margin: 0 0 var(--s6);
-  }
-
-  .about__wave {
-    display: inline-block;
-    transform-origin: 70% 70%;
-    animation: wave 2.6s var(--ease) infinite;
-  }
-  @keyframes wave {
-    0%, 60%, 100% { transform: rotate(0deg); }
-    68% { transform: rotate(16deg); }
-    76% { transform: rotate(-8deg); }
-    84% { transform: rotate(12deg); }
-    92% { transform: rotate(-4deg); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .about__wave { animation: none; }
-  }
-
-  .about__h3 {
-    font-size: 1.15rem;
-    margin: var(--s7) 0 var(--s4);
-    padding-top: var(--s4);
-    color: var(--ink);
-  }
-
-  .about__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  .about__list li {
-    position: relative;
-    padding-left: 0;
-    margin-bottom: 0.6rem;
-    color: var(--ink-soft);
-    transition: transform 0.3s var(--ease), color 0.3s var(--ease);
-  }
-  /* 悬停时那一条往右挪一点，像被指尖拨过 */
-  .about__list li:hover {
-    transform: translateX(4px);
-    color: var(--ink);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .about__list li, .about__list li::before { transition: none; }
-  }
-
-  /* --- 几何分隔带（替代原来的 Giphy 动图） --- */
-
-  .about__divider {
-    position: relative;
-    height: clamp(7rem, 14vw, 10rem);
-    margin: var(--s6) 0;
-    overflow: hidden;
-  }
-
-  .scene--inline {
-    position: absolute;
-    inset: 0;
-    mask-image: radial-gradient(60% 120% at 50% 50%, #000 40%, transparent 100%);
-    -webkit-mask-image: radial-gradient(60% 120% at 50% 50%, #000 40%, transparent 100%);
-  }
-
-  /* 侧栏仅展示头像。 */
-  .about__aside { align-self: start; }
-  @media (min-width: 62rem) {
-    .about__aside { position: sticky; top: 3rem; }
-  }
-</style>

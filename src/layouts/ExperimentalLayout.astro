@@ -75,7 +75,7 @@ const [emailName, emailDomain] = SITE.email.split('@');
     --ink: #f0f1e9; --ink-soft: #c6c8bf; --ink-muted: #9c9f96; --ink-faint: #999e93;
     --line: #30332e; --line-strong: #51564a; --accent: #d0ff45; --accent-soft: #b3dc3b;
     --font-serif: var(--font-sans); --exp-space: clamp(1.25rem, 5vw, 5rem);
-    --exp-purple: #bfa9ff; --exp-ease: cubic-bezier(.16, 1, .3, 1);
+    --exp-purple: #bfa9ff; --exp-purple-deep: #5941bf; --exp-ease: cubic-bezier(.16, 1, .3, 1);
     --brand-accent: #c4b5e5; --exp-nav-height: 6.5rem;
     --mark: #bfa9ff; --mark-wash: #242031; --code-bg: #111318; --code-line: #30323d;
     color: var(--ink); background: var(--paper); font-family: var(--font-sans);
@@ -84,7 +84,7 @@ const [emailName, emailDomain] = SITE.email.split('@');
     --brand-accent: #65577d;
     --paper: #eeefe7; --panel: #f9faf4; --panel-sunk: #dfe1d6;
     --ink: #15170f; --ink-soft: #363b2a; --ink-muted: #626756; --ink-faint: #666a5d;
-    --line: #c9ccbd; --line-strong: #9b9f8c; --accent: #5941bf; --accent-soft: #7660d0;
+    --line: #c9ccbd; --line-strong: #9b9f8c; --accent: var(--exp-purple-deep); --accent-soft: #7660d0;
     --mark: #5941bf; --mark-wash: #e2dbee; --code-bg: #e3e5dc; --code-line: #c9ccbd;
   }
   .experimental :is(a, button) { -webkit-tap-highlight-color: transparent; }

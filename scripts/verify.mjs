@@ -60,7 +60,7 @@ const FRIEND_NAMES = ['顺其自然2319', 'trs62'];
  * 已按用户要求撤掉 —— 页头改由 WebGL 几何场景承担。
  */
 const IMAGE_TOTAL = 46;
-/** 页面文案：主页保留 BUILD. BREAK. LEARN.，其余页面沿用引语。 */
+/** 首页移除宣言（home 保留原文用于检查残留），其余页面沿用引语。 */
 const PAGE_QUOTES = {
   home: 'BUILD. BREAK. LEARN.',
   about: '「节制与癫狂，秩序与诗意，能相提并论乎？」',
@@ -403,18 +403,22 @@ await check('11. 各页面文案符合要求，背景照片已撤底', async () 
       : key === 'notFound'
         ? html.match(/<p\b[^>]*class="[^"]*notfound__message[^"]*"[^>]*>([\s\S]*?)<\/p>/i)
         : html.match(/<blockquote\b[^>]*class="[^"]*page-opening__quote[^"]*"[^>]*>([\s\S]*?)<\/blockquote>/i);
-    if (!quoteBlock) {
-      missing.push(`${key} 缺引语区块`);
+    if (key === 'home') {
+      if (quoteBlock || html.includes(PAGE_QUOTES.home)) missing.push('首页仍在展示已移除的宣言');
+    } else {
+      if (!quoteBlock) {
+        missing.push(`${key} 缺引语区块`);
+      }
+      // 只比较引语区块的正文，装饰引号与源码排版不属于引语内容。
+      const quoteText = (quoteBlock?.[1] ?? '')
+        .replace(/<span\b[^>]*class="[^"]*\bquote-mark\b[^"]*"[^>]*>[\s\S]*?<\/span>/gi, '')
+        .replace(/<[^>]+>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/^[「“]|[」”]$/g, '');
+      const expectedQuote = PAGE_QUOTES[key].replace(/^[「“]|[」”]$/g, '');
+      if (quoteText !== expectedQuote) missing.push(`${key} 的引语正文与原文不一致`);
     }
-    // 只比较引语区块的正文，装饰引号与源码排版不属于引语内容。
-    const quoteText = (quoteBlock?.[1] ?? '')
-      .replace(/<span\b[^>]*class="[^"]*\bquote-mark\b[^"]*"[^>]*>[\s\S]*?<\/span>/gi, '')
-      .replace(/<[^>]+>/g, '')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .replace(/^[「“]|[」”]$/g, '');
-    const expectedQuote = PAGE_QUOTES[key].replace(/^[「“]|[」”]$/g, '');
-    if (quoteText !== expectedQuote) missing.push(`${key} 的引语正文与原文不一致`);
     for (const retired of RETIRED_IMAGES) {
       if (html.includes(retired)) missing.push(`${key} 仍在引用旧背景图 ${retired}`);
     }
