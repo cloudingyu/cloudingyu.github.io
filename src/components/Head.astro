@@ -105,6 +105,12 @@ const jsonLd =
   })();
 </script>
 
+<!-- Set the responsive default TOC layout before the first paint. -->
+<script is:inline>
+  document.documentElement.dataset.readingToc =
+    matchMedia('(max-width: 67.99rem)').matches ? 'closed' : 'open';
+</script>
+
 <noscript>
   <style is:inline>
     .hero--full, .orb__stage, .orb__note, .spiral, .foot__band,

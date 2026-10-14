@@ -5,7 +5,7 @@
 .notebook__head h1 { margin: 2rem 0 0; font-size: clamp(2.6rem, 5.2vw, 5rem); font-weight: 850; letter-spacing: -.055em; line-height: 1.25; }
 .notebook__head h1 > span { color: var(--accent); }
 .notebook__subtitle { display: block; margin: 1rem 0 0; font-size: 1.25rem; color: var(--ink-muted); line-height: 1.8; }
-.notebook--reading { --toc-gutter: clamp(1.25rem, 3vw, 3rem); width: calc(100% - var(--toc-gutter) * 2); max-width: 90rem; padding-top: 2rem; }
+.notebook--reading { --toc-gutter: var(--exp-space); width: calc(100% - var(--toc-gutter) * 2); max-width: max(84rem, calc(var(--reading-width, 56rem) + 20.5rem)); padding-top: 2rem; }
 .notebook--reading .notebook__head h1 { margin-top: 1.5rem; }
 .notebook__courses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 4rem; margin-top: 4rem; }
 .notebook-course { display: flex; align-items: baseline; gap: 1.2rem; padding-block: 2rem; border-top: 1px solid var(--line); min-width: 0; }

@@ -32,6 +32,13 @@
   letter-spacing: normal;
   overflow-wrap: break-word;
 }
+/* Dragging the margins moves the layout immediately while softly lighting its edges. */
+[data-reading-resizing] .experimental #main .post__prose {
+  transition: none !important;
+}
+[data-reading-resizing] .experimental #main .post__grid {
+  transition: none !important;
+}
 .experimental #main .post__prose :is(h1, h2, h3, h4, h5, h6) {
   font-family: inherit;
   font-weight: 700;

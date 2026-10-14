@@ -11,6 +11,7 @@
  */
 import ReadingToc from '../../../../components/ReadingToc.astro';
 import ReadingNavigation from '../../../../components/ReadingNavigation.astro';
+import ReadingTools from '../../../../components/ReadingTools.astro';
 import { render } from 'astro:content';
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import Tag from '../../../../components/Tag.astro';
@@ -99,7 +100,7 @@ const showToc = toc.length >= 2;
 
 
     <div class="shell post__body">
-      <div class="post__opening-rule" aria-hidden="true" />
+      <ReadingTools />
       <div class:list={['post__grid', showToc && 'post__grid--with-toc']}>
         {showToc && <ReadingToc headings={toc} />}
 

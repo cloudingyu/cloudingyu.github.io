@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Arrow from '../../components/Arrow.astro';
 import ReadingNavigation from '../../components/ReadingNavigation.astro';
+import ReadingTools from '../../components/ReadingTools.astro';
 import ReadingToc from '../../components/ReadingToc.astro';
 import { NOTEBOOK_PATH, NOTEBOOK_SEMESTER } from '../../data/notebook-config.mjs';
 import { loadNotebook, renderSemesterNote, courseUrl, noteUrl, noteDate } from '../../lib/notebook';
@@ -47,7 +48,7 @@ const title = note && course ? `${course.name} · ${noteDate(note.date)}` : cour
       <div class="notebook__topline">
         {note && course ? <a href={courseUrl(course)}><Arrow direction="left" /> {course.name}</a> : course ? <a href={NOTEBOOK_PATH + '/'}><Arrow direction="left" /> 学期笔记</a> : <span>{NOTEBOOK_SEMESTER}</span>}
       </div>
-      <h1 class:list={{ 'post__title': !!note }}>{note ? <time datetime={note.date}>{note.date.slice(0, 4)} 年 {noteDate(note.date)}</time> : <>{course?.name || '这学期的笔记'}<span aria-hidden="true">.</span></>}</h1>
+      {note ? <h1 class="post__title"><time datetime={note.date}>{note.date.slice(0, 4)} 年 {noteDate(note.date)}</time></h1> : <h1>{course?.name || '这学期的笔记'}<span aria-hidden="true">.</span></h1>}
       {!note && <p class="notebook__subtitle">{course ? course.description : '课堂上的记录，慢慢整理，慢慢理解。'}</p>}
     </header>
 
@@ -82,7 +83,7 @@ const title = note && course ? `${course.name} · ${noteDate(note.date)}` : cour
 
     {note && rendered && course && (
       <article class="notebook-reader">
-        <div class="post__opening-rule" aria-hidden="true" />
+        <ReadingTools />
         <div class:list={['post__grid', showToc && 'post__grid--with-toc']}>
           {showToc && <ReadingToc headings={toc} label="笔记目录" />}
           <div class="prose post__prose" set:html={rendered.code} />

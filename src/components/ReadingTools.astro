@@ -1,0 +1,32 @@
+<div class="reading-tools__rule" aria-hidden="true" />
+
+<div class="reading-width" data-reading-width-controls hidden>
+  <button class="reading-width__handle reading-width__handle--left" type="button" data-reading-width-handle="left" aria-label="调整正文宽度：左右键调节，双击恢复默认" title="拖动调宽 · 双击恢复" aria-describedby="reading-width-help"><span aria-hidden="true" /></button>
+  <button class="reading-width__handle reading-width__handle--right" type="button" data-reading-width-handle="right" aria-label="调整正文宽度：左右键调节，双击恢复默认" title="拖动调宽 · 双击恢复" aria-describedby="reading-width-help"><span aria-hidden="true" /></button>
+  <span class="reading-width__help" id="reading-width-help">拖动正文两侧的页边标记调整宽度，左右方向键也可调节，双击或按 Home 恢复默认宽度。</span>
+</div>
+
+<style>
+  .reading-tools__rule { height: 1px; margin-bottom: 2rem; background: var(--line-strong); }
+  .reading-width[hidden] { display: none; }
+  .reading-width__handle { position: fixed; z-index: 40; top: var(--reading-edge-top, 52vh); display: grid; place-items: center; width: 24px; height: 64px; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--line-strong); touch-action: none; user-select: none; transform: translateY(-50%); cursor: ew-resize; transition: color .2s; }
+  .reading-width__handle--left { left: var(--reading-edge-left); }
+  .reading-width__handle--right { left: var(--reading-edge-right); }
+  .reading-width__handle > span { position: relative; display: block; width: 6px; height: 24px; border-left: 2px solid currentColor; opacity: .4; transition: height .25s var(--exp-ease), opacity .2s; pointer-events: none; }
+  .reading-width__handle > span::before, .reading-width__handle > span::after { content: ''; position: absolute; left: 0; width: 6px; height: 2px; background: currentColor; opacity: 0; transform: scaleX(0); transform-origin: left; transition: opacity .2s, transform .25s var(--exp-ease); }
+  .reading-width__handle > span::before { top: 0; }
+  .reading-width__handle > span::after { bottom: 0; }
+  .reading-width__handle--right > span { rotate: 180deg; }
+  .reading-width__handle:is(:hover, :focus-visible), .reading-width[data-resizing] .reading-width__handle { color: var(--accent); }
+  .reading-width[data-resizing] .reading-width__handle > span { height: 40px; opacity: 1; }
+  .reading-width[data-resizing] .reading-width__handle > span::before, .reading-width[data-resizing] .reading-width__handle > span::after { opacity: 1; transform: scaleX(1); }
+  .reading-width__handle:focus { outline: none; }
+  @media (hover: hover) and (pointer: fine) {
+    .reading-width__handle:hover > span { height: 40px; opacity: .7; }
+    .reading-width__handle:hover > span::before, .reading-width__handle:hover > span::after { opacity: 1; transform: scaleX(1); }
+  }
+  .reading-width__help { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  @media (prefers-reduced-motion: reduce) {
+    .reading-width *, .reading-width__handle { transition: none !important; }
+  }
+</style>

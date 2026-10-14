@@ -1,3 +1,5 @@
+import { bindReadingPreferences } from './reading-preferences.js';
+
 async function copyText(text) {
   if (navigator.clipboard?.writeText) {
     try { await navigator.clipboard.writeText(text); return; }
@@ -69,33 +71,8 @@ export function bindReading(body) {
   const article = body.querySelector('.post__prose');
   if (!article) return () => {};
   const copyCleanup = bindCodeCopy(article);
+  const preferencesCleanup = bindReadingPreferences(body);
   const bar = body.querySelector('#progress-bar');
-  const percent = body.querySelector('[data-reading-progress]');
-  const directory = body.querySelector('.post__toc-panel');
-  const directoryToggle = directory?.querySelector('[data-toc-toggle]');
-  const directoryList = directory?.querySelector('nav');
-  const directoryGrid = directory?.closest('.post__grid');
-  const compact = matchMedia('(max-width: 67.99rem)');
-  const setDirectoryCollapsed = (collapsed) => {
-    if (!directoryToggle || !directoryList || !directoryGrid) return;
-    directoryGrid.toggleAttribute('data-toc-collapsed', collapsed);
-    directoryList.inert = collapsed;
-    directoryToggle.setAttribute('aria-expanded', String(!collapsed));
-    const label = collapsed ? '展开目录' : '收起目录';
-    directoryToggle.setAttribute('aria-label', label);
-    directoryToggle.title = label;
-  };
-  const adaptDirectory = () => setDirectoryCollapsed(compact.matches);
-  const toggleDirectory = () => {
-    setDirectoryCollapsed(!directoryGrid.hasAttribute('data-toc-collapsed'));
-    invalidate();
-  };
-  if (directory && !directory.hasAttribute('data-directory-ready')) {
-    adaptDirectory();
-    directory.setAttribute('data-directory-ready', '');
-  }
-  compact.addEventListener('change', adaptDirectory);
-  directoryToggle?.addEventListener('click', toggleDirectory);
   const headings = [...body.querySelectorAll('.post__toc a[href^="#"]')].map((link) => ({
     link, heading: document.getElementById(decodeURIComponent(link.hash.slice(1))),
   })).filter(({ heading }) => heading);
@@ -104,7 +81,6 @@ export function bindReading(body) {
   let articleTop = 0;
   let articleHeight = 0;
   let activeHeading = null;
-  let displayedPercent = -1;
 
   const update = () => {
     frame = 0;
@@ -119,8 +95,6 @@ export function bindReading(body) {
     const range = Math.max(articleHeight - innerHeight * .65, 1);
     const progress = Math.min(1, Math.max(0, (scrollY + innerHeight * .2 - articleTop) / range));
     if (bar) bar.style.transform = `scaleX(${progress})`;
-    const rounded = Math.round(progress * 100);
-    if (percent && rounded !== displayedPercent) { percent.textContent = `${rounded}%`; displayedPercent = rounded; }
     let active = headings[0];
     for (const entry of headings) {
       if (entry.top <= scrollY + innerHeight * .28) active = entry;
@@ -138,18 +112,19 @@ export function bindReading(body) {
   const invalidate = () => { layoutDirty = true; schedule(); };
   window.addEventListener('scroll', schedule, { passive: true });
   window.addEventListener('resize', invalidate, { passive: true });
+  body.addEventListener('reading-layout-change', invalidate);
   body.addEventListener('load', invalidate, true);
   const resize = new ResizeObserver(invalidate);
   resize.observe(article);
   update();
   return () => {
     copyCleanup();
+    preferencesCleanup();
     cancelAnimationFrame(frame);
     resize.disconnect();
-    compact.removeEventListener('change', adaptDirectory);
-    directoryToggle?.removeEventListener('click', toggleDirectory);
     window.removeEventListener('scroll', schedule);
     window.removeEventListener('resize', invalidate);
+    body.removeEventListener('reading-layout-change', invalidate);
     body.removeEventListener('load', invalidate, true);
   };
 }

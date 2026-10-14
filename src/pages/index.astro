@@ -28,9 +28,7 @@ const tags = tagCounts(posts);
         <div class="cloud-stage__halo" />
       </div>
     </div>
-    <a class="hero-orbit-tag hero-orbit-tag--one" href="/tags/机器学习/">机器学习 <span aria-hidden="true"><Arrow /></span></a>
-    <a class="hero-orbit-tag hero-orbit-tag--two" href="/tags/设计模式/">设计模式 <span aria-hidden="true"><Arrow /></span></a>
-    <button class="hero-morph" type="button" data-morph disabled><span aria-hidden="true"><Arrow direction="refresh" /></span><span>换一朵云</span></button>
+    <button class="hero-morph" type="button" data-morph disabled><span aria-hidden="true"><svg class="hero-morph__symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M20 8a8 8 0 0 0-13-2L4 9m0-5v5h5M4 16a8 8 0 0 0 13 2l3-3m0 5v-5h-5" /></svg></span><span>换一朵云</span></button>
 
     <a class="latest-dock" href={permalink(latest)}>
       <div><span class="latest-dock__badge">最新文章</span><time datetime={latest.data.date.toISOString()}>{formatDate(latest.data.date)}</time></div>
@@ -86,15 +84,13 @@ const tags = tagCounts(posts);
   .cloud-stage__halo { position: absolute; inset: 22% 5%; border-radius: 50%; background: radial-gradient(ellipse, color-mix(in srgb, var(--exp-purple) 9%, transparent), transparent 66%); filter: blur(1rem); }
   .cloud-fallback { position: absolute; inset: 0; background: url('/art/cloud-preview-dark.webp') center / contain no-repeat; }
   .cloud-stage[data-canvas-ready] .cloud-fallback { opacity: 0; }
-  .hero-orbit-tag { position: absolute; z-index: 2; display: flex; align-items: center; gap: 1.8rem; border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent); padding: .65rem 1rem; border-radius: 3rem; background: color-mix(in srgb, var(--panel) 92%, transparent); font-size: var(--home-link-size); font-weight: 600; }
-  .hero-orbit-tag:hover { color: var(--accent); border-color: var(--accent); }
-  .hero-orbit-tag span { color: var(--accent); }
-  .hero-orbit-tag--one { top: 30%; right: 6%; rotate: 9deg; transform: translateY(calc(var(--hero-progress) * -140px)); }
-  .hero-orbit-tag--two { top: 66%; right: calc(min(38%, 28rem) + var(--exp-space) + 1.5rem); rotate: -10deg; transform: translate(calc(var(--hero-progress) * -40px), calc(var(--hero-progress) * -70px)); }
   .hero-morph { position: absolute; z-index: 5; right: 10%; bottom: 13rem; display: flex; align-items: center; gap: .7rem; font-size: var(--home-link-size); font-weight: 600; color: var(--ink); transform: translateY(calc(var(--hero-progress) * -75px)); padding: .45rem .8rem .45rem .45rem; border: 1px solid var(--line-strong); border-radius: 3rem; background: color-mix(in srgb, var(--paper) 92%, transparent); }
-  .hero-morph > span:first-child { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border: 1px solid var(--line-strong); border-radius: 50%; font-size: 1.4rem; transition: rotate .6s var(--exp-ease), background .3s; }
-  .hero-morph:hover > span:first-child { rotate: 180deg; background: var(--accent); color: var(--paper); }
+  .hero-morph > span:first-child { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border: 1px solid var(--line-strong); border-radius: 50%; font-size: 1.4rem; transition: background .3s, color .3s; }
+  .hero-morph__symbol { display: block; width: 1em; height: 1em; transition: rotate .6s var(--exp-ease); }
+  .hero-morph:is(:hover, :focus-visible) > span:first-child { background: var(--accent); color: var(--paper); }
+  .hero-morph:is(:hover, :focus-visible) .hero-morph__symbol { rotate: 180deg; }
   .hero-morph:disabled { display: none; }
+  @media (prefers-reduced-motion: reduce) { .hero-morph__symbol { transition: none; } }
   .latest-dock { position: absolute; z-index: 5; bottom: 2rem; right: var(--exp-space); width: min(38%, 28rem); padding: 1.25rem 3.7rem 1.25rem 0; border: 0; border-top: 1px solid var(--line-strong); background: transparent; translate: calc(var(--hero-progress) * -25px) calc(var(--hero-progress) * -50px); transition: border-color .3s; }
   .latest-dock:hover { border-color: var(--accent); color: var(--accent); }
   .latest-dock > div { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; font: var(--home-link-size)/1.5 var(--font-sans); color: var(--ink-muted); margin-bottom: .7rem; }
@@ -136,19 +132,15 @@ const tags = tagCounts(posts);
     .cloud-stage { animation: sculpture-arrive 1s var(--exp-ease) both; }
     .cloud-stage :global(canvas) { animation: cloud-float 9s ease-in-out infinite alternate; }
     .exp-hero[data-offscreen] .cloud-stage :global(canvas), :global(.experimental[data-page-hidden]) .cloud-stage :global(canvas) { animation-play-state: paused; }
-    .hero-orbit-tag--one { animation: orbit-float 5s ease-in-out infinite alternate; }
-    .hero-orbit-tag--two { animation: orbit-float 7s ease-in-out infinite alternate-reverse; }
     .signal-band__track { animation: signal-run 28s linear infinite; }
     .topic-flow__track { animation: topics-run 80s linear infinite; }
     .topic-flow:hover .topic-flow__track, .topic-flow:focus-within .topic-flow__track { animation-play-state: paused; }
-    .exp-hero[data-offscreen] .hero-orbit-tag { animation-play-state: paused; }
     .signal-band[data-motion-paused] .signal-band__track, .topic-flow[data-motion-paused] .topic-flow__track { animation-play-state: paused; }
   }
   @keyframes giant-rise { from { transform: translateY(115%) rotate(4deg); opacity: 0; } to { transform: none; opacity: 1; } }
   @keyframes details-rise { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
   @keyframes sculpture-arrive { from { transform: translate(15%, 10%) scale(.7) rotate(20deg); } to { transform: none; } }
   @keyframes cloud-float { from { transform: translate3d(0, -5px, 0) rotate(-.5deg); } to { transform: translate3d(0, 7px, 0) rotate(.5deg); } }
-  @keyframes orbit-float { from { translate: 0 -8px; } to { translate: 0 12px; } }
   @keyframes scroll-pulse { 0%, 100% { translate: 0 -3px; } 50% { translate: 0 4px; } }
   @keyframes signal-run { to { transform: translateX(-25%); } }
   @keyframes topics-run { to { transform: translateX(-50%); } }
@@ -165,8 +157,6 @@ const tags = tagCounts(posts);
     .hero-type p { font-size: 1.0625rem; margin-top: 1rem; }
     .hero-cta { padding: .85rem 1.2rem; gap: 2rem; }
     .cloud-stage { width: 125%; height: 78%; top: 24%; right: -12%; }
-    .hero-orbit-tag--one { top: 48%; right: 3%; padding: .5rem .75rem; gap: 1rem; }
-    .hero-orbit-tag--two { top: auto; bottom: 11rem; left: var(--exp-space); right: auto; padding: .5rem .75rem; gap: 1rem; }
     .hero-morph { top: auto; bottom: 11rem; right: 6%; }
     .hero-morph > span:first-child { width: 2.1rem; height: 2.1rem; font-size: 1.2rem; }
     .latest-dock { width: auto; left: var(--exp-space); bottom: 1rem; right: var(--exp-space); padding: 1rem 3.5rem 1rem 0; }
@@ -187,12 +177,8 @@ const tags = tagCounts(posts);
     .topic-flow a[aria-hidden] { display: none; }
   }
   @media (max-width: 24rem) {
-    .hero-orbit-tag--two { gap: .5rem; padding-inline: .5rem; }
     .hero-morph { gap: .5rem; right: var(--exp-space); }
     .hero-morph > span:first-child { width: 1.9rem; height: 1.9rem; }
-  }
-  @media (max-width: 22rem) {
-    .hero-orbit-tag--one { top: 20%; }
   }
   @media (min-width: 48.01rem) and (max-height: 38rem) {
     .exp-hero { padding-block: .5rem; }
