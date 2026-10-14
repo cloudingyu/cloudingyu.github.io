@@ -36,7 +36,7 @@ const tags = tagCounts(posts);
     </a>
   </section>
 
-  <div class="signal-band" aria-hidden="true"><div class="signal-band__offset"><div class="signal-band__track">{Array.from({ length: 4 }, () => <span>STAY CURIOUS <i>✳</i> MAKE SOMETHING <i>✳</i> KEEP EXPLORING <i>✳</i></span>)}</div></div></div>
+  <div class="signal-band" aria-hidden="true"><div class="signal-band__offset"><div class="signal-band__track">{Array.from({ length: 4 }, () => <span>STAY CURIOUS <svg class="signal-band__mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" focusable="false"><path d="M12 2v20M2 12h20M5 5l14 14M5 19 19 5" /></svg> MAKE SOMETHING <svg class="signal-band__mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" focusable="false"><path d="M12 2v20M2 12h20M5 5l14 14M5 19 19 5" /></svg> KEEP EXPLORING <svg class="signal-band__mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" focusable="false"><path d="M12 2v20M2 12h20M5 5l14 14M5 19 19 5" /></svg></span>)}</div></div></div>
   </div>
 
   <section class="exp-journal" id="index" aria-labelledby="journal-title">
@@ -101,7 +101,7 @@ const tags = tagCounts(posts);
   .signal-band__offset { transform: translateX(calc(var(--signal-offset, 0) * -1px)); width: max-content; }
   .signal-band__track { display: flex; width: max-content; font-family: 'Arial Black', var(--font-sans); font-size: clamp(1.1rem, 2.7vw, 2.5rem); line-height: 1.2; font-weight: 900; letter-spacing: -.04em; }
   .signal-band__track > span { display: flex; align-items: center; gap: 2rem; padding-right: 2rem; }
-  .signal-band i { font-style: normal; font-size: 1.4em; line-height: 1; }
+  .signal-band__mark { display: block; flex: 0 0 auto; width: 1.4em; height: 1.4em; }
   .exp-journal { padding: 6rem var(--exp-space) 5rem; }
   .journal-heading { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 2.8rem; }
   .journal-heading h2 { font-size: clamp(2.75rem, 6vw, 6rem); font-weight: 800; letter-spacing: -.065em; }
