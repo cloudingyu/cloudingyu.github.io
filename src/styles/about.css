@@ -13,16 +13,13 @@
 .about-tile::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle 140px at var(--spot-x, 50%) var(--spot-y, 50%), color-mix(in srgb, var(--tile-glow) 25%, transparent), transparent 100%); opacity: 0; transition: opacity .25s; }
 .about-tile[data-pointer-active] { border-color: color-mix(in srgb, var(--accent) 70%, var(--line)); box-shadow: 0 12px 30px color-mix(in srgb, var(--ink) 8%, transparent); }
 .about-tile[data-pointer-active]::before { opacity: 1; }
-.about-tile h4 { position: relative; z-index: 1; margin: .75rem 0; font: 750 clamp(1.1rem, 1.6vw, 1.6rem)/1.4 var(--font-sans); letter-spacing: -.04em; }
+.about-tile h4 { position: relative; z-index: 1; margin: 1.2rem 0; color: inherit; font: 850 clamp(2rem, 3.25vw, 3.4rem)/1.05 var(--font-sans); letter-spacing: -.055em; }
 .about-tile p { position: relative; z-index: 1; margin: 0; color: var(--ink-soft); font-size: clamp(1rem, 1.2vw, 1.15rem); line-height: 1.8; }
 .about-tile--explore { --tile-glow: currentColor; background: var(--exp-purple); color: #15170f; }
-.about-tile--explore h4 { margin-block: 1.2rem; color: inherit; font-size: clamp(2rem, 3.6vw, 3.6rem); line-height: .9; letter-spacing: -.065em; }
-.about-tile--explore h4 > span { display: inline-block; margin-left: .3em; font-size: .4em; vertical-align: .2em; transition: translate .4s var(--exp-ease); }
-.about-tile--explore:hover h4 > span { translate: .15em -.15em; }
 .about-tile__track { position: absolute; z-index: -1; width: 12rem; height: 12rem; top: 2rem; right: -7rem; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 50%; box-shadow: 0 0 0 1.5rem color-mix(in srgb, currentColor 5%, transparent), 0 0 0 3rem color-mix(in srgb, currentColor 4%, transparent); transform: translate(var(--depth-x, 0px), var(--depth-y, 0px)); transition: transform .25s var(--exp-ease); }
 .about-tile--fudan { --tile-glow: currentColor; display: flex; flex-direction: column; justify-content: space-between; background: var(--about-green); color: #15170f; }
-.about-tile--fudan h4 { margin-block: 1.2rem; color: inherit; font-size: clamp(2rem, 3.25vw, 3.4rem); font-weight: 850; letter-spacing: -.055em; }
-.about-tile__seal { position: absolute; z-index: -1; width: 10rem; height: 10rem; right: -5rem; bottom: -4rem; border: 1px solid currentColor; border-radius: 50%; opacity: .22; outline: 1px solid currentColor; outline-offset: .7rem; transform: translate(var(--depth-x, 0px), var(--depth-y, 0px)); transition: transform .25s var(--exp-ease); }
+.about-tile.about-tile--fudan { padding-bottom: 3rem; }
+.about-tile__seal { position: absolute; z-index: -1; width: 8rem; height: 8rem; right: -5.5rem; bottom: -6.5rem; border: 1.5px solid currentColor; border-radius: 50%; opacity: .3; outline: 1.5px solid currentColor; outline-offset: .7rem; transform: translate(var(--depth-x, 0px), var(--depth-y, 0px)); transition: transform .25s var(--exp-ease); }
 .about-tile--curiosity { --tile-glow: currentColor; grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--exp-purple-deep); color: #f9faf4; }
 [data-theme='light'] .about-tile--curiosity { background: var(--exp-purple); color: #15170f; }
 .about-tile p, .about-tile--curiosity .about-tile__infinity { color: inherit; }
@@ -88,6 +85,8 @@
   .about-tile:is(.about-tile--explore, .about-tile--fudan) { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1fr); align-items: center; gap: 1.25rem; }
   .about-tile.about-tile--fudan { grid-template-columns: minmax(7.5rem, .9fr) minmax(0, 1fr); }
   .about-tile:is(.about-tile--explore, .about-tile--fudan) h4 { margin: 0; }
+  .about-tile--curiosity { gap: .75rem; }
+  .about-tile__infinity { flex-basis: 3rem; width: 3rem; }
   .about-art { grid-row: 1; width: min(100%, 24rem); aspect-ratio: 1 / 1.08; }
   .about-name { font-size: clamp(2.6rem, 11vw, 5rem); }
   .about-section-label { margin-top: 2rem; }
@@ -100,7 +99,6 @@
   .about-art__halo { transform: none; }
   .about-name, .about-tile, .about-tile :is(.about-tile__infinity, .about-tile__seal, .about-tile__track) { transform: none; stroke-dashoffset: 0; }
   .about-tile::before { display: none; }
-  .about-tile--explore:hover h4 > span { translate: none; }
   .about-portrait-button .about-avatar { scale: 1 !important; }
   .about-manifesto__line > span:hover { translate: none; }
 }
