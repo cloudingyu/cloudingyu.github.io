@@ -99,10 +99,10 @@ const next = neighbors.find((item) => item.rel === 'next');
     transition: transform .5s var(--exp-ease), opacity .2s, background .2s, color .2s;
   }
   .reading-navigation[data-open] .reading-navigation__item { opacity: 1; transform: translate(-50%, -50%) rotate(0) scale(1); transition-delay: var(--delay), var(--delay), 0s, 0s; }
-  .reading-navigation__item--home { left: 50%; top: 19%; --delay: 70ms; }
+  .reading-navigation__item--home { left: 50%; top: 81%; --delay: 220ms; }
   .reading-navigation__item--prev { left: 19%; top: 50%; --delay: 120ms; }
   .reading-navigation__item--next { left: 81%; top: 50%; --delay: 170ms; }
-  .reading-navigation__item--top { left: 50%; top: 81%; --delay: 220ms; }
+  .reading-navigation__item--top { left: 50%; top: 19%; --delay: 70ms; }
   .reading-navigation__item svg { width: 1.5rem; height: 1.5rem; }
   .reading-navigation__symbol { display: flex; align-items: center; justify-content: center; height: 1.5rem; font: 400 2.4rem/.65 Arial, sans-serif; }
   .reading-navigation__item:not(:disabled):hover, .reading-navigation__item:focus-visible { background: var(--accent); color: var(--paper); }

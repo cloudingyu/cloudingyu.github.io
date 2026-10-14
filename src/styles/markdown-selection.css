@@ -1,0 +1,98 @@
+.post__prose { --markdown-selection-background: color-mix(in srgb, var(--accent) 30%, var(--paper)); }
+
+.post__prose ::selection {
+  color: var(--ink);
+  background: var(--markdown-selection-background);
+}
+
+/* Treat a selected formula as one surface, including its spacing and scripts. */
+.post__prose .katex[data-math-selected],
+.post__prose .katex[data-math-selected] .base {
+  color: var(--ink);
+  background: var(--markdown-selection-background);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.post__prose .katex[data-math-selected] {
+  box-shadow: 0 .15em 0 var(--markdown-selection-background), 0 -.15em 0 var(--markdown-selection-background);
+}
+.post__prose .katex-display .katex[data-math-selected] { box-shadow: none; }
+.post__prose .katex[data-math-selected] ::selection { background: transparent; color: var(--ink); }
+
+.experimental .post__prose,
+.experimental .post__prose * {
+  cursor: text;
+}
+.experimental[data-cursor-ready] .post__prose,
+.experimental[data-cursor-ready] .post__prose * {
+  cursor: none;
+}
+.experimental .post__prose button,
+.experimental .post__prose button * { cursor: pointer; }
+.experimental[data-cursor-ready] .post__prose button,
+.experimental[data-cursor-ready] .post__prose button * { cursor: pointer; }
+.experimental .exp-cursor.is-reading-text {
+  width: 2px;
+  height: 24px;
+  border: 0;
+  border-radius: 0;
+  background: var(--accent);
+  color: var(--accent);
+  transition: opacity .2s;
+}
+.exp-cursor.is-reading-text::before,
+.exp-cursor.is-reading-text::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 10px;
+  height: 2px;
+  background: currentColor;
+  transform: translateX(-50%);
+}
+.exp-cursor.is-reading-text::before { top: 0; }
+.exp-cursor.is-reading-text::after { bottom: 0; }
+
+.markdown-selection {
+  display: flex;
+  position: fixed;
+  z-index: 90;
+}
+.markdown-selection[hidden] { display: none; }
+.markdown-selection__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border: 0;
+  border-radius: .35rem;
+  background: var(--accent);
+  color: var(--paper);
+  cursor: pointer;
+  transition: background .15s;
+}
+.markdown-selection__button:is(:hover, :focus-visible) {
+  background: var(--accent-soft);
+}
+.markdown-selection__icon { width: 20px; height: 20px; flex-shrink: 0; stroke-width: 1.8; }
+.markdown-selection__check { display: none; }
+.markdown-selection[data-state='copied'] .markdown-selection__sheets { display: none; }
+.markdown-selection[data-state='copied'] .markdown-selection__check { display: block; }
+.markdown-selection__button:disabled { opacity: .65; cursor: wait; }
+.markdown-selection__label,
+.markdown-selection__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (pointer: coarse) {
+  .markdown-selection__button { width: 44px; height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .markdown-selection__button { transition: none; }
+}

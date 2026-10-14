@@ -24,6 +24,7 @@
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "three": "^0.186.1",
+    "turndown": "^7.2.4",
     "unist-util-visit": "^5.0.0"
   },
   "engines": {

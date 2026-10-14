@@ -1,4 +1,5 @@
 import { bindReadingPreferences } from './reading-preferences.js';
+import { bindMarkdownSelectionCopy } from './markdown-selection-copy.js';
 
 async function copyText(text) {
   if (navigator.clipboard?.writeText) {
@@ -71,6 +72,7 @@ export function bindReading(body) {
   const article = body.querySelector('.post__prose');
   if (!article) return () => {};
   const copyCleanup = bindCodeCopy(article);
+  const markdownCleanup = bindMarkdownSelectionCopy(article, copyText);
   const preferencesCleanup = bindReadingPreferences(body);
   const bar = body.querySelector('#progress-bar');
   const headings = [...body.querySelectorAll('.post__toc a[href^="#"]')].map((link) => ({
@@ -119,6 +121,7 @@ export function bindReading(body) {
   update();
   return () => {
     copyCleanup();
+    markdownCleanup();
     preferencesCleanup();
     cancelAnimationFrame(frame);
     resize.disconnect();

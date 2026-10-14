@@ -61,7 +61,11 @@ export function rehypeMathHeadings() {
           }
         });
         const tex = ann.join(' ') || textOf(child).join('');
-        parent.children.splice(index, 1, { type: 'text', value: texToText(tex) });
+        // 显示与目录仍为纯文本；属性保留 TeX，供选区复制还原公式。
+        parent.children.splice(index, 1, {
+          type: 'element', tagName: 'span', properties: { 'data-copy-math': tex },
+          children: [{ type: 'text', value: texToText(tex) }],
+        });
         return index + 1;
       });
 
@@ -69,7 +73,10 @@ export function rehypeMathHeadings() {
       visit(node, (child, index, parent) => {
         if (child.type !== 'inlineMath' && child.type !== 'math') return;
         if (!parent || index === null || index === undefined) return;
-        parent.children.splice(index, 1, { type: 'text', value: texToText(child.value) });
+        parent.children.splice(index, 1, {
+          type: 'element', tagName: 'span', properties: { 'data-copy-math': child.value },
+          children: [{ type: 'text', value: texToText(child.value) }],
+        });
         return index + 1;
       });
 

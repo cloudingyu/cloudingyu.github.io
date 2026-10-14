@@ -19,7 +19,7 @@
 .about-tile__track { position: absolute; z-index: -1; width: 12rem; height: 12rem; top: 2rem; right: -7rem; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 50%; box-shadow: 0 0 0 1.5rem color-mix(in srgb, currentColor 5%, transparent), 0 0 0 3rem color-mix(in srgb, currentColor 4%, transparent); transform: translate(var(--depth-x, 0px), var(--depth-y, 0px)); transition: transform .25s var(--exp-ease); }
 .about-tile--fudan { --tile-glow: currentColor; display: flex; flex-direction: column; justify-content: space-between; background: var(--about-green); color: #15170f; }
 .about-tile.about-tile--fudan { padding-bottom: 3rem; }
-.about-tile__seal { position: absolute; z-index: -1; width: 8rem; height: 8rem; right: -5.5rem; bottom: -6.5rem; border: 1.5px solid currentColor; border-radius: 50%; opacity: .3; outline: 1.5px solid currentColor; outline-offset: .7rem; transform: translate(var(--depth-x, 0px), var(--depth-y, 0px)); transition: transform .25s var(--exp-ease); }
+.about-tile__seal { position: absolute; z-index: -1; width: 9rem; height: 6.25rem; right: -1.25rem; top: -1.5rem; opacity: .4; pointer-events: none; transform: translate(var(--depth-x, 0px), var(--depth-y, 0px)); transition: transform .25s var(--exp-ease); }
 .about-tile--curiosity { --tile-glow: currentColor; grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--exp-purple-deep); color: #f9faf4; }
 [data-theme='light'] .about-tile--curiosity { background: var(--exp-purple); color: #15170f; }
 .about-tile p, .about-tile--curiosity .about-tile__infinity { color: inherit; }
@@ -83,7 +83,8 @@
   .about-profile { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
   .about-mosaic { grid-template-columns: minmax(0, 1fr); }
   .about-tile:is(.about-tile--explore, .about-tile--fudan) { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1fr); align-items: center; gap: 1.25rem; }
-  .about-tile.about-tile--fudan { grid-template-columns: minmax(7.5rem, .9fr) minmax(0, 1fr); }
+  .about-tile.about-tile--fudan { grid-template-columns: minmax(7.5rem, .9fr) minmax(0, 1fr); padding-top: 2.75rem; }
+  .about-tile__seal { width: 7rem; height: auto; top: -1rem; }
   .about-tile:is(.about-tile--explore, .about-tile--fudan) h4 { margin: 0; }
   .about-tile--curiosity { gap: .75rem; }
   .about-tile__infinity { flex-basis: 3rem; width: 3rem; }
