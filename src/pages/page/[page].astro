@@ -33,5 +33,6 @@ const { page, total } = Astro.props;
   title="博客与笔记"
   description={`全部 ${total} 篇文章，第 ${page.current} 页（每页 ${POSTS_PER_PAGE} 篇）。`}
 >
+  <Fragment slot="page-title">博客<span>与笔记</span></Fragment>
   <PostList {page} {total} />
 </BaseLayout>
