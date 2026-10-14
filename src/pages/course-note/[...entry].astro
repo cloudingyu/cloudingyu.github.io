@@ -37,8 +37,8 @@ const title = note && course ? `${course.name} · ${noteDate(note.date)}` : cour
 
 <BaseLayout hero="bare" title={title} type={note ? 'article' : 'website'} published={note ? new Date(note.date) : undefined} description="课堂笔记与学习记录。" noindex>
   {note && course && <ReadingNavigation slot="reading-navigation" readingEmphasisKey={noteUrl(note)} label={`${course.name} · 阅读导航`} homeHref={NOTEBOOK_PATH + '/'} homeLabel="学期笔记主页" neighbors={[
-    ...(newer ? [{ href: noteUrl(newer), label: '较新笔记', title: noteDate(newer.date), rel: 'prev' }] : []),
-    ...(older ? [{ href: noteUrl(older), label: '较早笔记', title: noteDate(older.date), rel: 'next' }] : []),
+    ...(newer ? [{ href: noteUrl(newer), label: '上一篇', title: noteDate(newer.date), rel: 'prev' }] : []),
+    ...(older ? [{ href: noteUrl(older), label: '下一篇', title: noteDate(older.date), rel: 'next' }] : []),
   ]} />}
   <Fragment slot="head">
     <meta name="referrer" content="same-origin" />
