@@ -1,9 +1,9 @@
 ---
 import { getReadingEmphasis } from '../data/reading-emphasis.mjs';
 interface Link { href: string; label: string; title?: string; rel?: string }
-interface Props { label?: string; homeHref?: string; homeLabel?: string; neighbors?: Link[]; articleTitle?: string }
-const { label = '阅读导航', homeHref = '/', homeLabel = '博客首页', neighbors = [], articleTitle } = Astro.props;
-const hasReadingEmphasis = getReadingEmphasis(articleTitle) !== null;
+interface Props { label?: string; homeHref?: string; homeLabel?: string; neighbors?: Link[]; articleTitle?: string; readingEmphasisKey?: string }
+const { label = '阅读导航', homeHref = '/', homeLabel = '博客首页', neighbors = [], articleTitle, readingEmphasisKey } = Astro.props;
+const hasReadingEmphasis = getReadingEmphasis(readingEmphasisKey ?? articleTitle) !== null;
 const prev = neighbors.find((item) => item.rel === 'prev');
 const next = neighbors.find((item) => item.rel === 'next');
 ---

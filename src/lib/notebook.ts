@@ -7,6 +7,7 @@ import { remarkMathRestore } from './remark-math-restore.mjs';
 import { rehypeNotebookHeadings } from './rehype-notebook-headings.mjs';
 import { rehypeCodeFrame } from './rehype-code-frame.mjs';
 import { rehypeLazyImages } from './rehype-lazy-images.mjs';
+import { rehypeReadingEmphasis } from './rehype-reading-emphasis.mjs';
 import { NOTEBOOK_PATH, NOTEBOOK_SOURCE, NOTEBOOK_COURSES } from '../data/notebook-config.mjs';
 
 export type NotebookCourse = typeof NOTEBOOK_COURSES[number];
@@ -67,7 +68,7 @@ function blockMath(content: string) {
 export async function renderSemesterNote(note: SemesterNote) {
   renderer ??= createMarkdownProcessor({
     remarkPlugins: [remarkMath, remarkMathRestore],
-    rehypePlugins: [[rehypeKatex, { strict: false, trust: false }], rehypeNotebookHeadings, rehypeCodeFrame, rehypeLazyImages],
+    rehypePlugins: [[rehypeKatex, { strict: false, trust: false }], rehypeNotebookHeadings, rehypeCodeFrame, rehypeLazyImages, rehypeReadingEmphasis],
     syntaxHighlight: 'shiki',
     shikiConfig: {
       themes: { light: 'github-light', dark: 'github-dark-dimmed' },
@@ -78,7 +79,7 @@ export async function renderSemesterNote(note: SemesterNote) {
   });
   // The metadata lines belong together, but Markdown's soft line break joins them.
   const content = note.content.replace(/^(\uFEFF?\*\*日期\*\*[^\r\n]*)\r?\n(?=[ \t]*\*\*内容\*\*)/, '$1  \n');
-  const rendered = await (await renderer).render(blockMath(content));
+  const rendered = await (await renderer).render(blockMath(content), { frontmatter: { readingEmphasisKey: noteUrl(note) } });
   return {
     ...rendered,
     metadata: { ...rendered.metadata, headings: rendered.metadata.frontmatter.notebookHeadings ?? rendered.metadata.headings },

@@ -15,8 +15,8 @@ const classesOf = (node) => {
  * Math, code, headings and the author's own emphasis remain intact. */
 export function rehypeReadingEmphasis() {
   return (tree, file) => {
-    const title = file.data.astro?.frontmatter?.title;
-    const profile = getReadingEmphasis(title);
+    const frontmatter = file.data.astro?.frontmatter;
+    const profile = getReadingEmphasis(frontmatter?.readingEmphasisKey ?? frontmatter?.title);
     if (!profile) return;
     const levels = new Map();
     for (const level of ['secondary', 'primary']) {
