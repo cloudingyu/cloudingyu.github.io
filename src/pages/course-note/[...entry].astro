@@ -89,8 +89,8 @@ const title = note && course ? `${course.name} · ${noteDate(note.date)}` : cour
           <div class="prose post__prose" set:html={rendered.code} />
         </div>
         <nav class="notebook-reader__neighbors" aria-label="前后课堂笔记">
-          {newer ? <a href={noteUrl(newer)}><Arrow direction="left" /><span>较新笔记<strong>{noteDate(newer.date)}</strong></span></a> : <span />}
-          {older ? <a href={noteUrl(older)}><span>较早笔记<strong>{noteDate(older.date)}</strong></span><Arrow direction="right" /></a> : <span />}
+          {newer ? <a href={noteUrl(newer)}><Arrow direction="left" /><span>上一篇<strong>{noteDate(newer.date)}</strong></span></a> : <span />}
+          {older ? <a href={noteUrl(older)}><span>下一篇<strong>{noteDate(older.date)}</strong></span><Arrow direction="right" /></a> : <span />}
         </nav>
       </article>
     )}
