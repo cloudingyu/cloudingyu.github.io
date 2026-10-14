@@ -10,6 +10,7 @@ function bindExperiment() {
   if (!body) return;
   const hero = body.querySelector('[data-exp-hero]');
   const host = body.querySelector('[data-cloud-stage]');
+  const cloudView = body.querySelector('[data-cloud-view]');
   const cursor = body.querySelector('.exp-cursor');
   const themeButton = body.querySelector('[data-exp-theme]');
   const morphButton = body.querySelector('[data-morph]');
@@ -30,8 +31,7 @@ function bindExperiment() {
   const artController = new AbortController();
   let frame = 0;
   let previous = 0;
-  let cx = innerWidth / 2, cy = innerHeight / 2;
-  let tx = cx, ty = cy;
+  let tx = innerWidth / 2, ty = innerHeight / 2;
   let cursorVisible = false;
   let magnet = null;
   let magnetRect = null;
@@ -54,7 +54,7 @@ function bindExperiment() {
       paintedScroll = progress;
     }
     if (fine.matches && !motion.matches && cursorVisible) {
-      cursor.style.transform = `translate3d(${cx}px, ${cy}px, 0) translate(-50%, -50%)`;
+      cursor.style.transform = `translate3d(${tx}px, ${ty}px, 0) translate(-50%, -50%)`;
     }
   };
   const tick = (time) => {
@@ -63,16 +63,16 @@ function bindExperiment() {
     if (pointerEvent) { processPointer(pointerEvent); pointerEvent = null; }
     const dt = previous ? Math.min((time - previous) / 1000, .05) : 1 / 60;
     previous = time;
-    const amount = 1 - Math.exp(-9 * dt);
     let pending = false;
-    // Let the cloud ease the pointer once, rather than chaining two slow followers.
+    // Pointer motion transforms a cached image; it never schedules a WebGL draw.
     const pointerChanged = input.x !== target.x || input.y !== target.y;
     input.x = target.x; input.y = target.y;
     input.scroll += (target.scroll - input.scroll) * (1 - Math.exp(-14 * dt));
     if (Math.abs(input.scroll - target.scroll) > .0008) pending = true;
-    if (pointerChanged) art?.wake();
-    cx += (tx - cx) * amount; cy += (ty - cy) * amount;
-    if (cursorVisible && (Math.abs(tx - cx) + Math.abs(ty - cy) > .3)) pending = true;
+    if (pointerChanged && cloudView) {
+      cloudView.style.setProperty('--cloud-x', input.x.toFixed(4));
+      cloudView.style.setProperty('--cloud-y', input.y.toFixed(4));
+    }
     paint();
     if (pending) frame = requestAnimationFrame(tick);
   };
@@ -89,7 +89,7 @@ function bindExperiment() {
   };
   const processPointer = (event) => {
     tx = event.clientX; ty = event.clientY;
-    if (!cursorVisible) { cx = tx; cy = ty; cursorVisible = true; cursor.style.opacity = '1'; }
+    if (!cursorVisible) { cursorVisible = true; cursor.style.opacity = '1'; }
     if (heroRect && !hero.hasAttribute('data-offscreen')) {
       target.x = clamp((event.clientX - heroRect.left) / heroRect.width * 2 - 1, -1, 1);
       target.y = clamp((event.clientY + scrollY - heroRect.top) / heroRect.height * 2 - 1, -1, 1);
@@ -162,6 +162,8 @@ function bindExperiment() {
       Object.assign(input, { x: 0, y: 0, scroll: 0 });
       Object.assign(target, input);
       onLeave(); paint();
+      cloudView?.style.removeProperty('--cloud-x');
+      cloudView?.style.removeProperty('--cloud-y');
       signalBand?.style.setProperty('--signal-offset', '0');
     } else {
       onScroll();
@@ -199,13 +201,10 @@ function bindExperiment() {
   const loadArt = async () => {
     if (disposed || motion.matches || hero.hasAttribute('data-offscreen')) { artLoading = false; return; }
     try {
-      // Let the preview finish its entrance before parsing three.js or starting GPU work.
-      const entrance = host.getAnimations().filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity);
-      await Promise.all(entrance.map(animation => animation.finished.catch(() => {})));
-      if (disposed || motion.matches || hero.hasAttribute('data-offscreen')) return;
+      // Load after the first paint; the baked volume no longer needs to wait for the entrance.
       const { mountCloud } = await import('./cloud-sculpture.js');
       if (disposed || motion.matches || hero.hasAttribute('data-offscreen')) return;
-      const mounted = await mountCloud(host, input, { signal: artController.signal });
+      const mounted = await mountCloud(host, { signal: artController.signal });
       if (disposed) { mounted.dispose(); return; }
       art = mounted;
       art.setScrolling(scrollingTimer !== 0);

@@ -14,6 +14,8 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
+import { gunzipSync } from 'node:zlib';
+import { VOLUME_SIZE, VOLUME_SHAPES } from '../src/scripts/cloud-volume.js';
 
 const DIST = path.resolve(process.argv[2] || process.env.DIST || 'dist');
 
@@ -556,6 +558,22 @@ await check('19. 云朵独立打包并按需加载', async () => {
   const cloudBytes = Buffer.byteLength(await read(clouds[0]), 'utf8');
   // 恢复 Three.js 渲染后，体积预算包含渲染库。
   assert(cloudBytes < 650 * 1024, `云朵脚本过大：${cloudBytes} 字节`);
+  const volumes = allFiles.filter((f) => /^cloud-volume\..+\.bin$/.test(path.basename(f)));
+  assert(volumes.length === 1, '缺少预烘焙云朵素材');
+  assert((await read(clouds[0])).includes(path.basename(volumes[0])), '云朵脚本没有引用已打包的体积素材');
+  const compressed = await readFile(volumes[0]);
+  assert(compressed.length < 200 * 1024, `云朵素材过大：${compressed.length} 字节`);
+  const volume = gunzipSync(compressed);
+  const shapeBytes = VOLUME_SIZE.reduce((a, b) => a * b) * 2;
+  assert(volume.length === shapeBytes * VOLUME_SHAPES, '云朵素材损坏或尺寸不匹配');
+  for (let shape = 0; shape < VOLUME_SHAPES; shape++) {
+    let occupied = 0;
+    for (let i = shape * shapeBytes; i < (shape + 1) * shapeBytes; i += 2) {
+      if (volume[i]) occupied++;
+      assert(volume[i + 1] <= volume[i], '预烘焙光照超出密度范围');
+    }
+    assert(occupied > 1000 && occupied < shapeBytes / 2, `云形 ${shape} 的密度数据无效`);
+  }
   const loaders = await Promise.all(js.filter((f) => f !== clouds[0]).map(read));
   assert(loaders.some((src) => src.includes(cloudName) && /\bimport\s*\(/.test(src)), '云朵脚本没有通过动态 import 加载');
 
@@ -572,7 +590,7 @@ await check('19. 云朵独立打包并按需加载', async () => {
     css += await read(path.join(distFile('_astro'), n));
   }
   assert(/prefers-reduced-motion/.test(css), 'CSS 里没有 prefers-reduced-motion 处理');
-  return `${js.length} 个 JS 产物，云朵脚本 ${cloudBytes} 字节，按需加载`;
+  return `${js.length} 个 JS 产物，云朵脚本 ${cloudBytes} 字节，预烘焙素材 ${compressed.length} 字节，按需加载`;
 });
 
 /* 22. 归档统计与真实内容一致 */

@@ -23,8 +23,10 @@ const tags = tagCounts(posts);
     </div>
 
     <div class="cloud-stage" data-cloud-stage aria-hidden="true">
-      <div class="cloud-fallback" />
-      <div class="cloud-stage__halo" />
+      <div class="cloud-stage__view" data-cloud-view>
+        <div class="cloud-fallback" />
+        <div class="cloud-stage__halo" />
+      </div>
     </div>
     <a class="hero-orbit-tag hero-orbit-tag--one" href="/tags/机器学习/">机器学习 <span aria-hidden="true"><Arrow /></span></a>
     <a class="hero-orbit-tag hero-orbit-tag--two" href="/tags/设计模式/">设计模式 <span aria-hidden="true"><Arrow /></span></a>
@@ -77,6 +79,7 @@ const tags = tagCounts(posts);
   .hero-cta > span:last-child { font-size: 1.4rem; line-height: 1; }
   .hero-cta:hover { scale: 1.04; }
   .cloud-stage { position: absolute; z-index: 1; top: 2%; right: -1%; width: 65%; height: 100%; pointer-events: none; translate: calc(var(--hero-progress) * 70px) calc(var(--hero-progress) * -125px); scale: calc(1 + var(--hero-progress) * .24); rotate: calc(var(--hero-progress) * 9deg); opacity: calc(1 - var(--hero-progress) * .65); }
+  .cloud-stage__view { position: absolute; inset: 0; }
   .cloud-stage :global(canvas) { position: absolute; width: 100%; height: 100%; inset: 0; z-index: 1; }
   :global([data-theme='light']) .cloud-stage__halo { background: radial-gradient(ellipse, #303c761a, transparent 66%); }
   :global([data-theme='light']) .cloud-fallback { background-image: url('/art/cloud-preview-light.webp'); filter: drop-shadow(0 22px 24px #303c7628); }
@@ -125,6 +128,7 @@ const tags = tagCounts(posts);
   .topic-flow a:hover :is(sup, span) { color: inherit; }
   .home-manifesto { margin: 4rem var(--exp-space) 0; font: 750 clamp(1.4rem, 3.5vw, 3.5rem)/1.3 var(--font-sans); letter-spacing: -.035em; color: var(--exp-purple); }
   @media (prefers-reduced-motion: no-preference) {
+    .cloud-stage__view { transform: perspective(1000px) rotateX(calc(var(--cloud-y, 0) * -8deg)) rotateY(calc(var(--cloud-x, 0) * 14deg)) translate3d(calc(var(--cloud-x, 0) * 10px), calc(var(--cloud-y, 0) * 6px), 0); transition: transform .1s ease-out; will-change: transform; }
     .hero-line > span { animation: giant-rise .75s var(--exp-ease) both; }
     .hero-line--acid > span { animation-delay: .08s; }
     .hero-cta { animation-delay: .5s; }
