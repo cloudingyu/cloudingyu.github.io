@@ -6,6 +6,7 @@ export function bindReadingPreferences(body) {
   const article = body.querySelector('.post__prose');
   if (!article) return () => {};
   const root = document.documentElement;
+  root.dataset.readingMode = 'normal';
   const controller = new AbortController();
   const options = { signal: controller.signal };
   const modeToggle = body.querySelector('[data-reading-mode-toggle][data-reading-mode-available="true"]');
@@ -17,8 +18,6 @@ export function bindReadingPreferences(body) {
   modeToggle?.addEventListener('click', () => {
     root.dataset.readingMode = root.dataset.readingMode === 'enhanced' ? 'normal' : 'enhanced';
     updateModeToggle();
-    try { localStorage.setItem('cy-reading-mode', root.dataset.readingMode); }
-    catch { /* The current page can switch without storage. */ }
   }, options);
   updateModeToggle();
   if (modeToggle) modeToggle.disabled = false;

@@ -111,13 +111,9 @@ const jsonLd =
     matchMedia('(max-width: 67.99rem)').matches ? 'closed' : 'open';
 </script>
 
-<!-- Restore the reading mode before text paints. -->
+<!-- Start each page in ordinary reading mode before text paints. -->
 <script is:inline>
-  (() => {
-    let saved = null;
-    try { saved = localStorage.getItem('cy-reading-mode'); } catch { /* Use ordinary reading. */ }
-    document.documentElement.dataset.readingMode = saved === 'enhanced' ? 'enhanced' : 'normal';
-  })();
+  document.documentElement.dataset.readingMode = 'normal';
 </script>
 
 <noscript>
