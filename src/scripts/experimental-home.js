@@ -3,6 +3,8 @@ import { bindReadingNavigation } from './reading-navigation.js';
 import { bindHomeScroll } from './home-scroll.js';
 
 let cleanup = () => {};
+let savePointer = () => {};
+let rememberedPointer = null;
 
 function bindExperiment() {
   cleanup();
@@ -53,9 +55,6 @@ function bindExperiment() {
       hero.style.setProperty('--hero-progress', String(progress));
       paintedScroll = progress;
     }
-    if (fine.matches && !motion.matches && cursorVisible) {
-      cursor.style.transform = `translate3d(${tx}px, ${ty}px, 0) translate(-50%, -50%)`;
-    }
   };
   const tick = (time) => {
     frame = 0;
@@ -88,19 +87,10 @@ function bindExperiment() {
     magnetRect = null;
   };
   const processPointer = (event) => {
-    tx = event.clientX; ty = event.clientY;
-    if (!cursorVisible) { cursorVisible = true; cursor.style.opacity = '1'; }
     if (heroRect && !hero.hasAttribute('data-offscreen')) {
       target.x = clamp((event.clientX - heroRect.left) / heroRect.width * 2 - 1, -1, 1);
       target.y = clamp((event.clientY + scrollY - heroRect.top) / heroRect.height * 2 - 1, -1, 1);
     }
-    cursor.style.opacity = '1';
-    const link = event.target.closest('a[href], button:not(:disabled), summary, [role="button"]:not([aria-disabled="true"])');
-    if (link !== hoveredLink) {
-      hoveredLink = link;
-      cursor.classList.toggle('is-link', !!link);
-    }
-
     const nextMagnet = event.target.closest('[data-magnet]');
     if (nextMagnet !== magnet) {
       const rect = nextMagnet?.getBoundingClientRect();
@@ -115,7 +105,22 @@ function bindExperiment() {
 
   };
   const onPointer = (event) => {
-    if (!fine.matches || motion.matches || event.pointerType === 'touch') return;
+    if (event.pointerType !== 'mouse') return;
+    // Keep the pointer responsive even while the cloud's animation frame is busy.
+    tx = event.clientX; ty = event.clientY;
+    cursor.style.transform = `translate3d(${tx}px, ${ty}px, 0) translate(-50%, -50%)`;
+    cursor.style.opacity = '1';
+    const link = event.target.closest('a[href], button:not(:disabled), summary, [role="button"]:not([aria-disabled="true"])');
+    if (link !== hoveredLink) {
+      hoveredLink = link;
+      cursor.classList.toggle('is-link', !!link);
+    }
+    if (!cursorVisible) {
+      cursorVisible = true;
+      // Hide the native pointer only after the custom pointer has a position.
+      body.setAttribute('data-cursor-ready', '');
+    }
+    if (!fine.matches || motion.matches) return;
     pointerEvent = event;
     schedule();
   };
@@ -125,6 +130,7 @@ function bindExperiment() {
     cursorVisible = false;
     cursor.style.opacity = '0';
     cursor.classList.remove('is-link');
+    body.removeAttribute('data-cursor-ready');
     target.x = 0; target.y = 0;
     resetMagnet(); schedule();
   };
@@ -155,13 +161,14 @@ function bindExperiment() {
     else { onScroll(); schedule(); }
   };
   const onPreference = () => {
-    body.toggleAttribute('data-cursor-ready', fine.matches && !motion.matches);
+    body.toggleAttribute('data-cursor-ready', cursorVisible);
     if (motion.matches) {
       cancelAnimationFrame(frame); frame = 0;
       animations.forEach((animation) => animation.finish());
       Object.assign(input, { x: 0, y: 0, scroll: 0 });
       Object.assign(target, input);
-      onLeave(); paint();
+      pointerEvent = null;
+      resetMagnet(); paint();
       cloudView?.style.removeProperty('--cloud-x');
       cloudView?.style.removeProperty('--cloud-y');
       signalBand?.style.setProperty('--signal-offset', '0');
@@ -259,6 +266,26 @@ function bindExperiment() {
   fine.addEventListener('change', onPreference);
   updateThemeLabel(); onResize(); onPreference();
 
+  const restored = document.documentElement.hasAttribute('data-cursor-restored');
+  const remembered = rememberedPointer && Date.now() - rememberedPointer.time < 30000
+    && rememberedPointer.width === innerWidth && rememberedPointer.height === innerHeight;
+  if (restored || remembered) {
+    const style = document.documentElement.style;
+    const x = restored ? parseFloat(style.getPropertyValue('--cursor-x')) : rememberedPointer.x;
+    const y = restored ? parseFloat(style.getPropertyValue('--cursor-y')) : rememberedPointer.y;
+    onPointer({ pointerType: 'mouse', clientX: x, clientY: y, target: document.elementFromPoint(x, y) || body });
+    document.documentElement.removeAttribute('data-cursor-restored');
+    style.removeProperty('--cursor-x');
+    style.removeProperty('--cursor-y');
+  }
+  savePointer = () => {
+    if (!cursorVisible) return;
+    rememberedPointer = { x: tx, y: ty, width: innerWidth, height: innerHeight, time: Date.now() };
+    try {
+      sessionStorage.setItem('cy-pointer', JSON.stringify(rememberedPointer));
+    } catch { /* Navigation still works when storage is disabled. */ }
+  };
+
   cleanup = () => {
     disposed = true;
     artController.abort();
@@ -281,10 +308,12 @@ function bindExperiment() {
     themeButton.disabled = true;
     if (morphButton) morphButton.disabled = true;
     onLeave(); body.removeAttribute('data-cursor-ready');
+    savePointer = () => {};
     cleanup = () => {};
   };
 }
 
 bindExperiment();
-window.addEventListener('pagehide', () => cleanup());
+window.addEventListener('pageswap', () => savePointer());
+window.addEventListener('pagehide', () => { savePointer(); cleanup(); });
 window.addEventListener('pageshow', (event) => { if (event.persisted) bindExperiment(); });

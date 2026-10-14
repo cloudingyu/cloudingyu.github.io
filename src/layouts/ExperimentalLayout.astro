@@ -26,6 +26,22 @@ const [emailName, emailDomain] = SITE.email.split('@');
 <html lang={SITE.lang} data-theme="light">
   <head>
     <Head {title} {description} {type} {published} {tags} {image} {noindex} {author} />
+    <script is:inline>
+      // Restore the pointer before the new document's first paint.
+      try {
+        const pointer = JSON.parse(sessionStorage.getItem('cy-pointer'));
+        sessionStorage.removeItem('cy-pointer');
+        if (pointer && Date.now() - pointer.time < 30000
+          && pointer.width === innerWidth && pointer.height === innerHeight
+          && Number.isFinite(pointer.x) && Number.isFinite(pointer.y)
+          && pointer.x >= 0 && pointer.x < innerWidth && pointer.y >= 0 && pointer.y < innerHeight) {
+          const root = document.documentElement;
+          root.style.setProperty('--cursor-x', `${pointer.x}px`);
+          root.style.setProperty('--cursor-y', `${pointer.y}px`);
+          root.setAttribute('data-cursor-restored', '');
+        }
+      } catch { /* The native pointer remains available when storage is disabled. */ }
+    </script>
     <slot name="head" />
   </head>
   <body class="experimental">
@@ -130,10 +146,9 @@ const [emailName, emailDomain] = SITE.email.split('@');
   .exp-footer__base { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--line); font-size: .8rem; color: var(--ink-muted); }
   .exp-cursor { display: none; position: fixed; top: 0; left: 0; z-index: 100; width: 2.25rem; height: 2.25rem; border: 2px solid var(--accent); border-radius: 50%; background: transparent; pointer-events: none; will-change: transform; opacity: 0; transition: width .3s var(--exp-ease), height .3s var(--exp-ease), background .3s, border-color .3s, opacity .2s; }
   .exp-cursor.is-link { width: 1rem; height: 1rem; background: var(--accent); }
-  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-    .experimental[data-cursor-ready] .exp-cursor { display: flex; }
-    .experimental[data-cursor-ready], .experimental[data-cursor-ready] :is(a, button:not(:disabled), summary, [role='button']:not([aria-disabled='true'])) { cursor: none; }
-  }
+  .experimental[data-cursor-ready] .exp-cursor, html[data-cursor-restored] .exp-cursor { display: flex; }
+  html[data-cursor-restored] .exp-cursor { opacity: 1; transform: translate3d(var(--cursor-x), var(--cursor-y), 0) translate(-50%, -50%); }
+  :is(.experimental[data-cursor-ready], html[data-cursor-restored] .experimental), :is(.experimental[data-cursor-ready], html[data-cursor-restored] .experimental) :is(a, button:not(:disabled), summary, [role='button']:not([aria-disabled='true'])) { cursor: none; }
   .experimental[data-page-hidden] *, .experimental[data-page-hidden] *::before, .experimental[data-page-hidden] *::after { animation-play-state: paused !important; }
   html[data-exp-theme-transition]::view-transition-old(root) { animation: none; }
   html[data-exp-theme-transition]::view-transition-new(root) { animation: exp-theme-iris .65s cubic-bezier(.16,1,.3,1) both; mix-blend-mode: normal; }
@@ -154,7 +169,7 @@ const [emailName, emailDomain] = SITE.email.split('@');
     .exp-footer__base { margin-top: 2.5rem; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .exp-cursor { display: none !important; }
+    .exp-cursor { transition: none; }
     .footer-email__domain { transition: none; }
     .footer-directory a :is(span, i) { transition: none; }
     .footer-directory a:hover :is(span, i) { translate: none; }
