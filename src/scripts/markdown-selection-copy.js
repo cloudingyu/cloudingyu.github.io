@@ -124,7 +124,6 @@ export function bindMarkdownSelectionCopy(article, copyText) {
   let timer = 0;
   let bounds = null;
   let pointer = null;
-  let selectionAnchor = null;
   const formulas = Array.from(article.querySelectorAll('.katex'));
   const selectedFormulas = new Set();
   const highlightFormulas = (range) => {
@@ -167,29 +166,11 @@ export function bindMarkdownSelectionCopy(article, copyText) {
     if (!rect.width || !rect.height || rect.bottom <= 0 || rect.top >= innerHeight) return hide();
     popup.hidden = false;
     const { width, height } = popup.getBoundingClientRect();
-    const anchoredRange = selectionAnchor?.range;
-    const matchesAnchor = anchoredRange
-      && anchoredRange.startContainer === currentRange.startContainer && anchoredRange.startOffset === currentRange.startOffset
-      && anchoredRange.endContainer === currentRange.endContainer && anchoredRange.endOffset === currentRange.endOffset;
-    let x, y;
-    if (matchesAnchor) {
-      x = selectionAnchor.x - scrollX;
-      y = selectionAnchor.y - scrollY;
-    } else {
-      // Keyboard and touch selections use the moving end of the selection.
-      const caret = currentRange.cloneRange();
-      const selection = window.getSelection();
-      if (selection?.focusNode && article.contains(selection.focusNode)) {
-        caret.setStart(selection.focusNode, selection.focusOffset);
-        caret.collapse(true);
-      } else caret.collapse(false);
-      const caretRect = caret.getBoundingClientRect();
-      const end = caretRect.height ? caretRect : Array.from(currentRange.getClientRects()).at(-1) || rect;
-      x = end.right;
-      y = end.bottom;
-    }
-    const left = Math.max(12, Math.min(x + 12 + width <= innerWidth - 12 ? x + 12 : x - width - 12, innerWidth - width - 12));
-    const top = Math.max(12, Math.min(y + 12 + height <= innerHeight - 12 ? y + 12 : y - height - 12, innerHeight - height - 12));
+    // Center beside the visible selection, regardless of the drag direction.
+    const visibleTop = Math.max(0, rect.top);
+    const visibleBottom = Math.min(innerHeight, rect.bottom);
+    const left = Math.max(12, Math.min(rect.right + 12 + width <= innerWidth - 12 ? rect.right + 12 : rect.left - width - 12, innerWidth - width - 12));
+    const top = Math.max(12, Math.min((visibleTop + visibleBottom - height) / 2, innerHeight - height - 12));
     popup.style.left = `${left}px`;
     popup.style.top = `${top}px`;
   };
@@ -250,22 +231,19 @@ export function bindMarkdownSelectionCopy(article, copyText) {
   }, { passive: true });
   listen(document, 'pointerdown', (event) => {
     if (popup.contains(event.target)) return;
-    if (event.button === 0) selectionAnchor = null;
     dragging = event.button === 0 && article.contains(event.target);
     if (dragging) hide();
   }, { passive: true });
-  listen(document, 'pointerup', (event) => {
+  listen(document, 'pointerup', () => {
     if (!dragging) return;
     dragging = false;
-    const range = getRange();
-    selectionAnchor = range ? { x: event.clientX + scrollX, y: event.clientY + scrollY, range: range.cloneRange() } : null;
     schedule();
   }, { passive: true });
-  listen(document, 'pointercancel', () => { dragging = false; selectionAnchor = null; schedule(); });
+  listen(document, 'pointercancel', () => { dragging = false; schedule(); });
   listen(document, 'pointerleave', () => { pointer = null; cursor?.classList.remove('is-reading-text'); });
   listen(document, 'keydown', (event) => { if (event.key === 'Escape') hide(); });
   listen(window, 'scroll', () => { updateCursor(); position(); }, { passive: true });
-  listen(window, 'resize', () => { selectionAnchor = null; measure(); position(); }, { passive: true });
+  listen(window, 'resize', () => { measure(); position(); }, { passive: true });
   listen(document.body, 'reading-layout-change', measure);
   listen(document.body, 'load', measure, { capture: true });
   const resize = new ResizeObserver(measure);
