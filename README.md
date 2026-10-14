@@ -26,7 +26,7 @@ npm run preview
 - `build`：同步内容与字体，生成可部署的静态网站到 `dist/`。
 - `verify`：检查构建产物中的文章、图片、公式、分页、永久链接、搜索与标签数据。需要先构建。
 - `preview`：预览 `dist/` 中的静态网站。
-- `cloud:bake`：修改 `scripts/bake-cloud.mjs` 中的云形或光照后，重新生成并提交 `src/assets/cloud-volume.bin`。普通构建直接使用这份约 121 KB 的 gzip 素材，无需重新烘焙。
+- `cloud:bake`：修改 `scripts/bake-cloud.mjs` 中的云形或光照后，重新生成并提交 `src/assets/cloud-volume.bin`。普通构建直接使用这份约 144 KB 的 gzip 素材，无需重新烘焙。
 
 GitHub Actions 按锁文件安装依赖，完成构建、源码检查和内容校验后发布到 Pages。KaTeX 的依赖覆盖让数学插件也使用已修复的同一版本，避免嵌套安装旧版本。
 
