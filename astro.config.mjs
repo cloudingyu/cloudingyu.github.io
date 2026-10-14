@@ -9,6 +9,7 @@ import { remarkMathRestore } from './src/lib/remark-math-restore.mjs';
 import { rehypeMathHeadings } from './src/lib/rehype-math-headings.mjs';
 import { rehypeCodeFrame } from './src/lib/rehype-code-frame.mjs';
 import { rehypeLazyImages } from './src/lib/rehype-lazy-images.mjs';
+import { rehypeReadingEmphasis } from './src/lib/rehype-reading-emphasis.mjs';
 import { NOTEBOOK_PATH } from './src/data/notebook-config.mjs';
 
 /**
@@ -27,7 +28,7 @@ import { NOTEBOOK_PATH } from './src/data/notebook-config.mjs';
  */
 const markdownProcessor = unified({
   remarkPlugins: [remarkMath, remarkMathRestore, remarkGuardCurrency],
-  rehypePlugins: [rehypeKatex, rehypeMathHeadings, rehypeCodeFrame, rehypeLazyImages],
+  rehypePlugins: [rehypeKatex, rehypeMathHeadings, rehypeCodeFrame, rehypeLazyImages, rehypeReadingEmphasis],
 });
 
 export default defineConfig({

@@ -94,3 +94,20 @@
 .experimental #main .post__prose th { font-weight: 700; white-space: normal; }
 .experimental #main .post__prose .katex { font-size: 1em; }
 .experimental #main .post__prose .katex-display { margin: 1em 0; padding: 0; }
+
+/* The term experiment varies text color within a sentence. Keeping alpha on
+   color lets an important word override surrounding text without compounding
+   opacity or fading its mathematical content. Unconfigured articles keep their
+   existing typography. */
+[data-reading-mode='enhanced'] .experimental #main .post__prose:has(.reading-term) {
+  --reading-text-alpha: 30%;
+  --reading-secondary-alpha: 70%;
+  color: color-mix(in srgb, var(--ink) var(--reading-text-alpha), transparent);
+}
+[data-reading-mode='enhanced'] .experimental #main .post__prose .reading-term[data-importance='secondary'] {
+  color: color-mix(in srgb, var(--ink) var(--reading-secondary-alpha), transparent);
+}
+[data-reading-mode='enhanced'] .experimental #main .post__prose .reading-term[data-importance='primary'],
+[data-reading-mode='enhanced'] .experimental #main .post__prose:has(.reading-term) :is(strong, b, .katex) {
+  color: var(--ink);
+}

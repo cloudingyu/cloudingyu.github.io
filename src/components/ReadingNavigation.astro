@@ -1,7 +1,9 @@
 ---
+import { getReadingEmphasis } from '../data/reading-emphasis.mjs';
 interface Link { href: string; label: string; title?: string; rel?: string }
-interface Props { label?: string; homeHref?: string; homeLabel?: string; neighbors?: Link[] }
-const { label = '阅读导航', homeHref = '/', homeLabel = '博客首页', neighbors = [] } = Astro.props;
+interface Props { label?: string; homeHref?: string; homeLabel?: string; neighbors?: Link[]; articleTitle?: string }
+const { label = '阅读导航', homeHref = '/', homeLabel = '博客首页', neighbors = [], articleTitle } = Astro.props;
+const hasReadingEmphasis = getReadingEmphasis(articleTitle) !== null;
 const prev = neighbors.find((item) => item.rel === 'prev');
 const next = neighbors.find((item) => item.rel === 'next');
 ---
@@ -36,7 +38,10 @@ const next = neighbors.find((item) => item.rel === 'next');
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M12 20V8m-5 5 5-5 5 5" /></svg>
       <span>顶部</span>
     </button>
-    <span class="reading-navigation__caption" aria-hidden="true">NAV</span>
+    <button class="reading-navigation__emphasis" type="button" data-reading-mode-toggle data-reading-mode-available={hasReadingEmphasis ? 'true' : 'false'} aria-label={hasReadingEmphasis ? '开启强化阅读' : '尚未进行词汇重要性分级'} aria-pressed="false" disabled>
+      <span class="reading-navigation__focus-ring" aria-hidden="true" />
+      <svg class="reading-navigation__focus" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3C12 9 9 12 3 12c6 0 9 3 9 9 0-6 3-9 9-9-6 0-9-3-9-9Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg>
+    </button>
   </nav>
 </div>
 
@@ -108,7 +113,27 @@ const next = neighbors.find((item) => item.rel === 'next');
   .reading-navigation__item:not(:disabled):hover, .reading-navigation__item:focus-visible { background: var(--accent); color: var(--paper); }
   .reading-navigation__item:disabled { color: var(--ink-faint); cursor: default; }
   .reading-navigation__item:disabled > * { opacity: .3; }
-  .reading-navigation__caption { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: .3rem; background: var(--panel); color: var(--ink-muted); font: 500 .55rem var(--font-mono); letter-spacing: .12em; pointer-events: none; }
+  .reading-navigation__emphasis {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    display: grid; place-items: center; width: 3rem; height: 3rem; padding: 0;
+    border: 1px solid var(--line-strong); border-radius: 50%; background: var(--panel); color: var(--ink-muted);
+    touch-action: manipulation; isolation: isolate;
+    transition: color .3s, border-color .3s, background .3s, box-shadow .4s;
+  }
+  .reading-navigation__focus { width: 1.5rem; height: 1.5rem; transition: transform .5s var(--exp-ease); }
+  .reading-navigation__focus-ring { position: absolute; inset: .3rem; border: 1px solid currentColor; border-radius: 50%; opacity: .35; transition: inset .4s, opacity .4s; }
+  .reading-navigation__emphasis:not(:disabled):hover { border-color: var(--accent); color: var(--accent); }
+  .reading-navigation__emphasis:active:not(:disabled) .reading-navigation__focus { scale: .88; }
+  .reading-navigation__emphasis[aria-pressed='true'] {
+    color: var(--accent); border-color: var(--accent);
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 18%, var(--panel)), var(--panel) 75%);
+    box-shadow: 0 0 1rem color-mix(in srgb, var(--accent) 25%, transparent), inset 0 0 .65rem color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .reading-navigation__emphasis[aria-pressed='true'] .reading-navigation__focus { transform: rotate(90deg) scale(1.12); }
+  .reading-navigation__emphasis[aria-pressed='true'] .reading-navigation__focus-ring { inset: -.25rem; opacity: .6; }
+  .reading-navigation__emphasis[aria-pressed='true']::after { content: ''; position: absolute; inset: -1px; border: 1px solid currentColor; border-radius: 50%; pointer-events: none; animation: emphasis-ignite .65s ease-out both; }
+  .reading-navigation__emphasis:disabled { color: color-mix(in srgb, var(--ink-muted) 30%, transparent); border-color: var(--line); cursor: default; }
+  @keyframes emphasis-ignite { from { transform: scale(1); opacity: .65; } to { transform: scale(1.65); opacity: 0; } }
   @keyframes orb-arrive {
     0% { opacity: 0; transform: translate(.35rem, .6rem) scale(.82); }
     65% { opacity: 1; transform: translate(0, -.06rem) scale(1.04); }
@@ -141,6 +166,7 @@ const next = neighbors.find((item) => item.rel === 'next');
   }
   @media (prefers-reduced-motion: reduce) {
     .reading-navigation, .reading-navigation * { animation: none !important; }
-    .reading-navigation :is(.reading-navigation__core, .reading-navigation__ring, .reading-navigation__spark, .reading-navigation__panel, .reading-navigation__dial span, .reading-navigation__item) { transition: none; }
+    .reading-navigation :is(.reading-navigation__core, .reading-navigation__ring, .reading-navigation__spark, .reading-navigation__panel, .reading-navigation__dial span, .reading-navigation__item, .reading-navigation__emphasis, .reading-navigation__focus, .reading-navigation__focus-ring) { transition: none; }
+    .reading-navigation__emphasis::after { animation: none !important; }
   }
 </style>

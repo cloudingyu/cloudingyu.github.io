@@ -8,6 +8,20 @@ export function bindReadingPreferences(body) {
   const root = document.documentElement;
   const controller = new AbortController();
   const options = { signal: controller.signal };
+  const modeToggle = body.querySelector('[data-reading-mode-toggle][data-reading-mode-available="true"]');
+  const updateModeToggle = () => {
+    const enhanced = root.dataset.readingMode === 'enhanced';
+    modeToggle?.setAttribute('aria-pressed', String(enhanced));
+    modeToggle?.setAttribute('aria-label', enhanced ? '关闭强化阅读' : '开启强化阅读');
+  };
+  modeToggle?.addEventListener('click', () => {
+    root.dataset.readingMode = root.dataset.readingMode === 'enhanced' ? 'normal' : 'enhanced';
+    updateModeToggle();
+    try { localStorage.setItem('cy-reading-mode', root.dataset.readingMode); }
+    catch { /* The current page can switch without storage. */ }
+  }, options);
+  updateModeToggle();
+  if (modeToggle) modeToggle.disabled = false;
   const compact = matchMedia('(max-width: 67.99rem)');
   const grid = article.closest('.post__grid');
   const directory = grid?.querySelector('.post__toc-panel');
@@ -138,6 +152,7 @@ export function bindReadingPreferences(body) {
   apply();
   return () => {
     controller.abort();
+    if (modeToggle) modeToggle.disabled = true;
     resize.disconnect();
     cancelAnimationFrame(frame);
     layoutTransitions.clear();

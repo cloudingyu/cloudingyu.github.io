@@ -57,7 +57,7 @@ const showToc = toc.length >= 2;
   image={cover || undefined}
   description={subtitle || `${title} —— ${AUTHOR.name} 的技术笔记`}
 >
-  <ReadingNavigation slot="reading-navigation" neighbors={[
+  <ReadingNavigation slot="reading-navigation" articleTitle={title} neighbors={[
     ...(prev ? [{ href: permalink(prev), label: '上一篇', title: prev.data.title, rel: 'prev' }] : []),
     ...(next ? [{ href: permalink(next), label: '下一篇', title: next.data.title, rel: 'next' }] : []),
   ]} />
