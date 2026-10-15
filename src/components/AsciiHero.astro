@@ -1,0 +1,31 @@
+---
+import { cloudPiece } from '../data/ascii-pieces.mjs';
+
+// A real first frame keeps the hero visible before JavaScript and without motion.
+const still = cloudPiece.default()(0);
+---
+
+<div class="ascii-stage" data-ascii-stage data-ascii-piece="cloud" aria-hidden="true">
+  <div class="ascii-stage__view" data-ascii-view>
+    <pre class="ascii-stage__art" data-ascii-art style={`--ascii-cols: ${cloudPiece.meta.cols}; --ascii-rows: ${cloudPiece.meta.rows}`}>{still}</pre>
+  </div>
+</div>
+
+<style>
+  @font-face { font-family: 'Ascii Maple Mono'; src: url('/fonts/notebook/mono-bold.woff2') format('woff2'); font-style: normal; font-weight: 700; font-display: swap; }
+  .ascii-stage { position: absolute; z-index: 1; left: 38%; right: var(--exp-space); top: 2rem; bottom: 13rem; overflow: clip; contain: paint; isolation: isolate; pointer-events: none; opacity: calc(1 - var(--hero-progress) * .65); }
+  .ascii-stage__view { position: absolute; inset: 0; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; container-type: size; }
+  /* Fit the occupied rows, not the empty margins of the 112 × 48 frame.
+     Centre row 27, then lower the artwork slightly for optical alignment. */
+  .ascii-stage__art { grid-area: 1 / 1; position: relative; translate: 0 calc(1rem - 3em); margin: 0; padding: 0; border: 0; background: transparent; color: var(--accent); font-family: 'Ascii Maple Mono', monospace; font-size: min(1rem, calc(165cqw / var(--ascii-cols)), calc(114cqh / var(--ascii-rows))); font-weight: 700; line-height: 1; letter-spacing: 0; white-space: pre; font-variant-ligatures: none; user-select: none; }
+  .ascii-stage[data-ascii-vector] .ascii-stage__art { visibility: hidden; }
+  .ascii-stage__view :global(.ascii-stage__svg) { position: absolute; max-width: none; overflow: visible; pointer-events: none; user-select: none; }
+  @media (prefers-reduced-motion: no-preference) {
+    .ascii-stage { animation: ascii-arrive 1s var(--exp-ease) both; }
+  }
+  @keyframes ascii-arrive { from { opacity: 0; } to { opacity: 1; } }
+  :global([data-ascii-stacked]) .ascii-stage { position: relative; inset: auto; width: min(100%, 42rem); height: clamp(15rem, 42svh, 22rem); margin-inline: auto; }
+  @media (max-width: 48rem) {
+    .ascii-stage { position: relative; inset: auto; width: 100%; height: clamp(15rem, 42svh, 22rem); margin-inline: auto; }
+  }
+</style>

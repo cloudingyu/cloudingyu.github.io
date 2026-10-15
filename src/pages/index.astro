@@ -1,5 +1,6 @@
 ---
 import Arrow from '../components/Arrow.astro';
+import AsciiHero from '../components/AsciiHero.astro';
 import ExperimentalLayout from '../layouts/ExperimentalLayout.astro';
 import Pagination from '../components/Pagination.astro';
 import PostPoster from '../components/PostPoster.astro';
@@ -22,13 +23,8 @@ const tags = tagCounts(posts);
       <a class="hero-cta" href="#index" data-magnet><span>进入文章</span><span aria-hidden="true"><Arrow direction="down-right" /></span></a>
     </div>
 
-    <div class="cloud-stage" data-cloud-stage aria-hidden="true">
-      <div class="cloud-stage__view" data-cloud-view>
-        <div class="cloud-fallback" />
-        <div class="cloud-stage__halo" />
-      </div>
-    </div>
-    <button class="hero-morph" type="button" data-morph disabled><span aria-hidden="true"><svg class="hero-morph__symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M20 8a8 8 0 0 0-13-2L4 9m0-5v5h5M4 16a8 8 0 0 0 13 2l3-3m0 5v-5h-5" /></svg></span><span>换一朵云</span></button>
+    <AsciiHero />
+    <button class="hero-morph" type="button" data-morph aria-label="切换为鱼" disabled><svg class="hero-morph__symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 8a8 8 0 0 0-13-2L4 9m0-5v5h5M4 16a8 8 0 0 0 13 2l3-3m0 5v-5h-5" /></svg></button>
 
     <a class="latest-dock" href={permalink(latest)}>
       <div><span class="latest-dock__badge">最新文章</span><time datetime={latest.data.date.toISOString()}>{formatDate(latest.data.date)}</time></div>
@@ -75,18 +71,10 @@ const tags = tagCounts(posts);
   .hero-cta { pointer-events: auto; display: inline-flex; align-items: center; justify-content: space-between; gap: 2.8rem; background: var(--accent); color: var(--paper); font-size: var(--home-link-size); font-weight: 700; padding: 1rem 1.4rem; border-radius: 3rem; translate: var(--mag-x, 0px) var(--mag-y, 0px); transition: scale .3s var(--exp-ease); }
   .hero-cta > span:last-child { font-size: 1.4rem; line-height: 1; }
   .hero-cta:hover { scale: 1.04; }
-  .cloud-stage { position: absolute; z-index: 1; top: -5%; right: -1%; width: 65%; height: 100%; pointer-events: none; translate: calc(var(--hero-progress) * 70px) calc(var(--hero-progress) * -125px); scale: calc(1 + var(--hero-progress) * .24); rotate: calc(var(--hero-progress) * 9deg); opacity: calc(1 - var(--hero-progress) * .65); }
-  .cloud-stage__view { position: absolute; inset: 0; }
-  .cloud-stage :global(canvas) { position: absolute; width: 100%; height: 100%; inset: 0; z-index: 1; }
-  :global([data-theme='light']) .cloud-stage__halo { background: radial-gradient(ellipse, #303c761a, transparent 66%); }
-  :global([data-theme='light']) .cloud-fallback { background-image: url('/art/cloud-preview-light.webp'); filter: drop-shadow(0 22px 24px #303c7628); }
-  .cloud-stage__halo { position: absolute; inset: 22% 5%; border-radius: 50%; background: radial-gradient(ellipse, color-mix(in srgb, var(--exp-purple) 9%, transparent), transparent 66%); filter: blur(1rem); }
-  .cloud-fallback { position: absolute; inset: 0; background: url('/art/cloud-preview-dark.webp') center / contain no-repeat; }
-  .cloud-stage[data-canvas-ready] .cloud-fallback { opacity: 0; }
-  .hero-morph { position: absolute; z-index: 5; right: 10%; bottom: 13rem; display: flex; align-items: center; gap: .7rem; font-size: var(--home-link-size); font-weight: 600; color: var(--ink); transform: translateY(calc(var(--hero-progress) * -75px)); padding: .45rem .8rem .45rem .45rem; border: 1px solid var(--line-strong); border-radius: 3rem; background: color-mix(in srgb, var(--paper) 92%, transparent); }
-  .hero-morph > span:first-child { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border: 1px solid var(--line-strong); border-radius: 50%; font-size: 1.4rem; transition: background .3s, color .3s; }
-  .hero-morph__symbol { display: block; width: 1em; height: 1em; transition: rotate .6s var(--exp-ease); }
-  .hero-morph:is(:hover, :focus-visible) > span:first-child { background: var(--accent); color: var(--paper); }
+  .hero-morph { --morph-fill: var(--exp-purple-deep); --morph-ink: #f0f1e9; position: absolute; z-index: 5; right: 10%; bottom: 13rem; display: grid; place-items: center; width: 3.4rem; height: 3.4rem; color: var(--morph-ink); padding: 0; border: 2px solid var(--morph-fill); border-radius: 50%; background: var(--morph-fill); transition: background .3s, color .3s, border-color .3s, filter .3s; }
+  :global([data-theme='light']) .hero-morph { --morph-fill: #d0ff45; --morph-ink: #15170f; }
+  .hero-morph__symbol { display: block; width: 1.5rem; height: 1.5rem; transition: rotate .6s var(--exp-ease); }
+  .hero-morph:is(:hover, :focus-visible) { filter: brightness(1.08); }
   .hero-morph:is(:hover, :focus-visible) .hero-morph__symbol { rotate: 180deg; }
   .hero-morph:disabled { display: none; }
   @media (prefers-reduced-motion: reduce) { .hero-morph__symbol { transition: none; } }
@@ -101,7 +89,7 @@ const tags = tagCounts(posts);
   .signal-band__track { display: flex; width: max-content; font-family: 'Arial Black', var(--font-sans); font-size: clamp(1.1rem, 2.7vw, 2.5rem); line-height: 1.2; font-weight: 900; letter-spacing: -.04em; }
   .signal-band__track > span { display: flex; align-items: center; gap: 2rem; padding-right: 2rem; }
   .signal-band__mark { display: block; flex: 0 0 auto; width: 1.4em; height: 1.4em; }
-  .exp-journal { padding: 6rem var(--exp-space) 5rem; }
+  .exp-journal { padding: 6rem var(--exp-space) 5rem; overflow-x: clip; }
   .journal-heading { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 2.8rem; }
   .journal-heading h2 { font-size: clamp(2.75rem, 6vw, 6rem); font-weight: 800; letter-spacing: -.065em; }
   .journal-heading h2 span { color: var(--accent); }
@@ -122,23 +110,19 @@ const tags = tagCounts(posts);
   .topic-flow a:hover { background: var(--accent); color: var(--paper); rotate: -3deg; }
   .topic-flow a:hover :is(sup, span) { color: inherit; }
   @media (prefers-reduced-motion: no-preference) {
-    .cloud-stage__view { transform: perspective(1000px) rotateX(calc(var(--cloud-y, 0) * -8deg)) rotateY(calc(var(--cloud-x, 0) * 14deg)) translate3d(calc(var(--cloud-x, 0) * 10px), calc(var(--cloud-y, 0) * 6px), 0); transition: transform .1s ease-out; will-change: transform; }
+    .hero-morph[aria-busy='true'] .hero-morph__symbol { animation: morph-working .8s linear infinite; }
     .hero-line > span { animation: giant-rise .75s var(--exp-ease) both; }
     .hero-line--acid > span { animation-delay: .08s; }
     .hero-cta { animation-delay: .5s; }
     .latest-dock { animation-delay: .7s; }
-    .cloud-stage { animation: sculpture-arrive 1s var(--exp-ease) both; }
-    .cloud-stage :global(canvas) { animation: cloud-float 9s ease-in-out infinite alternate; }
-    .exp-hero[data-offscreen] .cloud-stage :global(canvas), :global(.experimental[data-page-hidden]) .cloud-stage :global(canvas) { animation-play-state: paused; }
     .signal-band__track { animation: signal-run 28s linear infinite; }
     .topic-flow__track { animation: topics-run 80s linear infinite; }
     .topic-flow:hover .topic-flow__track, .topic-flow:focus-within .topic-flow__track { animation-play-state: paused; }
     .signal-band[data-motion-paused] .signal-band__track, .topic-flow[data-motion-paused] .topic-flow__track { animation-play-state: paused; }
   }
   @keyframes giant-rise { from { transform: translateY(115%) rotate(4deg); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes morph-working { to { rotate: 360deg; } }
   @keyframes details-rise { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
-  @keyframes sculpture-arrive { from { transform: translate(15%, 10%) scale(.7) rotate(20deg); } to { transform: none; } }
-  @keyframes cloud-float { from { transform: translate3d(0, -5px, 0) rotate(-.5deg); } to { transform: translate3d(0, 7px, 0) rotate(.5deg); } }
   @keyframes scroll-pulse { 0%, 100% { translate: 0 -3px; } 50% { translate: 0 4px; } }
   @keyframes signal-run { to { transform: translateX(-25%); } }
   @keyframes topics-run { to { transform: translateX(-50%); } }
@@ -154,9 +138,7 @@ const tags = tagCounts(posts);
     .hero-type h1 { font-size: clamp(3.5rem, min(18vw, 13svh), 7rem); }
     .hero-type p { font-size: 1.0625rem; margin-top: 1rem; }
     .hero-cta { padding: .85rem 1.2rem; gap: 2rem; }
-    .cloud-stage { width: 125%; height: 78%; top: 20%; right: -12%; }
-    .hero-morph { top: auto; bottom: 11rem; right: 6%; }
-    .hero-morph > span:first-child { width: 2.1rem; height: 2.1rem; font-size: 1.2rem; }
+    .hero-morph { top: auto; bottom: 11rem; right: 6%; width: 3rem; height: 3rem; }
     .latest-dock { width: auto; left: var(--exp-space); bottom: 1rem; right: var(--exp-space); padding: 1rem 3.5rem 1rem 0; }
     .signal-band { padding-block: .7rem; }
     .signal-band__track > span { gap: 1rem; padding-right: 1rem; }
@@ -173,9 +155,18 @@ const tags = tagCounts(posts);
     .topic-flow__track { width: max-content; }
     .topic-flow a[aria-hidden] { display: none; }
   }
+  .home-stage:has([data-ascii-stacked]) { height: auto; min-height: calc(100dvh - var(--exp-nav-height)); grid-template-rows: auto auto; }
+  .exp-hero[data-ascii-stacked] { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 1.25rem; padding-block: 1.5rem; }
+  .exp-hero[data-ascii-stacked] .hero-type { width: 100%; padding-top: 0; align-self: auto; }
+  .exp-hero[data-ascii-stacked] .latest-dock { position: relative; inset: auto; width: 100%; margin: 0; }
+  @media (max-width: 48rem) {
+    .home-stage { height: auto; min-height: calc(100dvh - var(--exp-nav-height)); grid-template-rows: auto auto; }
+    .exp-hero { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 1.25rem; padding-block: 1.5rem; }
+    .hero-type { width: 100%; padding-top: 0; align-self: auto; }
+    .latest-dock { position: relative; inset: auto; width: 100%; margin: 0; }
+  }
   @media (max-width: 24rem) {
-    .hero-morph { gap: .5rem; right: var(--exp-space); }
-    .hero-morph > span:first-child { width: 1.9rem; height: 1.9rem; }
+    .hero-morph { right: var(--exp-space); }
   }
   @media (min-width: 48.01rem) and (max-height: 38rem) {
     .exp-hero { padding-block: .5rem; }

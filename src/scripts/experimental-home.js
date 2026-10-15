@@ -11,8 +11,7 @@ function bindExperiment() {
   const body = document.querySelector('.experimental');
   if (!body) return;
   const hero = body.querySelector('[data-exp-hero]');
-  const host = body.querySelector('[data-cloud-stage]');
-  const cloudView = body.querySelector('[data-cloud-view]');
+  const host = body.querySelector('[data-ascii-stage]');
   const cursor = body.querySelector('.exp-cursor');
   const themeButton = body.querySelector('[data-exp-theme]');
   const morphButton = body.querySelector('[data-morph]');
@@ -22,15 +21,14 @@ function bindExperiment() {
   const navigationCleanup = bindReadingNavigation(body);
   const homeScrollCleanup = bindHomeScroll(body);
   const fine = matchMedia('(hover: hover) and (pointer: fine)');
-  const input = { x: 0, y: 0, scroll: 0 };
-  const target = { x: 0, y: 0, scroll: 0 };
+  const input = { scroll: 0 };
+  const target = { scroll: 0 };
   let disposed = false;
   let art = null;
   let artLoading = false;
   let artFrame = 0;
   let artIdle = 0;
   let artTimer = 0;
-  const artController = new AbortController();
   let frame = 0;
   let previous = 0;
   let tx = innerWidth / 2, ty = innerHeight / 2;
@@ -39,7 +37,6 @@ function bindExperiment() {
   let magnetRect = null;
   let hoveredLink = null;
   let pointerEvent = null;
-  let scrollingTimer = 0;
   let heroRect = null;
   let paintedScroll = -1;
   const animations = new Set();
@@ -63,15 +60,8 @@ function bindExperiment() {
     const dt = previous ? Math.min((time - previous) / 1000, .05) : 1 / 60;
     previous = time;
     let pending = false;
-    // Pointer motion transforms a cached image; it never schedules a WebGL draw.
-    const pointerChanged = input.x !== target.x || input.y !== target.y;
-    input.x = target.x; input.y = target.y;
     input.scroll += (target.scroll - input.scroll) * (1 - Math.exp(-14 * dt));
     if (Math.abs(input.scroll - target.scroll) > .0008) pending = true;
-    if (pointerChanged && cloudView) {
-      cloudView.style.setProperty('--cloud-x', input.x.toFixed(4));
-      cloudView.style.setProperty('--cloud-y', input.y.toFixed(4));
-    }
     paint();
     if (pending) frame = requestAnimationFrame(tick);
   };
@@ -88,8 +78,7 @@ function bindExperiment() {
   };
   const processPointer = (event) => {
     if (heroRect && !hero.hasAttribute('data-offscreen')) {
-      target.x = clamp((event.clientX - heroRect.left) / heroRect.width * 2 - 1, -1, 1);
-      target.y = clamp((event.clientY + scrollY - heroRect.top) / heroRect.height * 2 - 1, -1, 1);
+      art?.setCursor(event.clientX, event.clientY);
     }
     const nextMagnet = event.target.closest('[data-magnet]');
     if (nextMagnet !== magnet) {
@@ -106,7 +95,7 @@ function bindExperiment() {
   };
   const onPointer = (event) => {
     if (event.pointerType !== 'mouse') return;
-    // Keep the pointer responsive even while the cloud's animation frame is busy.
+    // Keep pointer feedback independent of the artwork.
     tx = event.clientX; ty = event.clientY;
     cursor.style.transform = `translate3d(${tx}px, ${ty}px, 0) translate(-50%, -50%)`;
     cursor.style.opacity = '1';
@@ -131,7 +120,7 @@ function bindExperiment() {
     cursor.style.opacity = '0';
     cursor.classList.remove('is-link');
     body.removeAttribute('data-cursor-ready');
-    target.x = 0; target.y = 0;
+    art?.setCursor(null, null);
     resetMagnet(); schedule();
   };
   const onScroll = () => {
@@ -139,10 +128,6 @@ function bindExperiment() {
       // Give the first wheel movement a clear response, easing into the full range.
       const distance = clamp(scrollY / Math.max(heroRect.height * .72, 1), 0, 1);
       target.scroll = 1 - Math.pow(1 - distance, 1.35);
-      // Move the already rendered cloud with CSS while scrolling; release the GPU.
-      art?.setScrolling(true);
-      clearTimeout(scrollingTimer);
-      scrollingTimer = setTimeout(() => { scrollingTimer = 0; art?.setScrolling(false); }, 150);
     }
     signalBand?.style.setProperty('--signal-offset', String(motion.matches ? 0 : scrollY * .12));
     schedule();
@@ -165,12 +150,11 @@ function bindExperiment() {
     if (motion.matches) {
       cancelAnimationFrame(frame); frame = 0;
       animations.forEach((animation) => animation.finish());
-      Object.assign(input, { x: 0, y: 0, scroll: 0 });
+      Object.assign(input, { scroll: 0 });
       Object.assign(target, input);
       pointerEvent = null;
       resetMagnet(); paint();
-      cloudView?.style.removeProperty('--cloud-x');
-      cloudView?.style.removeProperty('--cloud-y');
+      art?.setCursor(null, null);
       signalBand?.style.setProperty('--signal-offset', '0');
     } else {
       onScroll();
@@ -206,24 +190,23 @@ function bindExperiment() {
     if (!motion.matches) remember(morphButton.animate([{ transform: 'scale(.9)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 450, easing: 'cubic-bezier(.16,1,.3,1)' }));
   };
   const loadArt = async () => {
-    if (disposed || motion.matches || hero.hasAttribute('data-offscreen')) { artLoading = false; return; }
+    if (disposed || hero.hasAttribute('data-offscreen')) { artLoading = false; return; }
     try {
-      // Load after the first paint; the baked volume no longer needs to wait for the entrance.
-      const { mountCloud } = await import('./cloud-sculpture.js');
-      if (disposed || motion.matches || hero.hasAttribute('data-offscreen')) return;
-      const mounted = await mountCloud(host, { signal: artController.signal });
+      // Load the ASCII player after the readable first paint.
+      const { mountAscii } = await import('./ascii-hero.js');
+      if (disposed || hero.hasAttribute('data-offscreen')) return;
+      const mounted = mountAscii(host, morphButton);
       if (disposed) { mounted.dispose(); return; }
       art = mounted;
-      art.setScrolling(scrollingTimer !== 0);
       morphButton.disabled = false;
-    } catch { if (!disposed) host.setAttribute('data-canvas-fallback', ''); }
+    } catch { if (!disposed) host.setAttribute('data-ascii-fallback', ''); }
     finally { artLoading = false; }
   };
   const artObserver = new IntersectionObserver(([entry]) => {
     hero.toggleAttribute('data-offscreen', !entry.isIntersecting);
-    if (!entry.isIntersecting || motion.matches || art || artLoading) return;
+    if (!entry.isIntersecting || art || artLoading) return;
     artLoading = true;
-    // Paint the readable homepage first; the CSS cloud is visible during initialization.
+    // The server-rendered ASCII frame stays visible while the player loads.
     artFrame = requestAnimationFrame(() => {
       artFrame = requestAnimationFrame(() => {
         artFrame = 0;
@@ -288,11 +271,9 @@ function bindExperiment() {
 
   cleanup = () => {
     disposed = true;
-    artController.abort();
     cancelAnimationFrame(artFrame);
     if (artIdle) cancelIdleCallback(artIdle);
     clearTimeout(artTimer);
-    clearTimeout(scrollingTimer);
     cancelAnimationFrame(frame);
     animations.forEach((animation) => animation.cancel());
     artObserver.disconnect(); revealObserver.disconnect(); motionObserver.disconnect(); heroResize.disconnect(); art?.dispose(); readingCleanup(); navigationCleanup(); homeScrollCleanup();
