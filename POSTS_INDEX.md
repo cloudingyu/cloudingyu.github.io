@@ -1,6 +1,6 @@
 # 文章索引与元数据
 
-共 **15 篇文章**，全部位于 `posts/` 目录，文件名格式为 `YYYY-MM-DD-<slug>.markdown`（原始 Jekyll 命名，用于推导日期与永久链接）。
+共 **16 篇文章**，全部位于 `posts/` 目录，文件名格式为 `YYYY-MM-DD-<slug>.markdown`（原始 Jekyll 命名，用于推导日期与永久链接）。
 
 ---
 
@@ -23,6 +23,7 @@
 | 13 | `2025-04-14-Command.markdown` | 命令模式（Command） | 当需要将请求封装为一个对象，使得可以用不同的请求对客户进行参数化时...... | 2025-04-14 | CloudingYu | 面向对象, 设计模式, 行为型模式, 软件设计 | 无 |
 | 14 | `2025-05-09-SOLID.markdown` | 面向对象程序设计基本原则（SOLID） | 编写可维护、可扩展代码的五大核心原则 | 2025-05-09 | CloudingYu | 面向对象, 软件设计 | 无 |
 | 15 | `2026-03-22-MLInit.markdown` | 从数学推导看机器学习的激活函数与损失函数 | 关于回归任务和分类任务在不同函数上的选择 | 2026-03-22 | CloudingYu | 人工智能, 机器学习, 概率论与数理统计 | 无 |
+| 16 | `2026-10-21-AI-Native-Organization.markdown` | 从「用 AI」到「AI 原生」：企业落地 AI 的四个 Ready | 「不再纸上谈兵：财税 AI 从 Demo 到生产环境」闭门分享会（2026.10.21）总结 | 2026-10-21 | CloudingYu | 人工智能, 组织管理, 数字化转型 | 无 |
 
 ## 标签统计
 
@@ -42,11 +43,13 @@
 | 插件 | 1 |
 | 数据结构 | 1 |
 | 算法设计 | 1 |
-| 人工智能 | 1 |
+| 人工智能 | 2 |
 | 机器学习 | 1 |
 | 概率论与数理统计 | 1 |
+| 组织管理 | 1 |
+| 数字化转型 | 1 |
 
-合计 17 个标签。原站点「特色标签」阈值为 1，即**文章数 ≥ 2 的标签**会被突出展示：题解、洛谷、面向对象、软件设计、设计模式、行为型模式、算法。
+合计 19 个标签。原站点「特色标签」阈值为 1，即**文章数 ≥ 2 的标签**会被突出展示：题解、洛谷、面向对象、软件设计、设计模式、行为型模式、算法、人工智能。
 
 ## 文章内容特征（影响渲染实现）
 
@@ -67,6 +70,7 @@
 | 2025-04-14-Command | 否 | 是 | 2 | |
 | 2025-05-09-SOLID | 否 | 是 | 0 | |
 | 2026-03-22-MLInit | 是 | 是 | 0 | |
+| 2026-10-21-AI-Native-Organization | 否 | 否 | 4 | 含 Markdown 表格、引用块与 4 张课件截图 |
 
 **依赖 MathJax 的文章共 10 篇**，重建时必须启用 LaTeX 公式渲染（原站点用 MathJax，`$...$` 与 `$$...$$` 均有用到）。
 
@@ -81,6 +85,7 @@
 | `2025-04-07-UML` | `images/posts/2025-04-07-UML/` | 共 27 个 SVG，见目录 |
 | `2025-04-11-Iterator` | `images/posts/2025-04-11-Iterator/` | cell.svg, iterator.svg, iteratorCheckborad.svg |
 | `2025-04-14-Command` | `images/posts/2025-04-14-Command/` | command.svg, string.svg |
+| `2026-10-21-AI-Native-Organization` | `images/posts/2026-10-21-AI-Native-Organization/` | slide-03-four-ready.webp, slide-05-knowledge-loop.webp, slide-09-scenario-criteria.webp, slide-22-digital-employee-lifecycle.webp |
 
 其余 8 篇文章不含本地图片。
 

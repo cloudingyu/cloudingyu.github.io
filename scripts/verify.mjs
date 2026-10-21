@@ -40,24 +40,26 @@ const EXPECTED_POSTS = [
   ['2025/04/14', 'Command'],
   ['2025/05/09', 'SOLID'],
   ['2026/03/22', 'MLInit'],
+  ['2026/10/21', 'AI-Native-Organization'],
 ];
 
-// 17 个标签，中文的落到目录名时是原值（Astro 会做百分号编码）
+// 19 个标签，中文的落到目录名时是原值（Astro 会做百分号编码）
 const EXPECTED_TAGS = [
   '题解', '洛谷', '面向对象', '软件设计', '设计模式', '行为型模式', '算法',
   '力扣', 'VSCode', 'Vim', 'IDE', '插件', '数据结构', '算法设计',
   '人工智能', '机器学习', '概率论与数理统计',
+  '组织管理', '数字化转型',
 ];
 
 const SOCIAL_HOSTS = ['github.com', 'zhihu.com', 'weibo.com'];
 const FRIEND_NAMES = ['顺其自然2319', 'trs62'];
 
 /**
- * 图片总数：44 张文章配图 + 头像 + favicon = 46。
+ * 图片总数：48 张文章配图 + 头像 + favicon = 50。
  * 原先的 50 张里有 4 张是页面背景照片（home / about / archive / 404），
  * 已按用户要求撤掉 —— 页头改由 WebGL 几何场景承担。
  */
-const IMAGE_TOTAL = 46;
+const IMAGE_TOTAL = 50;
 /** 首页移除宣言（home 保留原文用于检查残留），其余页面沿用引语。 */
 const PAGE_QUOTES = {
   home: 'BUILD. BREAK. LEARN.',
@@ -73,8 +75,8 @@ const RETIRED_IMAGES = [
   'images/site/archive-bg.jpg',
   'images/site/404-bg.jpg',
 ];
-const EXPECTED_TOTAL_POSTS = 15;
-const EXPECTED_TAGS_COUNT = 17;
+const EXPECTED_TOTAL_POSTS = 16;
+const EXPECTED_TAGS_COUNT = 19;
 
 /**
  * 公式文章不再手写清单 —— POSTS_INDEX.md 把 Visitor 也列成「依赖 MathJax」，
@@ -175,7 +177,7 @@ const allFiles = await walk(DIST);
 const htmlFiles = allFiles.filter((f) => f.endsWith('.html'));
 
 /* 1. 文章数量与永久链接 */
-await check(`1. 15 篇文章全部生成，且沿用旧永久链接 /YYYY/MM/DD/<slug>/`, async () => {
+await check(`1. 16 篇文章全部生成，且沿用旧永久链接 /YYYY/MM/DD/<slug>/`, async () => {
   const missing = [];
   for (const [ymd, slug] of EXPECTED_POSTS) {
     const [y, m, d] = ymd.split('/');
@@ -207,20 +209,20 @@ await check('2. 首页展示 6 篇，独立文章列表分 3 页', async () => {
 
   const third = await read(distFile('page/3/index.html'));
   const n3 = (third.match(/<article[^>]*class="journal-entry entry"/g) || []).length;
-  assert(n3 === 3, `第 3 页列出 ${n3} 条，期望 3（15 = 6+6+3）`);
+  assert(n3 === 4, `第 3 页列出 ${n3} 条，期望 4（16 = 6+6+4）`);
 
-  return '6 + 6 + 3 = 15';
+  return '6 + 6 + 4 = 16';
 });
 
 /* 3. 归档页 */
 await check('3. 归档页按年份分组，年份与篇数正确', async () => {
   const html = await read(distFile('archive/index.html'));
-  const years = [['2022', 5], ['2025', 9], ['2026', 1]];
+  const years = [['2022', 5], ['2025', 9], ['2026', 2]];
   for (const [y, n] of years) {
     assert(html.includes(y), `归档页没有年份 ${y}`);
     assert(html.includes(`${n} 篇`), `年份 ${y} 的篇数标注（${n} 篇）缺失`);
   }
-  return '2022(5) / 2025(9) / 2026(1)';
+  return '2022(5) / 2025(9) / 2026(2)';
 });
 
 /* 4. 标签页 */
@@ -250,7 +252,7 @@ await check(`5. ${IMAGE_TOTAL} 张图片全部就位且可访问（无 404）`, 
   const files = (await walk(imgDir)).filter((f) => !f.endsWith('.DS_Store'));
   assert(
     files.length === IMAGE_TOTAL,
-    `dist/images 下 ${files.length} 个文件，期望 ${IMAGE_TOTAL}（44 文章图 + 头像 + favicon）`
+    `dist/images 下 ${files.length} 个文件，期望 ${IMAGE_TOTAL}（48 文章图 + 头像 + favicon）`
   );
 
   // 遍历所有 HTML，确认每一条本地图片引用都能落到真实文件
@@ -348,8 +350,8 @@ await check('8. 代码块有语法高亮（双主题），行号由 CSS 计数�
   return `双主题 token + CSS 行号（${cssNames.length} 份样式表）`;
 });
 
-/* 9. 无封面图的 14 篇不伪造图片 */
-await check('9. 只有 vim-VScode 一篇有头图，其余 14 篇不出现伪造封面', async () => {
+/* 9. 无封面图的 15 篇不伪造图片 */
+await check('9. 只有 vim-VScode 一篇有头图，其余 15 篇不出现伪造封面', async () => {
   for (const [ymd, slug] of EXPECTED_POSTS) {
     const [y, m, d] = ymd.split('/');
     const html = await read(distFile(y, m, d, slug, 'index.html'));
@@ -361,7 +363,7 @@ await check('9. 只有 vim-VScode 一篇有头图，其余 14 篇不出现伪造
       assert(!hasCover, `${slug} 出现了不该有的封面区`);
     }
   }
-  return '1 篇有封面（bg.png），14 篇按版式承接';
+  return '1 篇有封面（bg.png），15 篇按版式承接';
 });
 
 /* 10. 统一署名与一句话文章 */
@@ -381,7 +383,7 @@ await check('10. 文章署名统一为 CloudingYu，一句话文章正文保留'
   );
   // 这篇不应被误当作 draft 或空内容而缺失
   assert(existsSync(distFile('2025/04/11', 'red-black-tree', 'index.html')), '红黑树那篇没有生成页面');
-  return '15 篇文章、作者元数据和搜索索引统一署名；一句话正文保留';
+  return '16 篇文章、作者元数据和搜索索引统一署名；一句话正文保留';
 });
 
 /* 11. 页面引语与背景素材 */
@@ -468,7 +470,7 @@ await check('13. 页面 title、favicon、avatar、sitemap、404 均正确', asy
   assert(existsSync(distFile('sitemap-index.xml')), '缺 sitemap-index.xml');
   const sitemap = await read(distFile('sitemap-0.xml'));
   const urls = (sitemap.match(/<loc>/g) || []).length;
-  assert(urls >= 15 + 17, `sitemap 只收录 ${urls} 条 URL，至少应有 15 篇文章 + 17 个标签页`);
+  assert(urls >= 16 + 19, `sitemap 只收录 ${urls} 条 URL，至少应有 16 篇文章 + 19 个标签页`);
 
   return `sitemap 收录 ${urls} 条 URL`;
 });
@@ -537,8 +539,8 @@ await check('17. P1010 被误判成公式的中文句被守卫改回普通文字
 /* 18. 永久链接大小写 */
 await check('18. 永久链接大小写与旧站逐一相符（Linux 上路径敏感，错一个字母即 404）', async () => {
   const mixed = EXPECTED_POSTS.filter(([, slug]) => slug !== slug.toLowerCase());
-  // 15 篇里只有 red-black-tree 与 leetcode-4 是全小写，其余 13 篇文件名都带大小写
-  assert(mixed.length === 13, `清单里有大小写的文章应是 13 篇，实际 ${mixed.length}`);
+  // 16 篇里只有 red-black-tree 与 leetcode-4 是全小写，其余 14 篇文件名都带大小写
+  assert(mixed.length === 14, `清单里有大小写的文章应是 14 篇，实际 ${mixed.length}`);
 
   const wrong = [];
   for (const [ymd, slug] of mixed) {
