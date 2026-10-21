@@ -33,6 +33,9 @@ const Heading = headingLevel;
   .journal-entry:has(a:hover, a:focus-visible) .journal-entry__number { color: var(--exp-purple); }
   .journal-entry:has(a:hover, a:focus-visible) :is(h2, h3) { color: var(--accent); translate: .4rem 0; }
   .journal-entry:has(a:hover, a:focus-visible) .journal-entry__action i { color: var(--accent); translate: .3rem -.3rem; }
+  @media (min-width: 48.01rem) {
+    .journal-entry__content :is(h2, h3) { text-wrap: wrap; }
+  }
   @media (max-width: 48rem) {
     .journal-entry__link { grid-template-columns: 2rem minmax(0, 1fr) 1.5rem; gap: .8rem; padding: 1.1rem 0; }
     .journal-entry__number { font-size: 1.4rem; margin-top: .1rem; }

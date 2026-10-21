@@ -31,6 +31,9 @@
 /* Reading: a bold entrance followed by a calm, generous text column. */
 .experimental #main .post__head { padding-top: 2rem; padding-bottom: 1.25rem; }
 .experimental #main .post__title { max-width: 18em; font-size: clamp(2.05rem, 4.5vw, 4.5rem); line-height: 1.25; letter-spacing: -.045em; font-weight: 850; text-wrap: balance; }
+@media (min-width: 48.01rem) {
+  .experimental #main .post__title { max-width: none; text-wrap: wrap; }
+}
 .experimental #main .post__subtitle { max-width: 55rem; font-size: 1.25rem; margin-top: 1.3rem; color: var(--ink-muted); }
 .experimental #main .post__byline { margin-top: 2rem; padding-top: 0; border: 0; }
 .experimental #main .post__author { font-size: 1rem; }

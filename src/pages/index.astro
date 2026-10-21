@@ -126,6 +126,9 @@ const tags = tagCounts(posts);
   @keyframes scroll-pulse { 0%, 100% { translate: 0 -3px; } 50% { translate: 0 4px; } }
   @keyframes signal-run { to { transform: translateX(-25%); } }
   @keyframes topics-run { to { transform: translateX(-50%); } }
+  @media (min-width: 48.01rem) {
+    .latest-dock h2 { text-wrap: wrap; }
+  }
   @media (max-width: 64rem) {
     .hero-type h1 { font-size: clamp(4.5rem, min(12vw, 19svh), 8rem); }
   }
