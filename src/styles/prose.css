@@ -322,6 +322,11 @@
 
 /* --- 图片与图注 --------------------------------------------------------- */
 
+.prose figcaption,
+.prose p:has(> img:only-child) + p:has(> em:only-child) {
+  text-align: center;
+}
+
 .prose img {
   margin: var(--s5) auto;
   border: 1px solid var(--line);
