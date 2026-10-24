@@ -111,3 +111,9 @@
 [data-reading-mode='enhanced'] .experimental #main .post__prose:has(.reading-term) :is(strong, b, .katex) {
   color: var(--ink);
 }
+
+/* Offline sentence/word scores use sixteen color-alpha levels. Protected inline
+   content inherits the original prose color; only annotated text is faded. */
+[data-reading-mode='enhanced'] .experimental #main .post__prose .reading-word {
+  color: color-mix(in srgb, var(--ink) var(--reading-word-alpha), transparent);
+}

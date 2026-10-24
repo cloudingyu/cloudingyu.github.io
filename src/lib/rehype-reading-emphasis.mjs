@@ -1,4 +1,6 @@
 import { getReadingEmphasis } from '../data/reading-emphasis.mjs';
+import { collectReadingBlocks, readingSnapshot, hashReadingSnapshot, validateReadingAnalysis } from './reading-analysis.mjs';
+import { scoreReadingAnalysis } from './reading-scoring.mjs';
 
 const EXCLUDED_TAGS = new Set([
   'pre', 'code', 'kbd', 'samp', 'script', 'style', 'svg', 'math', 'annotation',
@@ -18,6 +20,34 @@ export function rehypeReadingEmphasis() {
     const frontmatter = file.data.astro?.frontmatter;
     const profile = getReadingEmphasis(frontmatter?.readingEmphasisKey ?? frontmatter?.title);
     if (!profile) return;
+    if (profile.schemaVersion === 2) {
+      const blocks = collectReadingBlocks(tree);
+      const snapshot = readingSnapshot(blocks);
+      if (profile.snapshotHash !== hashReadingSnapshot(snapshot, tree)) return;
+      try { validateReadingAnalysis(profile, snapshot); }
+      catch { return; } // A changed document cannot receive stale annotations.
+      const scored = scoreReadingAnalysis(profile.blocks);
+      for (const block of blocks) {
+        const spans = scored.filter(s => s.blockId === block.id).flatMap(s => s.spans);
+        for (const piece of block.pieces) {
+          const children = [];
+          for (const span of spans) {
+            const start = Math.max(piece.start, span.start), end = Math.min(piece.end, span.end);
+            if (start >= end) continue;
+            children.push({ type: 'element', tagName: 'span', properties: {
+              className: ['reading-word'], 'data-reading-level': span.level,
+              style: `--reading-word-alpha:${(span.alpha * 100).toFixed(4)}%`,
+            }, children: [{ type: 'text', value: block.text.slice(start, end) }] });
+          }
+          // Replacing this leaf by a transparent container keeps its parent intact.
+          piece.node.type = 'element'; piece.node.tagName = 'span';
+          piece.node.properties = { className: ['reading-prose-run'] };
+          piece.node.children = children;
+          delete piece.node.value;
+        }
+      }
+      return;
+    }
     const levels = new Map();
     for (const level of ['secondary', 'primary']) {
       for (const term of profile[level]) if (term) levels.set(term, level);

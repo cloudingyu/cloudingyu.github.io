@@ -1,4 +1,6 @@
-/** Editorial term weights for the first reading experiment. */
+/** Offline sentence/word annotations, with legacy article term-list compatibility. */
+import { validateReadingAnalysis } from '../lib/reading-analysis.mjs';
+
 export const READING_EMPHASIS = {
   "/course-note/probability/2026-10-14/": {
     primary: [
@@ -3525,6 +3527,13 @@ export const READING_EMPHASIS = {
 /** Only complete, usable word lists enable enhanced reading. */
 export function getReadingEmphasis(title) {
   const profile = Object.hasOwn(READING_EMPHASIS, title ?? '') ? READING_EMPHASIS[title] : null;
+  if (profile?.schemaVersion === 2) {
+    try {
+      if (!/^[a-f0-9]{64}$/.test(profile.snapshotHash ?? '')) return null;
+      validateReadingAnalysis(profile, profile.blocks);
+      return profile;
+    } catch { return null; }
+  }
   if (!profile || !Array.isArray(profile.primary) || !profile.primary.length
     || !Array.isArray(profile.secondary)) return null;
   const terms = [...profile.primary, ...profile.secondary];

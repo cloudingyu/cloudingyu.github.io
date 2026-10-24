@@ -2,13 +2,7 @@
 import { defineConfig } from 'astro/config';
 import { unified } from '@astrojs/markdown-remark';
 import sitemap from '@astrojs/sitemap';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import { remarkGuardCurrency } from './src/lib/remark-guard-currency.mjs';
-import { remarkMathRestore } from './src/lib/remark-math-restore.mjs';
-import { rehypeMathHeadings } from './src/lib/rehype-math-headings.mjs';
-import { rehypeCodeFrame } from './src/lib/rehype-code-frame.mjs';
-import { rehypeLazyImages } from './src/lib/rehype-lazy-images.mjs';
+import { readingMarkdownOptions } from './src/lib/reading-markdown.mjs';
 import { rehypeReadingEmphasis } from './src/lib/rehype-reading-emphasis.mjs';
 import { NOTEBOOK_PATH } from './src/data/notebook-config.mjs';
 
@@ -26,9 +20,9 @@ import { NOTEBOOK_PATH } from './src/data/notebook-config.mjs';
  *   rehypeCodeFrame     → 最后给代码块套上滚动与行号的容器
  *                         （rehypePlugins 整体排在 Shiki 之后，所以这一步拿得到已着色的 pre）
  */
-const markdownProcessor = unified({
-  remarkPlugins: [remarkMath, remarkMathRestore, remarkGuardCurrency],
-  rehypePlugins: [rehypeKatex, rehypeMathHeadings, rehypeCodeFrame, rehypeLazyImages, rehypeReadingEmphasis],
+const readingOptions = readingMarkdownOptions();
+const markdownProcessor = unified({ ...readingOptions,
+  rehypePlugins: [...readingOptions.rehypePlugins, rehypeReadingEmphasis],
 });
 
 export default defineConfig({

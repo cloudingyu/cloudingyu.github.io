@@ -9,7 +9,12 @@ export function bindReadingPreferences(body) {
   root.dataset.readingMode = 'normal';
   const controller = new AbortController();
   const options = { signal: controller.signal };
-  const modeToggle = body.querySelector('[data-reading-mode-toggle][data-reading-mode-available="true"]');
+  const configuredToggle = body.querySelector('[data-reading-mode-toggle][data-reading-mode-available="true"]');
+  const modeToggle = article.querySelector('.reading-term, .reading-word') ? configuredToggle : null;
+  if (configuredToggle && !modeToggle) {
+    configuredToggle.dataset.readingModeAvailable = 'false';
+    configuredToggle.setAttribute('aria-label', '正文已变化，请重新进行阅读分级');
+  }
   const updateModeToggle = () => {
     const enhanced = root.dataset.readingMode === 'enhanced';
     modeToggle?.setAttribute('aria-pressed', String(enhanced));
